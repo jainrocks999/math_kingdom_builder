@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:math_kingdom_builder/app_colors.dart';
-import 'package:math_kingdom_builder/app_typography.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_typography.dart';
 
 class HintBubble extends StatelessWidget {
   final String text;
@@ -18,7 +18,7 @@ class HintBubble extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha:0.1),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),

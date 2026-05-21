@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:math_kingdom_builder/app_colors.dart';
-import 'package:math_kingdom_builder/app_typography.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_typography.dart';
 
 class NumberBlock extends StatefulWidget {
   final int number;
@@ -64,7 +64,7 @@ class _NumberBlockState extends State<NumberBlock>
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withOpacity(0.2),
+                color: AppColors.primary.withValues(alpha:0.2),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),

@@ -22,10 +22,6 @@ class CelebrationOverlay extends StatelessWidget {
           onLoaded: (composition) {
             Future.delayed(composition.duration, () => onComplete?.call());
           },
-          errorBuilder: (context, error, stackTrace) {
-            // Graceful fallback if Lottie asset isn't downloaded yet
-            return const Center(child: Icon(Icons.star, color: Colors.orange, size: 100));
-          },
         ),
       ),
     );
