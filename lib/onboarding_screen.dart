@@ -187,8 +187,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       leadingIcon: _currentPage == _pages.length - 1
                           ? Icons.workspace_premium
                           : null,
-                      trailingIcon: _currentPage != _pages.length - 1
-                          ? Icons.arrow_forward
+                      trailingText: _currentPage != _pages.length - 1
+                          ? '>' // Text arrow to inherit the exact same font
                           : null,
                       onTap: _onNextTap,
                     ),

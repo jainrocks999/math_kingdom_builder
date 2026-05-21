@@ -9,6 +9,7 @@ class BouncingGameButton extends StatefulWidget {
   final VoidCallback onTap;
   final IconData? leadingIcon;
   final IconData? trailingIcon;
+  final String? trailingText;
 
   const BouncingGameButton({
     super.key,
@@ -16,6 +17,7 @@ class BouncingGameButton extends StatefulWidget {
     required this.onTap,
     this.leadingIcon,
     this.trailingIcon,
+    this.trailingText,
   });
 
   @override
@@ -98,29 +100,44 @@ class _BouncingGameButtonState extends State<BouncingGameButton> {
                             Icon(
                               widget.leadingIcon,
                               color: Colors.white,
-                              size: 28,
+                              size: 32, // Increased size to match the chunky text
                               shadows: const [Shadow(color: Color(0xFFC44A1B), offset: Offset(0, 2))],
                             ),
-                            const SizedBox(width: 8),
+                            if (widget.text.isNotEmpty) const SizedBox(width: 8),
                           ],
-                          Text(
-                            widget.text,
-                            style: GoogleFonts.lilitaOne(
-                              textStyle: AppTypography.button.copyWith(
-                                fontSize: 26,
-                                letterSpacing: 1.5,
-                                color: Colors.white,
-                                shadows: const [Shadow(color: Color(0xFFC44A1B), offset: Offset(0, 2), blurRadius: 0)],
+                          if (widget.text.isNotEmpty)
+                            Text(
+                              widget.text,
+                              style: GoogleFonts.lilitaOne(
+                                textStyle: AppTypography.button.copyWith(
+                                  fontSize: 26,
+                                  letterSpacing: 1.5,
+                                  color: Colors.white,
+                                  shadows: const [Shadow(color: Color(0xFFC44A1B), offset: Offset(0, 2), blurRadius: 0)],
+                                ),
                               ),
                             ),
-                          ),
                           if (widget.trailingIcon != null) ...[
-                            const SizedBox(width: 8),
+                            if (widget.text.isNotEmpty) const SizedBox(width: 8),
                             Icon(
                               widget.trailingIcon,
                               color: Colors.white,
-                              size: 28,
+                              size: 32, // Increased size to match the chunky text
                               shadows: const [Shadow(color: Color(0xFFC44A1B), offset: Offset(0, 2))],
+                            ),
+                          ],
+                          if (widget.trailingText != null) ...[
+                            if (widget.text.isNotEmpty) const SizedBox(width: 8),
+                            Text(
+                              widget.trailingText!,
+                              style: GoogleFonts.lilitaOne(
+                                textStyle: AppTypography.button.copyWith(
+                                  fontSize: 26,
+                                  letterSpacing: 1.5,
+                                  color: Colors.white,
+                                  shadows: const [Shadow(color: Color(0xFFC44A1B), offset: Offset(0, 2), blurRadius: 0)],
+                                ),
+                              ),
                             ),
                           ],
                         ],
