@@ -25,7 +25,7 @@ class _SplashScreenState extends State<SplashScreen> {
     // Navigate to the first feature screen and remove the splash screen from the back stack
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (context) => const NumberRecognitionScreen(),
+        builder: (context) => const StateLearningScreen(),
       ),
     );
   }

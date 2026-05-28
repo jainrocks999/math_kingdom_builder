@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
@@ -10,6 +11,7 @@ class BouncingGameButton extends StatefulWidget {
   final IconData? leadingIcon;
   final IconData? trailingIcon;
   final String? trailingText;
+  final String? trailingSvgIcon;
 
   const BouncingGameButton({
     super.key,
@@ -18,6 +20,7 @@ class BouncingGameButton extends StatefulWidget {
     this.leadingIcon,
     this.trailingIcon,
     this.trailingText,
+    this.trailingSvgIcon,
   });
 
   @override
@@ -100,10 +103,16 @@ class _BouncingGameButtonState extends State<BouncingGameButton> {
                             Icon(
                               widget.leadingIcon,
                               color: Colors.white,
-                              size: 32, // Increased size to match the chunky text
-                              shadows: const [Shadow(color: Color(0xFFC44A1B), offset: Offset(0, 2))],
+                              size:
+                                  32, // Increased size to match the chunky text
+                              shadows: const [
+                                Shadow(
+                                    color: Color(0xFFC44A1B),
+                                    offset: Offset(0, 2))
+                              ],
                             ),
-                            if (widget.text.isNotEmpty) const SizedBox(width: 8),
+                            if (widget.text.isNotEmpty)
+                              const SizedBox(width: 8),
                           ],
                           if (widget.text.isNotEmpty)
                             Text(
@@ -113,21 +122,33 @@ class _BouncingGameButtonState extends State<BouncingGameButton> {
                                   fontSize: 26,
                                   letterSpacing: 1.5,
                                   color: Colors.white,
-                                  shadows: const [Shadow(color: Color(0xFFC44A1B), offset: Offset(0, 2), blurRadius: 0)],
+                                  shadows: const [
+                                    Shadow(
+                                        color: Color(0xFFC44A1B),
+                                        offset: Offset(0, 2),
+                                        blurRadius: 0)
+                                  ],
                                 ),
                               ),
                             ),
                           if (widget.trailingIcon != null) ...[
-                            if (widget.text.isNotEmpty) const SizedBox(width: 8),
+                            if (widget.text.isNotEmpty)
+                              const SizedBox(width: 8),
                             Icon(
                               widget.trailingIcon,
                               color: Colors.white,
-                              size: 32, // Increased size to match the chunky text
-                              shadows: const [Shadow(color: Color(0xFFC44A1B), offset: Offset(0, 2))],
+                              size:
+                                  32, // Increased size to match the chunky text
+                              shadows: const [
+                                Shadow(
+                                    color: Color(0xFFC44A1B),
+                                    offset: Offset(0, 2))
+                              ],
                             ),
                           ],
                           if (widget.trailingText != null) ...[
-                            if (widget.text.isNotEmpty) const SizedBox(width: 8),
+                            if (widget.text.isNotEmpty)
+                              const SizedBox(width: 8),
                             Text(
                               widget.trailingText!,
                               style: GoogleFonts.lilitaOne(
@@ -135,7 +156,29 @@ class _BouncingGameButtonState extends State<BouncingGameButton> {
                                   fontSize: 26,
                                   letterSpacing: 1.5,
                                   color: Colors.white,
-                                  shadows: const [Shadow(color: Color(0xFFC44A1B), offset: Offset(0, 2), blurRadius: 0)],
+                                  shadows: const [
+                                    Shadow(
+                                        color: Color(0xFFC44A1B),
+                                        offset: Offset(0, 2),
+                                        blurRadius: 0)
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                          if (widget.trailingSvgIcon != null) ...[
+                            if (widget.text.isNotEmpty)
+                              const SizedBox(width: 8),
+                            SizedBox(
+                              width: 32,
+                              height: 34,
+                              child: SvgPicture.asset(
+                                widget.trailingSvgIcon!,
+                                width: 32,
+                                height: 32,
+                                colorFilter: const ColorFilter.mode(
+                                  Colors.white,
+                                  BlendMode.srcIn,
                                 ),
                               ),
                             ),

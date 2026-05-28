@@ -20,6 +20,7 @@
 | `08_parental_dashboard.md` | PIN gate, progress reports, settings |
 | `09_monetization.md` | Freemium model, IAP setup, RevenueCat |
 | `10_compliance_and_testing.md` | COPPA, GDPR-K, accessibility, app store submission |
+| `09_home_screen_guide.md` | Home screen layout, asset mapping, and where images should come from |
 
 ---
 

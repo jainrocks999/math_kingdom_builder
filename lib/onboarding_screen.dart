@@ -187,8 +187,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       leadingIcon: _currentPage == _pages.length - 1
                           ? Icons.workspace_premium
                           : null,
-                      trailingText: _currentPage != _pages.length - 1
-                          ? '>' // Text arrow to inherit the exact same font
+                      trailingSvgIcon: _currentPage != _pages.length - 1
+                          ? 'assets/images/svg/ArrowRight.svg' // SVG Icon usage
                           : null,
                       onTap: _onNextTap,
                     ),
@@ -198,16 +198,47 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(_pages.length, (index) {
+                    final isActive = _currentPage == index;
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      width: _currentPage == index ? 24 : 8,
-                      height: 8,
+                      margin: const EdgeInsets.symmetric(horizontal: 6),
+                      width: isActive ? 32 : 16,
+                      height: 16,
                       decoration: BoxDecoration(
-                        color: _currentPage == index
-                            ? AppColors.primary
-                            : AppColors.primaryLight,
-                        borderRadius: BorderRadius.circular(4),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: isActive
+                              ? [
+                                  const Color(0xFFFF9B73), // Glossy orange top
+                                  AppColors.primary, // Base primary orange
+                                ]
+                              : [
+                                  Colors.white, // Glassy white top
+                                  AppColors.primaryLight, // Light orange base
+                                ],
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 2,
+                        ),
+                        boxShadow: [
+                          // Solid 3D lip under the dot
+                          BoxShadow(
+                            color: isActive
+                                ? const Color(0xFFC44A1B) // Dark orange lip
+                                : const Color(0xFFD6BFA9), // Brownish lip for inactive
+                            offset: const Offset(0, 2),
+                            blurRadius: 0,
+                          ),
+                          // Soft drop shadow
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.15),
+                            offset: const Offset(0, 4),
+                            blurRadius: 4,
+                          ),
+                        ],
                       ),
                     );
                   }),

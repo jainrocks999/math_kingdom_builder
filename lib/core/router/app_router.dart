@@ -121,7 +121,7 @@ final GoRouter _appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.numberRecognition,
-      builder: (context, state) => const NumberRecognitionScreen(),
+      builder: (context, state) => const StateLearningScreen(),
     ),
     ...appPlaceholderRoutes.map(
       (route) => GoRoute(
