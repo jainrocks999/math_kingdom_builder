@@ -2,6 +2,8 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
+import 'tts_voice_helper.dart';
+
 class AudioService {
   static final AudioService _instance = AudioService._internal();
   factory AudioService() => _instance;
@@ -16,7 +18,11 @@ class AudioService {
 
   Future<void> init() async {
     // Configure TTS
-    await _tts.setLanguage('en-US');
+    await TtsVoiceHelper.applyPreferredVoice(
+      _tts,
+      locale: 'en-IN',
+      fallbackLocales: const ['en-US', 'hi-IN'],
+    );
     await _tts.setSpeechRate(0.45); // Slow for young children
     await _tts.setVolume(1.0);
     await _tts.setPitch(1.1); // Slightly warm/high

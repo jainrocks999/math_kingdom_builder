@@ -5,6 +5,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/utils/tts_voice_helper.dart';
 
 class StateLearningScreen extends StatefulWidget {
   const StateLearningScreen({super.key});
@@ -16,6 +17,7 @@ class StateLearningScreen extends StatefulWidget {
 class _StateLearningScreenState extends State<StateLearningScreen>
     with TickerProviderStateMixin {
   late final FlutterTts _flutterTts;
+  late final Future<void> _ttsReady;
   late final AnimationController _speakerPulseController;
   late final AnimationController _cardBounceController;
   late final AnimationController _celebrationController;
@@ -114,7 +116,7 @@ class _StateLearningScreenState extends State<StateLearningScreen>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    _initTts();
+    _ttsReady = _initTts();
     _prepareQuestion(autoSpeak: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -127,6 +129,11 @@ class _StateLearningScreenState extends State<StateLearningScreen>
     await _flutterTts.setVolume(1.0);
     await _flutterTts.setSpeechRate(0.42);
     await _flutterTts.setPitch(1.05);
+    await TtsVoiceHelper.applyPreferredVoice(
+      _flutterTts,
+      locale: 'en-IN',
+      fallbackLocales: const ['en-US', 'hi-IN', 'gu-IN'],
+    );
     _flutterTts.setCompletionHandler(() {
       if (!mounted) return;
       setState(() => _isSpeaking = false);
@@ -166,12 +173,17 @@ class _StateLearningScreenState extends State<StateLearningScreen>
   }
 
   Future<void> _speakCurrentPrompt() async {
+    await _ttsReady;
     if (_isSpeaking) {
       await _flutterTts.stop();
     }
 
     setState(() => _isSpeaking = true);
-    await _flutterTts.setLanguage(_currentSystem.locale);
+    await TtsVoiceHelper.applyPreferredVoice(
+      _flutterTts,
+      locale: _currentSystem.locale,
+      fallbackLocales: const ['en-IN', 'hi-IN', 'gu-IN', 'en-US'],
+    );
     await _flutterTts.setSpeechRate(0.42);
     await _flutterTts.speak(_currentNumber.word);
   }
@@ -229,8 +241,13 @@ class _StateLearningScreenState extends State<StateLearningScreen>
   void _showCompletionCelebration() {
     setState(() => _showCelebration = true);
     _celebrationController.forward(from: 0);
-    _flutterTts.setLanguage('en-US');
-    _flutterTts.speak('Amazing! You finished all the numbers.');
+    TtsVoiceHelper.applyPreferredVoice(
+      _flutterTts,
+      locale: 'en-IN',
+      fallbackLocales: const ['en-US', 'hi-IN'],
+    ).then((_) {
+      _flutterTts.speak('Amazing! You finished all the numbers.');
+    });
   }
 
   void _resetCurrentSystem() {

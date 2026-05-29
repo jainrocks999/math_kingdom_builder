@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/utils/tts_voice_helper.dart';
 
 // ─── Enums & data ─────────────────────────────────────────────────────────────
 
@@ -46,10 +47,6 @@ class LearnNumbersScreen extends StatefulWidget {
 
 class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     with TickerProviderStateMixin {
-  static const Map<String, String> _staticFemaleVoice = {
-    'locale': 'en-IN',
-  };
-
   // ── Data ──────────────────────────────────────────────────────────────────
   static const List<String> _numberWords = [
     'Zero',
@@ -146,6 +143,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
 
   // ── Controllers ───────────────────────────────────────────────────────────
   late final FlutterTts _tts;
+  late final Future<void> _ttsReady;
   late final ScrollController _selectorController;
 
   // Number pop — elastic scale when digit changes
@@ -238,7 +236,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
       value: 1,
     );
 
-    _configureTts();
+    _ttsReady = _configureTts();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollSelectorTo(_currentIndex, animated: false);
       _speakCurrentNumber();
@@ -256,10 +254,11 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   }
 
   Future<void> _applyIndianEnglishVoice() async {
-    await _tts.setLanguage(_staticFemaleVoice['locale']!);
-
-    // Keep one static language/locale so the screen uses a single Indian
-    // English voice instead of switching between multiple voices.
+    await TtsVoiceHelper.applyPreferredVoice(
+      _tts,
+      locale: 'en-IN',
+      fallbackLocales: const ['en-US', 'hi-IN'],
+    );
   }
 
   void _onSpeechDone() {
@@ -278,6 +277,8 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     String text, {
     _BearMood mood = _BearMood.talking,
   }) async {
+    if (!mounted) return;
+    await _ttsReady;
     if (!mounted) return;
     await _tts.stop();
     if (!mounted) return;

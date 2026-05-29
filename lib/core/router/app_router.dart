@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:math_kingdom_builder/features/StartLearning/start_learning_screen.dart';
 import 'package:math_kingdom_builder/features/learn_numbers/learn_numbers_screen.dart';
+import 'package:math_kingdom_builder/features/number_tracing/trace_numbers_screen.dart';
 import 'package:math_kingdom_builder/onboarding_screen.dart';
 
 import '../../features/home/home_screen.dart';
@@ -48,12 +49,6 @@ final List<PlaceholderRouteSpec> appPlaceholderRoutes = [
     title: 'Counting Objects',
     description: 'Placeholder screen for the counting activity flow.',
     icon: Icons.looks_two_rounded,
-  ),
-  const PlaceholderRouteSpec(
-    path: AppRoutes.tracing,
-    title: 'Number Tracing',
-    description: 'Placeholder screen for tracing dotted number paths.',
-    icon: Icons.gesture_rounded,
   ),
   const PlaceholderRouteSpec(
     path: AppRoutes.matching,
@@ -130,6 +125,10 @@ final GoRouter _appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.learnNumbers,
       builder: (context, state) => const LearnNumbersScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.tracing,
+      builder: (context, state) => const TraceNumbersScreen(),
     ),
     GoRoute(
       path: AppRoutes.startlearning,

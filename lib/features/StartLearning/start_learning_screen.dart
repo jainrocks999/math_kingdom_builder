@@ -45,7 +45,7 @@ class StartLearningScreen extends StatelessWidget {
       color: AppColors.pathwayPeach,
       softColor: AppColors.primaryLight,
       shadowColor: Color(0xFFD97A4D),
-      route: '/trace-numbers',
+      route: AppRoutes.tracing,
     ),
     _LearningModule(
       title: 'Count Objects',
