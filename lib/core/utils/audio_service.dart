@@ -17,9 +17,9 @@ class AudioService {
   Future<void> init() async {
     // Configure TTS
     await _tts.setLanguage('en-US');
-    await _tts.setSpeechRate(0.45);   // Slow for young children
+    await _tts.setSpeechRate(0.45); // Slow for young children
     await _tts.setVolume(1.0);
-    await _tts.setPitch(1.1);          // Slightly warm/high
+    await _tts.setPitch(1.1); // Slightly warm/high
 
     // Start background music (Uncomment when you add the asset)
     // await _musicPlayer.setReleaseMode(ReleaseMode.loop);
@@ -37,8 +37,19 @@ class AudioService {
 
   // Speak a number name (uses TTS fallback until MP3s are added)
   Future<void> speakNumber(int number) async {
-    final names = ['zero','one','two','three','four','five',
-                   'six','seven','eight','nine','ten'];
+    final names = [
+      'zero',
+      'one',
+      'two',
+      'three',
+      'four',
+      'five',
+      'six',
+      'seven',
+      'eight',
+      'nine',
+      'ten'
+    ];
     if (number >= 0 && number <= 10) {
       await _tts.speak(names[number]);
     }
@@ -81,8 +92,11 @@ class AudioService {
 
   void setMusicEnabled(bool enabled) {
     _musicEnabled = enabled;
-    if (!enabled) _musicPlayer.pause();
-    else _musicPlayer.resume();
+    if (!enabled) {
+      _musicPlayer.pause();
+    } else {
+      _musicPlayer.resume();
+    }
   }
 
   void setSfxEnabled(bool enabled) => _sfxEnabled = enabled;

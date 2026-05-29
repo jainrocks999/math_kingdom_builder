@@ -58,7 +58,7 @@ class HomeScreen extends StatelessWidget {
     _HomeActionData(
       title: 'Start Learning',
       subtitle: 'Number magic & playful counting',
-      route: AppRoutes.numberRecognition,
+      route: AppRoutes.startlearning,
       icon: Icons.play_arrow_rounded,
       color: AppColors.primary,
       softColor: AppColors.primaryLight,
@@ -520,7 +520,7 @@ class _FeatureCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.go(action.route),
+      onTap: () => context.push(action.route),
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,

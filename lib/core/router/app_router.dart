@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:math_kingdom_builder/features/StartLearning/start_learning_screen.dart';
+import 'package:math_kingdom_builder/features/learn_numbers/learn_numbers_screen.dart';
 import 'package:math_kingdom_builder/onboarding_screen.dart';
 
 import '../../features/home/home_screen.dart';
@@ -12,6 +14,7 @@ class AppRoutes {
   static const home = '/home';
   static const onbording = '/onbording';
   static const numberRecognition = '/number-recognition';
+  static const learnNumbers = '/learn-numbers';
   static const counting = '/counting';
   static const tracing = '/tracing';
   static const matching = '/matching';
@@ -22,6 +25,7 @@ class AppRoutes {
   static const kingdom = '/kingdom';
   static const stickers = '/stickers';
   static const parentDashboard = '/parent-dashboard';
+  static const startlearning = '/start-learning';
 }
 
 class PlaceholderRouteSpec {
@@ -122,6 +126,14 @@ final GoRouter _appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.numberRecognition,
       builder: (context, state) => const StateLearningScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.learnNumbers,
+      builder: (context, state) => const LearnNumbersScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.startlearning,
+      builder: (context, state) => const StartLearningScreen(),
     ),
     ...appPlaceholderRoutes.map(
       (route) => GoRoute(
