@@ -46,6 +46,10 @@ class LearnNumbersScreen extends StatefulWidget {
 
 class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     with TickerProviderStateMixin {
+  static const Map<String, String> _staticFemaleVoice = {
+    'locale': 'en-IN',
+  };
+
   // ── Data ──────────────────────────────────────────────────────────────────
   static const List<String> _numberWords = [
     'Zero',
@@ -135,6 +139,10 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   bool _isSpeaking = false;
   int? _highlightedObjectIndex;
   _BearMood _bearMood = _BearMood.idle;
+  int _bearVisualToken = 0;
+  int _cardTransitionDirection = 1;
+  bool _isCardTransitionExiting = false;
+  int _cardTransitionToken = 0;
 
   // ── Controllers ───────────────────────────────────────────────────────────
   late final FlutterTts _tts;
@@ -155,8 +163,8 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   // Bear "wow" bounce (one-shot)
   late final AnimationController _bearBounceController;
 
-  // Card slide-in on number change
-  late final AnimationController _cardSlideController;
+  // Lightweight content transition for the top card
+  late final AnimationController _cardTransitionController;
 
   // ── Derived ───────────────────────────────────────────────────────────────
   _CountObjectTheme get _theme =>
@@ -187,6 +195,15 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     }
   }
 
+  void _setBearMood(_BearMood mood) {
+    if (_bearMood != mood) {
+      _bearMood = mood;
+      _bearVisualToken++;
+      return;
+    }
+    _bearMood = mood;
+  }
+
   // ── Lifecycle ─────────────────────────────────────────────────────────────
   @override
   void initState() {
@@ -215,9 +232,9 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
       vsync: this,
       duration: const Duration(milliseconds: 620),
     );
-    _cardSlideController = AnimationController(
+    _cardTransitionController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 520),
+      duration: const Duration(milliseconds: 280),
       value: 1,
     );
 
@@ -229,24 +246,31 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   }
 
   Future<void> _configureTts() async {
-    await _tts.setLanguage('en-US');
+    await _applyIndianEnglishVoice();
     await _tts.setPitch(1.04);
-    await _tts.setSpeechRate(0.42);
+    await _tts.setSpeechRate(0.34);
     await _tts.setVolume(1.0);
     _tts.setCompletionHandler(_onSpeechDone);
     _tts.setCancelHandler(_onSpeechDone);
     _tts.setErrorHandler((_) => _onSpeechDone());
   }
 
+  Future<void> _applyIndianEnglishVoice() async {
+    await _tts.setLanguage(_staticFemaleVoice['locale']!);
+
+    // Keep one static language/locale so the screen uses a single Indian
+    // English voice instead of switching between multiple voices.
+  }
+
   void _onSpeechDone() {
     if (!mounted) return;
     setState(() {
       _isSpeaking = false;
-      _bearMood = _BearMood.clapping;
+      _setBearMood(_BearMood.clapping);
     });
     Future<void>.delayed(const Duration(milliseconds: 700), () {
       if (!mounted || _isSpeaking) return;
-      setState(() => _bearMood = _BearMood.idle);
+      setState(() => _setBearMood(_BearMood.idle));
     });
   }
 
@@ -259,7 +283,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     if (!mounted) return;
     setState(() {
       _isSpeaking = true;
-      _bearMood = mood;
+      _setBearMood(mood);
     });
     await _tts.speak(text);
   }
@@ -277,18 +301,36 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     }
 
     HapticFeedback.selectionClick();
+    final previousIndex = _currentIndex;
+    final transitionToken = ++_cardTransitionToken;
+    final transitionDirection = index > previousIndex ? 1 : -1;
+    _cardTransitionController.stop();
     setState(() {
-      _currentIndex = index;
+      _cardTransitionDirection = transitionDirection;
+      _isCardTransitionExiting = true;
       _highlightedObjectIndex = null;
-      _bearMood = _BearMood.wow;
+      _setBearMood(_BearMood.wow);
     });
 
-    // Animate card slide + number pop together
-    _cardSlideController.forward(from: 0);
+    await _cardTransitionController.animateBack(
+      0,
+      duration: const Duration(milliseconds: 140),
+      curve: Curves.easeInCubic,
+    );
+    if (!mounted || transitionToken != _cardTransitionToken) return;
+
+    setState(() {
+      _isCardTransitionExiting = false;
+      _currentIndex = index;
+      _highlightedObjectIndex = null;
+      _setBearMood(_BearMood.wow);
+    });
+
     _numberPopController.forward(from: 0);
     _objectsRevealController.forward(from: 0);
     _bearBounceController.forward(from: 0);
     _scrollSelectorTo(index);
+    _cardTransitionController.forward(from: 0);
 
     if (speak) await _speakCurrentNumber();
   }
@@ -300,7 +342,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     HapticFeedback.lightImpact();
     setState(() {
       _highlightedObjectIndex = index;
-      _bearMood = _BearMood.wow;
+      _setBearMood(_BearMood.wow);
     });
     await _speakPhrase('$count $label');
   }
@@ -336,7 +378,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     _backgroundController.dispose();
     _bearFloatController.dispose();
     _bearBounceController.dispose();
-    _cardSlideController.dispose();
+    _cardTransitionController.dispose();
     _tts.stop();
     super.dispose();
   }
@@ -476,84 +518,112 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     required bool isCompact,
     required bool isVeryCompact,
   }) {
-    return AnimatedBuilder(
-      animation: Listenable.merge([_cardSlideController, _numberPopController]),
-      builder: (context, child) {
-        final slideVal = CurvedAnimation(
-          parent: _cardSlideController,
-          curve: Curves.easeOutQuart,
-        ).value;
-        final dy = (1 - slideVal) * 16;
-        return Transform.translate(
-          offset: Offset(0, dy),
-          child: Opacity(opacity: slideVal.clamp(0.0, 1.0), child: child),
-        );
-      },
-      child: GestureDetector(
-        onTap: _speakCurrentNumber,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 450),
-          curve: Curves.easeOutCubic,
-          padding: EdgeInsets.all(isVeryCompact ? 12 : 16),
-          decoration: BoxDecoration(
-            // Frosted glass effect via ClipRRect + BackdropFilter is done below
-            borderRadius: BorderRadius.circular(28),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 450),
-                curve: Curves.easeOutCubic,
-                padding: EdgeInsets.all(isVeryCompact ? 14 : 18),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.78),
-                  borderRadius: BorderRadius.circular(28),
-                  border: Border.all(
-                    color: _theme.color.withValues(alpha: 0.35),
-                    width: 2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _theme.shadowColor.withValues(alpha: 0.55),
-                      offset: const Offset(0, 5),
-                      blurRadius: 0,
-                    ),
-                    BoxShadow(
-                      color: _theme.color.withValues(alpha: 0.14),
-                      offset: const Offset(0, 14),
-                      blurRadius: 24,
-                    ),
-                  ],
+    return GestureDetector(
+      onTap: _speakCurrentNumber,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.all(isVeryCompact ? 12 : 16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(28),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 450),
+              curve: Curves.easeOutCubic,
+              padding: EdgeInsets.all(isVeryCompact ? 14 : 18),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.78),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(
+                  color: _theme.color.withValues(alpha: 0.35),
+                  width: 2,
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      flex: 12,
-                      child: _buildNumberInfo(
-                        isVeryCompact: isVeryCompact,
-                        isCompact: isCompact,
+                boxShadow: [
+                  BoxShadow(
+                    color: _theme.shadowColor.withValues(alpha: 0.55),
+                    offset: const Offset(0, 5),
+                    blurRadius: 0,
+                  ),
+                  BoxShadow(
+                    color: _theme.color.withValues(alpha: 0.14),
+                    offset: const Offset(0, 14),
+                    blurRadius: 24,
+                  ),
+                ],
+              ),
+              child: AnimatedBuilder(
+                animation: _cardTransitionController,
+                child: _buildMainCardContent(
+                  isCompact: isCompact,
+                  isVeryCompact: isVeryCompact,
+                ),
+                builder: (context, child) {
+                  final t = Curves.easeOutCubic.transform(
+                    _cardTransitionController.value,
+                  );
+                  final direction = _isCardTransitionExiting
+                      ? -_cardTransitionDirection
+                      : _cardTransitionDirection;
+                  final dx = lerpDouble(26.0 * direction, 0, t)!;
+                  final dy = lerpDouble(6.0, 0, t)!;
+                  final scale = lerpDouble(0.985, 1.0, t)!;
+                  final opacity = lerpDouble(0.18, 1.0, t)!;
+
+                  return Transform.translate(
+                    offset: Offset(dx, dy),
+                    child: Transform.scale(
+                      scale: scale,
+                      child: Opacity(
+                        opacity: opacity.clamp(0.0, 1.0),
+                        child: child,
                       ),
                     ),
-                    SizedBox(width: isVeryCompact ? 4 : 6),
-                    _BearBuddy(
-                      assetPath: _bearAssetPath,
-                      message: _bearMessage,
-                      color: _theme.color,
-                      softColor: _theme.softColor,
-                      floatController: _bearFloatController,
-                      bounceController: _bearBounceController,
-                      isCompact: isCompact,
-                      isVeryCompact: isVeryCompact,
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildMainCardContent({
+    required bool isCompact,
+    required bool isVeryCompact,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            flex: isVeryCompact ? 7 : 8,
+            child: _buildNumberInfoCard(
+              isVeryCompact: isVeryCompact,
+              isCompact: isCompact,
+            ),
+          ),
+          SizedBox(width: isVeryCompact ? 8 : 12),
+          Expanded(
+            flex: isVeryCompact ? 5 : 4,
+            child: _BearBuddy(
+              assetPath: _bearAssetPath,
+              message: _bearMessage,
+              visualToken: _bearVisualToken,
+              color: _theme.color,
+              softColor: _theme.softColor,
+              floatController: _bearFloatController,
+              bounceController: _bearBounceController,
+              isCompact: isCompact,
+              isVeryCompact: isVeryCompact,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -611,10 +681,16 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
             final t = Curves.easeOutCubic.transform(_numberPopController.value);
             final scale = lerpDouble(0.88, 1.0, t)!;
             final opacity = lerpDouble(0.40, 1.0, t)!;
-            return Transform.scale(
-              alignment: Alignment.centerLeft,
-              scale: scale,
-              child: Opacity(opacity: opacity.clamp(0.0, 1.0), child: child),
+            return Align(
+              alignment: Alignment.center,
+              child: Transform.scale(
+                alignment: Alignment.center,
+                scale: scale,
+                child: Opacity(
+                  opacity: opacity.clamp(0.0, 1.0),
+                  child: child,
+                ),
+              ),
             );
           },
           child: AnimatedSwitcher(
@@ -662,20 +738,24 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
               child: SlideTransition(position: slide, child: child),
             );
           },
-          child: Text(
-            _numberWords[_currentIndex],
-            key: ValueKey(_numberWords[_currentIndex]),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTypography.h1.copyWith(
-              fontSize: isVeryCompact
-                  ? 20
-                  : isCompact
-                      ? 24
-                      : 28,
-              color: const Color(0xFF1E1060),
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.4,
+          child: Align(
+            alignment: Alignment.center,
+            child: Text(
+              _numberWords[_currentIndex],
+              key: ValueKey(_numberWords[_currentIndex]),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: AppTypography.h1.copyWith(
+                fontSize: isVeryCompact
+                    ? 20
+                    : isCompact
+                        ? 24
+                        : 28,
+                color: const Color(0xFF1E1060),
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.4,
+              ),
             ),
           ),
         ),
@@ -708,6 +788,70 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildNumberInfoCard({
+    required bool isVeryCompact,
+    required bool isCompact,
+  }) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: Container(
+        padding: EdgeInsets.fromLTRB(
+          isVeryCompact ? 12 : 16,
+          isVeryCompact ? 12 : 16,
+          isVeryCompact ? 10 : 14,
+          isVeryCompact ? 12 : 16,
+        ),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withValues(alpha: 0.95),
+              _theme.softColor.withValues(alpha: 0.72),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: _theme.color.withValues(alpha: 0.14),
+            width: 1.5,
+          ),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              top: -18,
+              right: -8,
+              child: Container(
+                width: isVeryCompact ? 52 : 64,
+                height: isVeryCompact ? 52 : 64,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.38),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -20,
+              left: -14,
+              child: Container(
+                width: isVeryCompact ? 44 : 56,
+                height: isVeryCompact ? 44 : 56,
+                decoration: BoxDecoration(
+                  color: _theme.color.withValues(alpha: 0.10),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+            _buildNumberInfo(
+              isVeryCompact: isVeryCompact,
+              isCompact: isCompact,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -980,6 +1124,7 @@ class _BearBuddy extends StatelessWidget {
   const _BearBuddy({
     required this.assetPath,
     required this.message,
+    required this.visualToken,
     required this.color,
     required this.softColor,
     required this.floatController,
@@ -990,6 +1135,7 @@ class _BearBuddy extends StatelessWidget {
 
   final String assetPath;
   final String message;
+  final int visualToken;
   final Color color;
   final Color softColor;
   final AnimationController floatController;
@@ -999,31 +1145,33 @@ class _BearBuddy extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final width = isVeryCompact
-        ? 70.0
-        : isCompact
-            ? 80.0
-            : 90.0;
     final imgH = isVeryCompact
-        ? 48.0
+        ? 58.0
         : isCompact
-            ? 58.0
-            : 68.0;
+            ? 68.0
+            : 78.0;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
-      width: width,
+      width: double.infinity,
       padding: EdgeInsets.fromLTRB(
-        isVeryCompact ? 6 : 8,
         isVeryCompact ? 8 : 10,
-        isVeryCompact ? 6 : 8,
-        isVeryCompact ? 6 : 8,
+        isVeryCompact ? 10 : 12,
+        isVeryCompact ? 8 : 10,
+        isVeryCompact ? 8 : 10,
       ),
       decoration: BoxDecoration(
-        color: softColor.withValues(alpha: 0.65),
-        borderRadius: BorderRadius.circular(22),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.white.withValues(alpha: 0.82),
+            softColor.withValues(alpha: 0.88),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: color.withValues(alpha: 0.22),
+          color: color.withValues(alpha: 0.24),
           width: 1.5,
         ),
         boxShadow: [
@@ -1036,7 +1184,27 @@ class _BearBuddy extends StatelessWidget {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: isVeryCompact ? 7 : 8,
+              vertical: 3,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.88),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              'Bear Buddy',
+              style: AppTypography.bodySmall.copyWith(
+                color: color,
+                fontSize: isVeryCompact ? 8 : 9,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          SizedBox(height: isVeryCompact ? 6 : 8),
           AnimatedBuilder(
             animation: Listenable.merge([floatController, bounceController]),
             builder: (context, child) {
@@ -1072,19 +1240,19 @@ class _BearBuddy extends StatelessWidget {
               },
               child: Image.asset(
                 assetPath,
-                key: ValueKey(assetPath),
+                key: ValueKey('bear-image-$visualToken-$assetPath'),
                 height: imgH,
                 fit: BoxFit.contain,
               ),
             ),
           ),
-          SizedBox(height: isVeryCompact ? 4 : 5),
+          SizedBox(height: isVeryCompact ? 6 : 8),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 260),
             switchInCurve: Curves.easeOutCubic,
             switchOutCurve: Curves.easeInCubic,
             child: Container(
-              key: ValueKey(message),
+              key: ValueKey('bear-message-$visualToken-$message'),
               padding: EdgeInsets.symmetric(
                 horizontal: isVeryCompact ? 5 : 6,
                 vertical: 3,
