@@ -6,6 +6,7 @@ import 'core/constants/app_colors.dart';
 import 'core/constants/app_typography.dart';
 import 'core/router/app_router.dart';
 import 'shared/widgets/bouncing_game_button.dart';
+import 'core/services/audio_service.dart';
 
 class OnboardingPageData {
   final String title;
@@ -49,6 +50,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       imageUrl: 'assets/images/onboarding/third.png',
     ),
   ];
+  @override
+void initState() {
+  super.initState();
+  AppAudioService.instance.playHomeMusic();
+}
 
   @override
   void dispose() {

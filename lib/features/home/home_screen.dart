@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/router/app_router.dart';
+import '../../core/services/audio_service.dart';
 
 class _HomeActionData {
   const _HomeActionData({
@@ -51,7 +52,7 @@ class _QuestData {
   final int stars;
 }
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   static const List<_HomeActionData> _featuredActions = [
@@ -167,6 +168,21 @@ class HomeScreen extends StatelessWidget {
   ];
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  void _navigateWithoutHomeMusic(String route, {bool replace = false}) {
+    AppAudioService.instance.stopHomeMusic();
+
+    if (replace) {
+      context.go(route);
+    } else {
+      context.push(route);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -259,8 +275,10 @@ class HomeScreen extends StatelessWidget {
 
                         // Big Play button
                         _PrimaryPlayButton(
-                          onPressed: () =>
-                              context.go(AppRoutes.numberRecognition),
+                          onPressed: () => _navigateWithoutHomeMusic(
+                            AppRoutes.numberRecognition,
+                            replace: true,
+                          ),
                         ),
                         const SizedBox(height: 20),
 
@@ -268,7 +286,7 @@ class HomeScreen extends StatelessWidget {
                         GridView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _featuredActions.length,
+                          itemCount: HomeScreen._featuredActions.length,
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
@@ -276,8 +294,13 @@ class HomeScreen extends StatelessWidget {
                             crossAxisSpacing: 14,
                             childAspectRatio: 1.14,
                           ),
-                          itemBuilder: (context, index) =>
-                              _FeatureCard(action: _featuredActions[index]),
+                          itemBuilder: (context, index) => _FeatureCard(
+                            action: HomeScreen._featuredActions[index],
+                            onTap: () => _navigateWithoutHomeMusic(
+                              HomeScreen._featuredActions[index].route,
+                              replace: true,
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 26),
 
@@ -312,7 +335,7 @@ class HomeScreen extends StatelessWidget {
                         GridView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _quests.length,
+                          itemCount: HomeScreen._quests.length,
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
@@ -321,7 +344,7 @@ class HomeScreen extends StatelessWidget {
                             childAspectRatio: 0.96,
                           ),
                           itemBuilder: (context, index) =>
-                              _QuestCard(quest: _quests[index]),
+                              _QuestCard(quest: HomeScreen._quests[index]),
                         ),
                         const SizedBox(height: 24),
 
@@ -514,13 +537,14 @@ class _PrimaryPlayButton extends StatelessWidget {
 // ─── Feature Card ─────────────────────────────────────────────────────────────
 
 class _FeatureCard extends StatelessWidget {
-  const _FeatureCard({required this.action});
+  const _FeatureCard({required this.action, required this.onTap});
   final _HomeActionData action;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push(action.route),
+      onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,

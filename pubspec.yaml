@@ -88,6 +88,7 @@ flutter:
   assets:
     - assets/animations/
     - assets/audio/
+    - assets/audio/bg/home_music.mp3
     - assets/images/
     - assets/images/onboarding/
     - assets/images/bear/
