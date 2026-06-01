@@ -18,6 +18,7 @@ class AudioService {
 
   Future<void> init() async {
     // Configure TTS
+    await TtsVoiceHelper.configureSharedAudio(_tts);
     await TtsVoiceHelper.applyPreferredVoice(
       _tts,
       locale: 'en-IN',

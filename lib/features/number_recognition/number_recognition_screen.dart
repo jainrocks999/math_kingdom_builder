@@ -5,7 +5,9 @@ import 'package:flutter_tts/flutter_tts.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/services/audio_service.dart';
 import '../../core/utils/tts_voice_helper.dart';
+import '../../shared/widgets/celebration_bear.dart';
 
 class StateLearningScreen extends StatefulWidget {
   const StateLearningScreen({super.key});
@@ -126,6 +128,7 @@ class _StateLearningScreenState extends State<StateLearningScreen>
   }
 
   Future<void> _initTts() async {
+    await TtsVoiceHelper.configureSharedAudio(_flutterTts);
     await _flutterTts.setVolume(1.0);
     await _flutterTts.setSpeechRate(0.42);
     await _flutterTts.setPitch(1.05);
@@ -208,6 +211,13 @@ class _StateLearningScreenState extends State<StateLearningScreen>
       HapticFeedback.mediumImpact();
       _cardBounceController.forward(from: 0);
       _speakCurrentPrompt();
+      if (_currentNumberIndex == _currentSystem.numbers.length - 1) {
+        Future<void>.delayed(const Duration(milliseconds: 900), () {
+          if (!mounted || _showCelebration) return;
+          if (!_hasAnsweredCorrectly) return;
+          _showCompletionCelebration();
+        });
+      }
     } else {
       HapticFeedback.heavyImpact();
     }
@@ -239,18 +249,16 @@ class _StateLearningScreenState extends State<StateLearningScreen>
   }
 
   void _showCompletionCelebration() {
+    if (_showCelebration) return;
+    _flutterTts.stop();
     setState(() => _showCelebration = true);
     _celebrationController.forward(from: 0);
-    TtsVoiceHelper.applyPreferredVoice(
-      _flutterTts,
-      locale: 'en-IN',
-      fallbackLocales: const ['en-US', 'hi-IN'],
-    ).then((_) {
-      _flutterTts.speak('Amazing! You finished all the numbers.');
-    });
+    AppAudioService.instance.playCelebrationMusic();
   }
 
   void _resetCurrentSystem() {
+    AppAudioService.instance.stopCelebrationMusic();
+    _flutterTts.stop();
     setState(() {
       _currentNumberIndex = 0;
       _correctAnswersCount = 0;
@@ -259,9 +267,16 @@ class _StateLearningScreenState extends State<StateLearningScreen>
     _prepareQuestion(autoSpeak: true);
   }
 
+  void _goBackToLearningMenu() {
+    AppAudioService.instance.stopCelebrationMusic();
+    _flutterTts.stop();
+    Navigator.of(context).pop();
+  }
+
   void _selectSystem(int index) {
     if (_selectedSystemIndex == index) return;
 
+    AppAudioService.instance.stopCelebrationMusic();
     setState(() {
       _selectedSystemIndex = index;
       _currentNumberIndex = 0;
@@ -274,6 +289,7 @@ class _StateLearningScreenState extends State<StateLearningScreen>
 
   @override
   void dispose() {
+    AppAudioService.instance.stopCelebrationMusic();
     _flutterTts.stop();
     _speakerPulseController.dispose();
     _cardBounceController.dispose();
@@ -857,12 +873,23 @@ class _StateLearningScreenState extends State<StateLearningScreen>
     return AnimatedBuilder(
       animation: _celebrationController,
       builder: (context, child) {
-        final scale = 0.88 + (_celebrationController.value * 0.12);
+        final overlayCurve = CurvedAnimation(
+          parent: _celebrationController,
+          curve: Curves.easeOutCubic,
+        );
+        final bearCurve = CurvedAnimation(
+          parent: _celebrationController,
+          curve: const Interval(0.10, 0.90, curve: Curves.elasticOut),
+        );
+        final sparkleCurve = CurvedAnimation(
+          parent: _celebrationController,
+          curve: const Interval(0.0, 0.65, curve: Curves.easeOutBack),
+        );
         return Container(
           color: Colors.black.withValues(alpha: 0.28),
           child: Center(
             child: Transform.scale(
-              scale: scale,
+              scale: 0.88 + (overlayCurve.value * 0.12),
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 28),
                 padding: const EdgeInsets.all(24),
@@ -880,7 +907,63 @@ class _StateLearningScreenState extends State<StateLearningScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('🎉', style: TextStyle(fontSize: 56)),
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Transform.scale(
+                          scale: 0.7 + (sparkleCurve.value * 0.3),
+                          child: Opacity(
+                            opacity: sparkleCurve.value,
+                            child: Container(
+                              width: 142,
+                              height: 142,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: _currentSystem.softColor
+                                    .withValues(alpha: 0.85),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: _currentSystem.color
+                                        .withValues(alpha: 0.18),
+                                    blurRadius: 28,
+                                    spreadRadius: 4,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 6,
+                          left: 16,
+                          child: Opacity(
+                            opacity: sparkleCurve.value,
+                            child: const Text(
+                              '✨',
+                              style: TextStyle(fontSize: 24),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          right: 16,
+                          bottom: 16,
+                          child: Opacity(
+                            opacity: sparkleCurve.value,
+                            child: const Text(
+                              '🎉',
+                              style: TextStyle(fontSize: 22),
+                            ),
+                          ),
+                        ),
+                        Transform.translate(
+                          offset: Offset(0, (1 - bearCurve.value) * 24),
+                          child: Transform.scale(
+                            scale: 0.82 + (bearCurve.value * 0.18),
+                            child: const CelebrationBear(size: 120),
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 10),
                     Text(
                       'Amazing!',
@@ -894,20 +977,45 @@ class _StateLearningScreenState extends State<StateLearningScreen>
                       'You finished all ${_currentSystem.name} numbers.',
                       style: AppTypography.body.copyWith(
                         color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Bear is clapping for your smart work!',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w700,
                       ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 18),
-                    SizedBox(
-                      width: double.infinity,
-                      child: _ActionButton(
-                        label: 'Play Again',
-                        icon: Icons.replay_rounded,
-                        onTap: _resetCurrentSystem,
-                        backgroundColor: _currentSystem.color,
-                        foregroundColor: AppColors.surface,
-                        borderColor: _currentSystem.shadowColor,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _ActionButton(
+                            label: 'Go Back',
+                            icon: Icons.arrow_back_rounded,
+                            onTap: _goBackToLearningMenu,
+                            backgroundColor:
+                                AppColors.surface.withValues(alpha: 0.96),
+                            foregroundColor: AppColors.textSecondary,
+                            borderColor: AppColors.outlineStrong,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _ActionButton(
+                            label: 'Re-learn',
+                            icon: Icons.replay_rounded,
+                            onTap: _resetCurrentSystem,
+                            backgroundColor: _currentSystem.color,
+                            foregroundColor: AppColors.surface,
+                            borderColor: _currentSystem.shadowColor,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

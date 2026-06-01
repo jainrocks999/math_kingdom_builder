@@ -8,7 +8,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/services/audio_service.dart';
 import '../../core/utils/tts_voice_helper.dart';
+import '../../shared/widgets/celebration_bear.dart';
 
 // ─── Enums & data ─────────────────────────────────────────────────────────────
 
@@ -140,6 +142,8 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   int _cardTransitionDirection = 1;
   bool _isCardTransitionExiting = false;
   int _cardTransitionToken = 0;
+  bool _showCompletionCelebration = false;
+  int _completionCelebrationToken = 0;
 
   // ── Controllers ───────────────────────────────────────────────────────────
   late final FlutterTts _tts;
@@ -244,6 +248,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   }
 
   Future<void> _configureTts() async {
+    await TtsVoiceHelper.configureSharedAudio(_tts);
     await _applyIndianEnglishVoice();
     await _tts.setPitch(1.04);
     await _tts.setSpeechRate(0.34);
@@ -257,7 +262,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     await TtsVoiceHelper.applyPreferredVoice(
       _tts,
       locale: 'en-IN',
-      fallbackLocales: const ['en-US', 'hi-IN'],
+      fallbackLocales: const ['en-US', 'en-GB'],
     );
   }
 
@@ -301,6 +306,16 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
       return;
     }
 
+    _completionCelebrationToken++;
+    if (_showCompletionCelebration) {
+      AppAudioService.instance.stopCelebrationMusic();
+      if (mounted) {
+        setState(() {
+          _showCompletionCelebration = false;
+        });
+      }
+    }
+
     HapticFeedback.selectionClick();
     final previousIndex = _currentIndex;
     final transitionToken = ++_cardTransitionToken;
@@ -334,6 +349,42 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     _cardTransitionController.forward(from: 0);
 
     if (speak) await _speakCurrentNumber();
+    if (!mounted || transitionToken != _cardTransitionToken) return;
+    if (index == _numberWords.length - 1) {
+      final completionToken = ++_completionCelebrationToken;
+      Future<void>.delayed(const Duration(milliseconds: 900), () {
+        if (!mounted || completionToken != _completionCelebrationToken) return;
+        if (_currentIndex != _numberWords.length - 1) return;
+        _showLearnNumbersCompletion();
+      });
+    }
+  }
+
+  void _showLearnNumbersCompletion() {
+    if (_showCompletionCelebration) return;
+    _tts.stop();
+    setState(() {
+      _showCompletionCelebration = true;
+      _setBearMood(_BearMood.clapping);
+    });
+    AppAudioService.instance.playCelebrationMusic();
+  }
+
+  Future<void> _restartLearningJourney() async {
+    AppAudioService.instance.stopCelebrationMusic();
+    _completionCelebrationToken++;
+    _tts.stop();
+    setState(() {
+      _showCompletionCelebration = false;
+    });
+    await _selectNumber(0);
+  }
+
+  void _goBackFromCompletion() {
+    AppAudioService.instance.stopCelebrationMusic();
+    _completionCelebrationToken++;
+    _tts.stop();
+    context.pop();
   }
 
   Future<void> _handleObjectTap(int index) async {
@@ -373,6 +424,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
 
   @override
   void dispose() {
+    AppAudioService.instance.stopCelebrationMusic();
     _selectorController.dispose();
     _numberPopController.dispose();
     _objectsRevealController.dispose();
@@ -461,7 +513,90 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
               },
             ),
           ),
+          if (_showCompletionCelebration) _buildCompletionOverlay(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCompletionOverlay() {
+    return Positioned.fill(
+      child: Container(
+        color: Colors.black.withValues(alpha: 0.30),
+        child: Center(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: _theme.color.withValues(alpha: 0.18),
+                  blurRadius: 28,
+                  spreadRadius: 6,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CelebrationBear(size: 118),
+                const SizedBox(height: 10),
+                Text(
+                  'Counting Complete!',
+                  style: AppTypography.h2.copyWith(
+                    color: const Color(0xFF1A1060),
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'You reached 30 and Bear is celebrating with you!',
+                  textAlign: TextAlign.center,
+                  style: AppTypography.body.copyWith(
+                    color: const Color(0xFF556172),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _NavButton(
+                        label: 'Go Back',
+                        icon: Icons.arrow_back_rounded,
+                        color: Colors.white,
+                        textColor: const Color(0xFF4E5868),
+                        borderColor: _theme.color.withValues(alpha: 0.18),
+                        shadowColor: Colors.transparent,
+                        enabled: true,
+                        isCompact: false,
+                        iconLeading: true,
+                        onTap: _goBackFromCompletion,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _NavButton(
+                        label: 'Re-learn',
+                        icon: Icons.replay_rounded,
+                        color: _theme.color,
+                        textColor: Colors.white,
+                        borderColor: _theme.shadowColor.withValues(alpha: 0.60),
+                        shadowColor: _theme.shadowColor.withValues(alpha: 0.55),
+                        enabled: true,
+                        isCompact: false,
+                        iconLeading: false,
+                        onTap: _restartLearningJourney,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

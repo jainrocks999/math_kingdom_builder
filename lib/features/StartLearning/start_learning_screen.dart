@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/services/audio_service.dart';
 import '../../core/router/app_router.dart';
 
 class _LearningModule {
@@ -25,7 +26,7 @@ class _LearningModule {
   final String route;
 }
 
-class StartLearningScreen extends StatelessWidget {
+class StartLearningScreen extends StatefulWidget {
   const StartLearningScreen({super.key});
 
   static const List<_LearningModule> _modules = [
@@ -95,6 +96,77 @@ class StartLearningScreen extends StatelessWidget {
   ];
 
   @override
+  State<StartLearningScreen> createState() => _StartLearningScreenState();
+}
+
+class _StartLearningScreenState extends State<StartLearningScreen>
+    with RouteAware {
+  int _musicRequestToken = 0;
+
+  void _playScreenMusic({bool delayed = false}) {
+    final requestToken = ++_musicRequestToken;
+    Future<void>.delayed(
+      delayed ? const Duration(milliseconds: 180) : Duration.zero,
+      () {
+        if (!mounted || requestToken != _musicRequestToken) return;
+        AppAudioService.instance.playStartCountingMusic();
+      },
+    );
+  }
+
+  void _stopScreenMusic() {
+    _musicRequestToken++;
+    AppAudioService.instance.stopBackgroundMusic();
+  }
+
+  void _openModule(String route) {
+    _stopScreenMusic();
+    context.push(route);
+  }
+
+  void _goBack() {
+    _stopScreenMusic();
+    context.pop();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _playScreenMusic(delayed: true);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute<dynamic>) {
+      appRouteObserver.unsubscribe(this);
+      appRouteObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void didPopNext() {
+    _playScreenMusic(delayed: true);
+  }
+
+  @override
+  void didPush() {
+    _playScreenMusic(delayed: true);
+  }
+
+  @override
+  void didPushNext() {
+    _stopScreenMusic();
+  }
+
+  @override
+  void dispose() {
+    appRouteObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -131,7 +203,7 @@ class StartLearningScreen extends StatelessWidget {
                   Row(
                     children: [
                       _BackButton(
-                        onTap: () => context.pop(),
+                        onTap: _goBack,
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -302,10 +374,13 @@ class StartLearningScreen extends StatelessWidget {
                   const SizedBox(height: 18),
 
                   // Learning Cards
-                  ..._modules.map(
+                  ...StartLearningScreen._modules.map(
                     (module) => Padding(
                       padding: const EdgeInsets.only(bottom: 18),
-                      child: _LearningCard(module: module),
+                      child: _LearningCard(
+                        module: module,
+                        onTap: () => _openModule(module.route),
+                      ),
                     ),
                   ),
 
@@ -440,14 +515,18 @@ class _BackButton extends StatelessWidget {
 }
 
 class _LearningCard extends StatelessWidget {
-  const _LearningCard({required this.module});
+  const _LearningCard({
+    required this.module,
+    required this.onTap,
+  });
 
   final _LearningModule module;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push(module.route),
+      onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,

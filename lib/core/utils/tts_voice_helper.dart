@@ -1,7 +1,22 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
 class TtsVoiceHelper {
   static final Map<String, Map<String, String>?> _voiceCache = {};
+
+  static Future<void> configureSharedAudio(FlutterTts tts) async {
+    if (kIsWeb || !Platform.isIOS) return;
+
+    await tts.setSharedInstance(true);
+    await tts.autoStopSharedSession(true);
+    await tts.setIosAudioCategory(
+      IosTextToSpeechAudioCategory.playback,
+      const [IosTextToSpeechAudioCategoryOptions.mixWithOthers],
+      IosTextToSpeechAudioMode.voicePrompt,
+    );
+  }
 
   static Future<void> applyPreferredVoice(
     FlutterTts tts, {
@@ -9,14 +24,13 @@ class TtsVoiceHelper {
     List<String> fallbackLocales = const [],
   }) async {
     final cacheKey = _cacheKey(locale, fallbackLocales);
-    final voice =
-        _voiceCache.containsKey(cacheKey)
-            ? _voiceCache[cacheKey]
-            : await _findBestVoice(
-              tts,
-              locale: locale,
-              fallbackLocales: fallbackLocales,
-            );
+    final voice = _voiceCache.containsKey(cacheKey)
+        ? _voiceCache[cacheKey]
+        : await _findBestVoice(
+            tts,
+            locale: locale,
+            fallbackLocales: fallbackLocales,
+          );
 
     _voiceCache[cacheKey] = voice;
 
@@ -64,8 +78,7 @@ class TtsVoiceHelper {
       return null;
     }
 
-    final ranked = [...voices]
-      ..sort(
+    final ranked = [...voices]..sort(
         (left, right) => _scoreVoice(
           right,
           locale: locale,

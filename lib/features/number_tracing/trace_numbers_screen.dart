@@ -7,7 +7,9 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/services/audio_service.dart';
 import '../../core/utils/tts_voice_helper.dart';
+import '../../shared/widgets/celebration_bear.dart';
 
 class _TraceStrokeTemplate {
   const _TraceStrokeTemplate({
@@ -342,10 +344,12 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
   int _currentProgressIndex = 0;
   bool _isTracing = false;
   bool _lessonComplete = false;
+  bool _showFinalCelebration = false;
   List<List<Offset>> _completedStrokePaths = <List<Offset>>[];
   List<Offset> _activeStrokePath = <Offset>[];
   String _statusText = 'Start at the green dot.';
   int _celebrationToken = 0;
+  int _finalCelebrationToken = 0;
 
   _TraceLesson get _lesson => _lessons[_currentLessonIndex];
 
@@ -365,6 +369,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
   }
 
   Future<void> _configureTts() async {
+    await TtsVoiceHelper.configureSharedAudio(_tts);
     await TtsVoiceHelper.applyPreferredVoice(
       _tts,
       locale: 'en-IN',
@@ -410,8 +415,10 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
 
   void _goToLesson(int index) {
     if (index < 0 || index >= _lessons.length) return;
+    _finalCelebrationToken++;
     setState(() {
       _currentLessonIndex = index;
+      _showFinalCelebration = false;
       _resetLessonState(speakPrompt: false);
     });
     HapticFeedback.selectionClick();
@@ -424,6 +431,33 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       return;
     }
     _goToLesson(_currentLessonIndex + 1);
+  }
+
+  void _showTracingCourseCelebration() {
+    if (_showFinalCelebration) return;
+    _tts.stop();
+    AppAudioService.instance.playCelebrationMusic();
+    setState(() => _showFinalCelebration = true);
+  }
+
+  void _restartTracingJourney() {
+    AppAudioService.instance.stopCelebrationMusic();
+    _tts.stop();
+    _finalCelebrationToken++;
+    setState(() {
+      _completedLessons.clear();
+      _currentLessonIndex = 0;
+      _showFinalCelebration = false;
+      _resetLessonState(speakPrompt: false);
+    });
+    _speakLessonPrompt(includeStrokeHint: true);
+  }
+
+  void _goBackFromTracingCelebration() {
+    AppAudioService.instance.stopCelebrationMusic();
+    _tts.stop();
+    _finalCelebrationToken++;
+    context.pop();
   }
 
   void _handlePanStart(Offset position, Size size) {
@@ -528,7 +562,20 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
     if (isLastStroke) {
       _celebrationController.forward(from: 0);
       HapticFeedback.heavyImpact();
-      _speakSuccess();
+      if (_currentLessonIndex != _lessons.length - 1) {
+        AppAudioService.instance.playCelebrationMusic();
+        _speakSuccess();
+      }
+      if (_currentLessonIndex == _lessons.length - 1) {
+        final celebrationToken = ++_finalCelebrationToken;
+        Future<void>.delayed(const Duration(milliseconds: 900), () {
+          if (!mounted || celebrationToken != _finalCelebrationToken) return;
+          if (!_lessonComplete || _currentLessonIndex != _lessons.length - 1) {
+            return;
+          }
+          _showTracingCourseCelebration();
+        });
+      }
       final token = _celebrationToken;
       Future<void>.delayed(_autoAdvanceDelay, () {
         if (!mounted) return;
@@ -613,6 +660,8 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
 
   @override
   void dispose() {
+    _finalCelebrationToken++;
+    AppAudioService.instance.stopCelebrationMusic();
     _celebrationController.dispose();
     _tts.stop();
     super.dispose();
@@ -1085,14 +1134,89 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
                 child: _lessonComplete
                     ? _BoardCelebration(
                         key: ValueKey('trace-success-$_celebrationToken'),
+                        animation: _celebrationController,
                         display: _lesson.display,
                         color: _lesson.color,
+                        softColor: _lesson.softColor,
                       )
                     : const SizedBox.shrink(),
               ),
             ),
           ),
+          if (_showFinalCelebration) _buildFinalCelebrationOverlay(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFinalCelebrationOverlay() {
+    return Positioned.fill(
+      child: Container(
+        color: Colors.black.withValues(alpha: 0.30),
+        child: Center(
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: _lesson.color.withValues(alpha: 0.18),
+                  blurRadius: 28,
+                  spreadRadius: 6,
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CelebrationBear(size: 118),
+                const SizedBox(height: 10),
+                Text(
+                  'Tracing Complete!',
+                  style: AppTypography.h2.copyWith(
+                    color: const Color(0xFF1A1060),
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'You finished all trace numbers and Bear is celebrating with you!',
+                  textAlign: TextAlign.center,
+                  style: AppTypography.body.copyWith(
+                    color: const Color(0xFF556172),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _HeaderActionChip(
+                        icon: Icons.arrow_back_rounded,
+                        label: 'Go Back',
+                        foreground: const Color(0xFF4E5868),
+                        background: Colors.white,
+                        onTap: _goBackFromTracingCelebration,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _HeaderActionChip(
+                        icon: Icons.replay_rounded,
+                        label: 'Re-learn',
+                        foreground: Colors.white,
+                        background: _lesson.color,
+                        onTap: _restartTracingJourney,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -1398,64 +1522,133 @@ class _TracingBoardPainter extends CustomPainter {
 class _BoardCelebration extends StatelessWidget {
   const _BoardCelebration({
     super.key,
+    required this.animation,
     required this.display,
     required this.color,
+    required this.softColor,
   });
 
+  final Animation<double> animation;
   final String display;
   final Color color;
+  final Color softColor;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.68),
-      ),
-      child: Center(
-        child: Container(
-          width: 220,
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        final bearRise = CurvedAnimation(
+          parent: animation,
+          curve: const Interval(0.12, 0.92, curve: Curves.easeOutBack),
+        ).value;
+        final glow = CurvedAnimation(
+          parent: animation,
+          curve: const Interval(0.0, 0.60, curve: Curves.easeOutCubic),
+        ).value;
+
+        return DecoratedBox(
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              BoxShadow(
-                color: color.withValues(alpha: 0.22),
-                blurRadius: 28,
-                offset: const Offset(0, 14),
-              ),
-            ],
+            color: Colors.white.withValues(alpha: 0.68),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '⭐ ✨ ⭐',
-                style: TextStyle(
-                  color: color,
-                  fontSize: 24,
-                ),
+          child: Center(
+            child: Container(
+              width: 240,
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.22 + (glow * 0.10)),
+                    blurRadius: 28 + (glow * 12),
+                    offset: const Offset(0, 14),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                display,
-                style: GoogleFonts.lilitaOne(
-                  color: color,
-                  fontSize: 46,
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Container(
+                        width: 132,
+                        height: 132,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: softColor.withValues(alpha: 0.82),
+                        ),
+                      ),
+                      Positioned(
+                        top: 4,
+                        left: 8,
+                        child: Opacity(
+                          opacity: glow,
+                          child: Text(
+                            '✨',
+                            style: TextStyle(
+                              color: color,
+                              fontSize: 22,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        right: 10,
+                        bottom: 10,
+                        child: Opacity(
+                          opacity: glow,
+                          child: const Text(
+                            '🎉',
+                            style: TextStyle(fontSize: 20),
+                          ),
+                        ),
+                      ),
+                      Transform.translate(
+                        offset: Offset(0, (1 - bearRise) * 18),
+                        child: Transform.scale(
+                          scale: 0.84 + (bearRise * 0.16),
+                          child: Image.asset(
+                            'assets/images/bear/clapping.png',
+                            height: 110,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    display,
+                    style: GoogleFonts.lilitaOne(
+                      color: color,
+                      fontSize: 46,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Brilliant tracing!',
+                    style: AppTypography.h3.copyWith(
+                      color: const Color(0xFF1A1060),
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Bear is cheering with you!',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: const Color(0xFF5E6878),
+                      fontWeight: FontWeight.w700,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Brilliant tracing!',
-                style: AppTypography.h3.copyWith(
-                  color: const Color(0xFF1A1060),
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
