@@ -171,7 +171,39 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with RouteAware {
+  @override
+  void initState() {
+    super.initState();
+    AppAudioService.instance.playHomeMusic();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute<dynamic>) {
+      appRouteObserver.unsubscribe(this);
+      appRouteObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void dispose() {
+    appRouteObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    AppAudioService.instance.playHomeMusic();
+  }
+
+  @override
+  void didPushNext() {
+    AppAudioService.instance.stopHomeMusic();
+  }
+
   void _navigateWithoutHomeMusic(String route, {bool replace = false}) {
     AppAudioService.instance.stopHomeMusic();
 
@@ -343,14 +375,22 @@ class _HomeScreenState extends State<HomeScreen> {
                             crossAxisSpacing: 14,
                             childAspectRatio: 0.96,
                           ),
-                          itemBuilder: (context, index) =>
-                              _QuestCard(quest: HomeScreen._quests[index]),
+                          itemBuilder: (context, index) => _QuestCard(
+                            quest: HomeScreen._quests[index],
+                            onTap: () => _navigateWithoutHomeMusic(
+                              HomeScreen._quests[index].route,
+                              replace: true,
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 24),
 
                         // Daily challenge banner
                         _DailyChallengeBanner(
-                          onTap: () => context.go(AppRoutes.numberRecognition),
+                          onTap: () => _navigateWithoutHomeMusic(
+                            AppRoutes.numberRecognition,
+                            replace: true,
+                          ),
                         ),
                       ],
                     ),
@@ -645,13 +685,18 @@ class _FeatureCard extends StatelessWidget {
 // ─── Quest Card ───────────────────────────────────────────────────────────────
 
 class _QuestCard extends StatelessWidget {
-  const _QuestCard({required this.quest});
+  const _QuestCard({
+    required this.quest,
+    required this.onTap,
+  });
+
   final _QuestData quest;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.go(quest.route),
+      onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,

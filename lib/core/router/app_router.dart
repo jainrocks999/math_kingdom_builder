@@ -10,6 +10,9 @@ import '../../features/number_recognition/number_recognition_screen.dart';
 import '../../shared/widgets/placeholder_screen.dart';
 import '../../splash_screen.dart';
 
+final RouteObserver<ModalRoute<dynamic>> appRouteObserver =
+    RouteObserver<ModalRoute<dynamic>>();
+
 class AppRoutes {
   static const splash = '/';
   static const home = '/home';
@@ -105,6 +108,7 @@ GoRouter get appRouter => _appRouter;
 
 final GoRouter _appRouter = GoRouter(
   initialLocation: AppRoutes.splash,
+  observers: [appRouteObserver],
   routes: [
     GoRoute(
       path: AppRoutes.splash,

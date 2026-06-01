@@ -78,6 +78,11 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+dependency_overrides:
+  # Local fork adds iOS Swift Package Manager support until upstream adopts it.
+  flutter_tts:
+    path: third_party/flutter_tts
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
