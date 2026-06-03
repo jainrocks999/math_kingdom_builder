@@ -7,7 +7,9 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
+import '../StartLearning/start_learning_next_action_button.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/audio_service.dart';
 import '../../core/utils/tts_voice_helper.dart';
@@ -460,11 +462,13 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
     _speakLessonPrompt(includeStrokeHint: true);
   }
 
-  void _goBackFromTracingCelebration() {
+  void _prepareNextLearningNavigation() {
     AppAudioService.instance.stopCelebrationMusic();
     _tts.stop();
     _finalCelebrationToken++;
-    context.pop();
+    setState(() {
+      _showFinalCelebration = false;
+    });
   }
 
   void _handlePanStart(Offset position, Size size) {
@@ -1199,28 +1203,18 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
                   ),
                 ),
                 const SizedBox(height: 18),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _HeaderActionChip(
-                        icon: Icons.arrow_back_rounded,
-                        label: 'Go Back',
-                        foreground: const Color(0xFF4E5868),
-                        background: Colors.white,
-                        onTap: _goBackFromTracingCelebration,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _HeaderActionChip(
-                        icon: Icons.replay_rounded,
-                        label: 'Re-learn',
-                        foreground: Colors.white,
-                        background: _lesson.color,
-                        onTap: _restartTracingJourney,
-                      ),
-                    ),
-                  ],
+                StartLearningNextActionButton(
+                  currentRoute: AppRoutes.tracing,
+                  onPrepareNavigation: _prepareNextLearningNavigation,
+                  builder: (context, label, onTap) {
+                    return _HeaderActionChip(
+                      icon: Icons.arrow_forward_rounded,
+                      label: label,
+                      foreground: Colors.white,
+                      background: _lesson.color,
+                      onTap: onTap,
+                    );
+                  },
                 ),
               ],
             ),

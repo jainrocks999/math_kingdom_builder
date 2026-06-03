@@ -12,6 +12,7 @@ import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/audio_service.dart';
 import '../../core/utils/tts_voice_helper.dart';
+import '../StartLearning/start_learning_next_action_button.dart';
 import '../../shared/widgets/celebration_bear.dart';
 
 enum _QuizMode { tapNumber, dragMatch, writeNumber }
@@ -451,6 +452,15 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
     AppAudioService.instance.stopCelebrationMusic();
     _stopScreenMusic();
     context.pop();
+  }
+
+  void _prepareNextLearningNavigation() {
+    _autoAdvanceToken++;
+    AppAudioService.instance.stopCelebrationMusic();
+    _stopScreenMusic();
+    setState(() {
+      _showCelebration = false;
+    });
   }
 
   @override
@@ -1190,30 +1200,19 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
                         ),
                       ),
                       const SizedBox(height: 22),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _ActionButton(
-                              label: 'Go Back',
-                              icon: Icons.arrow_back_rounded,
-                              backgroundColor: Colors.white,
-                              foregroundColor: AppColors.textSecondary,
-                              borderColor: _theme.color.withValues(alpha: 0.22),
-                              onTap: _goBack,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _ActionButton(
-                              label: 'Re-learn',
-                              icon: Icons.replay_rounded,
-                              backgroundColor: _theme.color,
-                              foregroundColor: Colors.white,
-                              borderColor: _theme.shadowColor,
-                              onTap: _restartQuiz,
-                            ),
-                          ),
-                        ],
+                      StartLearningNextActionButton(
+                        currentRoute: AppRoutes.miniQuiz,
+                        onPrepareNavigation: _prepareNextLearningNavigation,
+                        builder: (context, label, onTap) {
+                          return _ActionButton(
+                            label: label,
+                            icon: Icons.arrow_forward_rounded,
+                            backgroundColor: _theme.color,
+                            foregroundColor: Colors.white,
+                            borderColor: _theme.shadowColor,
+                            onTap: onTap,
+                          );
+                        },
                       ),
                     ],
                   ),

@@ -8,7 +8,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
+import '../StartLearning/start_learning_next_action_button.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/tts_voice_helper.dart';
 import '../../shared/widgets/celebration_bear.dart';
@@ -384,11 +386,13 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     await _selectNumber(0);
   }
 
-  void _goBackFromCompletion() {
+  void _prepareNextLearningNavigation() {
     AppAudioService.instance.stopCelebrationMusic();
     _completionCelebrationToken++;
     _tts.stop();
-    context.pop();
+    setState(() {
+      _showCompletionCelebration = false;
+    });
   }
 
   Future<void> _handleObjectTap(int index) async {
@@ -564,38 +568,23 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
                   ),
                 ),
                 const SizedBox(height: 18),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _NavButton(
-                        label: 'Go Back',
-                        icon: Icons.arrow_back_rounded,
-                        color: Colors.white,
-                        textColor: const Color(0xFF4E5868),
-                        borderColor: _theme.color.withValues(alpha: 0.18),
-                        shadowColor: Colors.transparent,
-                        enabled: true,
-                        isCompact: false,
-                        iconLeading: true,
-                        onTap: _goBackFromCompletion,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _NavButton(
-                        label: 'Re-learn',
-                        icon: Icons.replay_rounded,
-                        color: _theme.color,
-                        textColor: Colors.white,
-                        borderColor: _theme.shadowColor.withValues(alpha: 0.60),
-                        shadowColor: _theme.shadowColor.withValues(alpha: 0.55),
-                        enabled: true,
-                        isCompact: false,
-                        iconLeading: false,
-                        onTap: _restartLearningJourney,
-                      ),
-                    ),
-                  ],
+                StartLearningNextActionButton(
+                  currentRoute: AppRoutes.learnNumbers,
+                  onPrepareNavigation: _prepareNextLearningNavigation,
+                  builder: (context, label, onTap) {
+                    return _NavButton(
+                      label: label,
+                      icon: Icons.arrow_forward_rounded,
+                      color: _theme.color,
+                      textColor: Colors.white,
+                      borderColor: _theme.shadowColor.withValues(alpha: 0.60),
+                      shadowColor: _theme.shadowColor.withValues(alpha: 0.55),
+                      enabled: true,
+                      isCompact: false,
+                      iconLeading: false,
+                      onTap: onTap,
+                    );
+                  },
                 ),
               ],
             ),

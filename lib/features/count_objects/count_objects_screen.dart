@@ -9,6 +9,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
+import '../StartLearning/start_learning_next_action_button.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/tts_voice_helper.dart';
 import '../../shared/widgets/celebration_bear.dart';
@@ -327,6 +328,14 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
     AppAudioService.instance.stopCelebrationMusic();
     _stopScreenMusic();
     context.pop();
+  }
+
+  void _prepareNextLearningNavigation() {
+    AppAudioService.instance.stopCelebrationMusic();
+    _stopScreenMusic();
+    setState(() {
+      _showCelebration = false;
+    });
   }
 
   @override
@@ -757,7 +766,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        'You finished every counting challenge from 1 to 10. Tap below to play again or go back.',
+                        'You finished every counting challenge from 1 to 10. Keep going with the next adventure!',
                         textAlign: TextAlign.center,
                         style: AppTypography.body.copyWith(
                           color: const Color(0xFF556172),
@@ -765,30 +774,19 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
                         ),
                       ),
                       const SizedBox(height: 22),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _ActionButton(
-                              label: 'Go Back',
-                              icon: Icons.arrow_back_rounded,
-                              backgroundColor: Colors.white,
-                              foregroundColor: AppColors.textSecondary,
-                              borderColor: _theme.color.withValues(alpha: 0.22),
-                              onTap: _goBack,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _ActionButton(
-                              label: 'Re-learn',
-                              icon: Icons.replay_rounded,
-                              backgroundColor: _theme.color,
-                              foregroundColor: Colors.white,
-                              borderColor: _theme.shadowColor,
-                              onTap: _restartGame,
-                            ),
-                          ),
-                        ],
+                      StartLearningNextActionButton(
+                        currentRoute: AppRoutes.counting,
+                        onPrepareNavigation: _prepareNextLearningNavigation,
+                        builder: (context, label, onTap) {
+                          return _ActionButton(
+                            label: label,
+                            icon: Icons.arrow_forward_rounded,
+                            backgroundColor: _theme.color,
+                            foregroundColor: Colors.white,
+                            borderColor: _theme.shadowColor,
+                            onTap: onTap,
+                          );
+                        },
                       ),
                     ],
                   ),

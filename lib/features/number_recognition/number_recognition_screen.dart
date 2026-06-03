@@ -10,6 +10,7 @@ import '../../core/services/reward_progress_service.dart';
 import '../../core/router/app_router.dart';
 import '../../core/utils/audio_service.dart';
 import '../../core/utils/tts_voice_helper.dart';
+import '../StartLearning/start_learning_next_action_button.dart';
 import '../../shared/widgets/celebration_bear.dart';
 
 class FindCorrectNumberScreen extends StatefulWidget {
@@ -304,6 +305,16 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
       _showCelebration = false;
     });
     _prepareQuestion(autoSpeak: true);
+  }
+
+  void _prepareNextLearningNavigation() {
+    _autoAdvanceToken++;
+    AppAudioService.instance.stopCelebrationMusic();
+    _stopScreenMusic();
+    _flutterTts.stop();
+    setState(() {
+      _showCelebration = false;
+    });
   }
 
   void _goBackToLearningMenu() {
@@ -1057,31 +1068,19 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 18),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _ActionButton(
-                            label: 'Go Back',
-                            icon: Icons.arrow_back_rounded,
-                            onTap: _goBackToLearningMenu,
-                            backgroundColor:
-                                AppColors.surface.withValues(alpha: 0.96),
-                            foregroundColor: AppColors.textSecondary,
-                            borderColor: AppColors.outlineStrong,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _ActionButton(
-                            label: 'Re-learn',
-                            icon: Icons.replay_rounded,
-                            onTap: _resetCurrentSystem,
-                            backgroundColor: _currentSystem.color,
-                            foregroundColor: AppColors.surface,
-                            borderColor: _currentSystem.shadowColor,
-                          ),
-                        ),
-                      ],
+                    StartLearningNextActionButton(
+                      currentRoute: AppRoutes.findNumber,
+                      onPrepareNavigation: _prepareNextLearningNavigation,
+                      builder: (context, label, onTap) {
+                        return _ActionButton(
+                          label: label,
+                          icon: Icons.arrow_forward_rounded,
+                          onTap: onTap,
+                          backgroundColor: _currentSystem.color,
+                          foregroundColor: AppColors.surface,
+                          borderColor: _currentSystem.shadowColor,
+                        );
+                      },
                     ),
                   ],
                 ),
