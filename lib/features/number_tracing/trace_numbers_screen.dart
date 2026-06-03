@@ -8,6 +8,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/services/audio_service.dart';
+import '../../core/services/reward_progress_service.dart';
+import '../../core/utils/audio_service.dart';
 import '../../core/utils/tts_voice_helper.dart';
 import '../../shared/widgets/celebration_bear.dart';
 
@@ -52,6 +54,8 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
     with SingleTickerProviderStateMixin {
   static const int _maxProgressJump = 6;
   static const Duration _autoAdvanceDelay = Duration(milliseconds: 1400);
+
+  final AudioService _audioService = AudioService();
 
   static const List<_TraceLesson> _lessons = [
     _TraceLesson(
@@ -436,6 +440,9 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
   void _showTracingCourseCelebration() {
     if (_showFinalCelebration) return;
     _tts.stop();
+    RewardProgressService.instance.recordModuleCompletion(
+      RewardModuleIds.traceNumbers,
+    );
     AppAudioService.instance.playCelebrationMusic();
     setState(() => _showFinalCelebration = true);
   }
@@ -473,6 +480,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
         _currentProgressIndex = 0;
       });
       HapticFeedback.selectionClick();
+      _audioService.playWrongFeedback();
       return;
     }
 
@@ -534,6 +542,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       _statusText = 'Nice try. Let\'s start that stroke again.';
     });
     HapticFeedback.selectionClick();
+    _audioService.playWrongFeedback();
   }
 
   void _completeCurrentStroke(Size size) {

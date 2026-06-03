@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 
 class AppAudioService {
   AppAudioService._();
@@ -9,6 +13,7 @@ class AppAudioService {
   final AudioPlayer _bgPlayer = AudioPlayer();
   final AudioPlayer _celebrationPlayer = AudioPlayer();
 
+  final Map<String, Source> _sourceCache = {};
   bool _isConfigured = false;
   bool _isBackgroundMusicPlaying = false;
   String? _currentBackgroundTrack;
@@ -31,6 +36,32 @@ class AppAudioService {
     _isConfigured = true;
   }
 
+  Future<Source> _sourceForAsset(String filePath) async {
+    final assetPath = _assetPath(filePath);
+    final cached = _sourceCache[assetPath];
+    if (cached != null) return cached;
+
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      final directory = await getTemporaryDirectory();
+      final fileName = assetPath.replaceAll('/', '_');
+      final localFile = File('${directory.path}/$fileName');
+      if (!await localFile.exists()) {
+        final data = await rootBundle.load('assets/$assetPath');
+        await localFile.writeAsBytes(
+          data.buffer.asUint8List(),
+          flush: true,
+        );
+      }
+      final source = DeviceFileSource(localFile.path);
+      _sourceCache[assetPath] = source;
+      return source;
+    }
+
+    final source = AssetSource(assetPath);
+    _sourceCache[assetPath] = source;
+    return source;
+  }
+
   Future<void> _playLoopingBackgroundMusic(
     String filePath, {
     required double volume,
@@ -45,7 +76,7 @@ class AppAudioService {
       await _bgPlayer.stop();
       await _bgPlayer.setReleaseMode(ReleaseMode.loop);
       await _bgPlayer.setVolume(volume);
-      await _bgPlayer.play(AssetSource(assetPath));
+      await _bgPlayer.play(await _sourceForAsset(filePath));
       _currentBackgroundTrack = assetPath;
       _isBackgroundMusicPlaying = true;
     } catch (error) {
@@ -93,7 +124,7 @@ class AppAudioService {
       await _celebrationPlayer.setReleaseMode(ReleaseMode.release);
       await _celebrationPlayer.setVolume(0.85);
       await _celebrationPlayer.play(
-        AssetSource(_assetPath('assets/audio/bg/celebration.mp3')),
+        await _sourceForAsset('assets/audio/bg/celebration.mp3'),
       );
     } catch (error) {
       debugPrint('Celebration music asset missing: $error');

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:math_kingdom_builder/features/StartLearning/start_learning_screen.dart';
+import 'package:math_kingdom_builder/features/count_objects/count_objects_screen.dart';
 import 'package:math_kingdom_builder/features/learn_numbers/learn_numbers_screen.dart';
+import 'package:math_kingdom_builder/features/matching/match_numbers_screen.dart';
+import 'package:math_kingdom_builder/features/mini_quiz/mini_quiz_screen.dart';
 import 'package:math_kingdom_builder/features/number_tracing/trace_numbers_screen.dart';
+import 'package:math_kingdom_builder/features/rewards/rewards_screen.dart';
 import 'package:math_kingdom_builder/onboarding_screen.dart';
 
 import '../../features/home/home_screen.dart';
@@ -18,10 +22,12 @@ class AppRoutes {
   static const home = '/home';
   static const onbording = '/onbording';
   static const numberRecognition = '/number-recognition';
+  static const findNumber = '/find-number';
   static const learnNumbers = '/learn-numbers';
-  static const counting = '/counting';
+  static const counting = '/count-objects';
   static const tracing = '/tracing';
   static const matching = '/matching';
+  static const miniQuiz = '/mini-quiz';
   static const addition = '/addition';
   static const subtraction = '/subtraction';
   static const sequencing = '/sequencing';
@@ -47,18 +53,6 @@ class PlaceholderRouteSpec {
 }
 
 final List<PlaceholderRouteSpec> appPlaceholderRoutes = [
-  const PlaceholderRouteSpec(
-    path: AppRoutes.counting,
-    title: 'Counting Objects',
-    description: 'Placeholder screen for the counting activity flow.',
-    icon: Icons.looks_two_rounded,
-  ),
-  const PlaceholderRouteSpec(
-    path: AppRoutes.matching,
-    title: 'Matching',
-    description: 'Placeholder screen for quantity-to-numeral matching.',
-    icon: Icons.view_week_rounded,
-  ),
   const PlaceholderRouteSpec(
     path: AppRoutes.addition,
     title: 'Addition',
@@ -90,12 +84,6 @@ final List<PlaceholderRouteSpec> appPlaceholderRoutes = [
     icon: Icons.castle_rounded,
   ),
   const PlaceholderRouteSpec(
-    path: AppRoutes.stickers,
-    title: 'Sticker Album',
-    description: 'Placeholder screen for earned stickers and rewards.',
-    icon: Icons.star_border_rounded,
-  ),
-  const PlaceholderRouteSpec(
     path: AppRoutes.parentDashboard,
     title: 'Parent Dashboard',
     description:
@@ -124,15 +112,35 @@ final GoRouter _appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.numberRecognition,
-      builder: (context, state) => const StateLearningScreen(),
+      builder: (context, state) => const FindCorrectNumberScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.findNumber,
+      builder: (context, state) => const FindCorrectNumberScreen(),
     ),
     GoRoute(
       path: AppRoutes.learnNumbers,
       builder: (context, state) => const LearnNumbersScreen(),
     ),
     GoRoute(
+      path: AppRoutes.counting,
+      builder: (context, state) => const CountObjectsScreen(),
+    ),
+    GoRoute(
       path: AppRoutes.tracing,
       builder: (context, state) => const TraceNumbersScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.matching,
+      builder: (context, state) => const MatchNumbersScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.miniQuiz,
+      builder: (context, state) => const MiniQuizScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.stickers,
+      builder: (context, state) => const RewardsScreen(),
     ),
     GoRoute(
       path: AppRoutes.startlearning,

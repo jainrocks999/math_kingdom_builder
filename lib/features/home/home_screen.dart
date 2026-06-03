@@ -309,7 +309,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                         _PrimaryPlayButton(
                           onPressed: () => _navigateWithoutHomeMusic(
                             AppRoutes.numberRecognition,
-                            replace: true,
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -330,7 +329,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                             action: HomeScreen._featuredActions[index],
                             onTap: () => _navigateWithoutHomeMusic(
                               HomeScreen._featuredActions[index].route,
-                              replace: true,
                             ),
                           ),
                         ),
@@ -379,7 +377,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                             quest: HomeScreen._quests[index],
                             onTap: () => _navigateWithoutHomeMusic(
                               HomeScreen._quests[index].route,
-                              replace: true,
                             ),
                           ),
                         ),
@@ -389,7 +386,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                         _DailyChallengeBanner(
                           onTap: () => _navigateWithoutHomeMusic(
                             AppRoutes.numberRecognition,
-                            replace: true,
                           ),
                         ),
                       ],

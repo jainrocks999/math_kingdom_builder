@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/services/audio_service.dart';
+import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/tts_voice_helper.dart';
 import '../../shared/widgets/celebration_bear.dart';
 
@@ -363,6 +364,9 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   void _showLearnNumbersCompletion() {
     if (_showCompletionCelebration) return;
     _tts.stop();
+    RewardProgressService.instance.recordModuleCompletion(
+      RewardModuleIds.learnNumbers,
+    );
     setState(() {
       _showCompletionCelebration = true;
       _setBearMood(_BearMood.clapping);

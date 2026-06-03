@@ -6,100 +6,71 @@ import 'package:flutter_tts/flutter_tts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/services/audio_service.dart';
+import '../../core/services/reward_progress_service.dart';
+import '../../core/router/app_router.dart';
+import '../../core/utils/audio_service.dart';
 import '../../core/utils/tts_voice_helper.dart';
 import '../../shared/widgets/celebration_bear.dart';
 
-class StateLearningScreen extends StatefulWidget {
-  const StateLearningScreen({super.key});
+class FindCorrectNumberScreen extends StatefulWidget {
+  const FindCorrectNumberScreen({super.key});
 
   @override
-  State<StateLearningScreen> createState() => _StateLearningScreenState();
+  State<FindCorrectNumberScreen> createState() =>
+      _FindCorrectNumberScreenState();
 }
 
-class _StateLearningScreenState extends State<StateLearningScreen>
-    with TickerProviderStateMixin {
+class StateLearningScreen extends FindCorrectNumberScreen {
+  const StateLearningScreen({super.key});
+}
+
+class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
+    with TickerProviderStateMixin, RouteAware {
   late final FlutterTts _flutterTts;
   late final Future<void> _ttsReady;
   late final AnimationController _speakerPulseController;
   late final AnimationController _cardBounceController;
   late final AnimationController _celebrationController;
+  late List<int> _roundOrder;
 
-  final List<NumberSystem> _numberSystems = [
-    NumberSystem(
-      name: 'English',
-      locale: 'en-US',
-      color: AppColors.primary,
-      softColor: AppColors.primaryLight,
-      shadowColor: const Color(0xFFC94A18),
-      emoji: '🇬🇧',
-      numbers: [
-        NumberData(digit: '0', word: 'Zero', symbol: '0'),
-        NumberData(digit: '1', word: 'One', symbol: '1'),
-        NumberData(digit: '2', word: 'Two', symbol: '2'),
-        NumberData(digit: '3', word: 'Three', symbol: '3'),
-        NumberData(digit: '4', word: 'Four', symbol: '4'),
-        NumberData(digit: '5', word: 'Five', symbol: '5'),
-        NumberData(digit: '6', word: 'Six', symbol: '6'),
-        NumberData(digit: '7', word: 'Seven', symbol: '7'),
-        NumberData(digit: '8', word: 'Eight', symbol: '8'),
-        NumberData(digit: '9', word: 'Nine', symbol: '9'),
-        NumberData(digit: '10', word: 'Ten', symbol: '10'),
-      ],
-    ),
-    NumberSystem(
-      name: 'Hindi',
-      locale: 'hi-IN',
-      color: AppColors.secondary,
-      softColor: AppColors.secondaryLight,
-      shadowColor: const Color(0xFF2AADA4),
-      emoji: '🇮🇳',
-      numbers: [
-        NumberData(digit: '०', word: 'Shunya', symbol: '0'),
-        NumberData(digit: '१', word: 'Ek', symbol: '1'),
-        NumberData(digit: '२', word: 'Do', symbol: '2'),
-        NumberData(digit: '३', word: 'Teen', symbol: '3'),
-        NumberData(digit: '४', word: 'Chaar', symbol: '4'),
-        NumberData(digit: '५', word: 'Paanch', symbol: '5'),
-        NumberData(digit: '६', word: 'Chhe', symbol: '6'),
-        NumberData(digit: '७', word: 'Saat', symbol: '7'),
-        NumberData(digit: '८', word: 'Aath', symbol: '8'),
-        NumberData(digit: '९', word: 'Nau', symbol: '9'),
-        NumberData(digit: '१०', word: 'Das', symbol: '10'),
-      ],
-    ),
-    NumberSystem(
-      name: 'Gujarati',
-      locale: 'gu-IN',
-      color: AppColors.stairsLavender,
-      softColor: AppColors.restBackground,
-      shadowColor: const Color(0xFFA888E8),
-      emoji: '🇮🇳',
-      numbers: [
-        NumberData(digit: '૦', word: 'Shunya', symbol: '0'),
-        NumberData(digit: '૧', word: 'Ek', symbol: '1'),
-        NumberData(digit: '૨', word: 'Be', symbol: '2'),
-        NumberData(digit: '૩', word: 'Tran', symbol: '3'),
-        NumberData(digit: '૪', word: 'Chaar', symbol: '4'),
-        NumberData(digit: '૫', word: 'Paanch', symbol: '5'),
-        NumberData(digit: '૬', word: 'Chhah', symbol: '6'),
-        NumberData(digit: '૭', word: 'Saat', symbol: '7'),
-        NumberData(digit: '૮', word: 'Aath', symbol: '8'),
-        NumberData(digit: '૯', word: 'Nav', symbol: '9'),
-        NumberData(digit: '૧૦', word: 'Das', symbol: '10'),
-      ],
-    ),
-  ];
+  final NumberSystem _numberSystem = const NumberSystem(
+    name: 'English',
+    locale: 'en-US',
+    color: AppColors.primary,
+    softColor: AppColors.primaryLight,
+    shadowColor: Color(0xFFC94A18),
+    emoji: '🇬🇧',
+    numbers: [
+      NumberData(digit: '0', word: 'Zero', symbol: '0'),
+      NumberData(digit: '1', word: 'One', symbol: '1'),
+      NumberData(digit: '2', word: 'Two', symbol: '2'),
+      NumberData(digit: '3', word: 'Three', symbol: '3'),
+      NumberData(digit: '4', word: 'Four', symbol: '4'),
+      NumberData(digit: '5', word: 'Five', symbol: '5'),
+      NumberData(digit: '6', word: 'Six', symbol: '6'),
+      NumberData(digit: '7', word: 'Seven', symbol: '7'),
+      NumberData(digit: '8', word: 'Eight', symbol: '8'),
+      NumberData(digit: '9', word: 'Nine', symbol: '9'),
+      NumberData(digit: '10', word: 'Ten', symbol: '10'),
+    ],
+  );
 
-  int _selectedSystemIndex = 0;
-  int _currentNumberIndex = 0;
+  final AudioService _feedbackAudio = AudioService();
+
+  int _musicRequestToken = 0;
+  int _autoAdvanceToken = 0;
+  int _currentRoundIndex = 0;
   List<int> _currentOptions = const [];
   int? _selectedOptionIndex;
+  bool _answerLocked = false;
   bool _hasAnsweredCorrectly = false;
   bool _isSpeaking = false;
   bool _showCelebration = false;
   int _correctAnswersCount = 0;
 
-  NumberSystem get _currentSystem => _numberSystems[_selectedSystemIndex];
+  NumberSystem get _currentSystem => _numberSystem;
+  List<int> get _currentRoundOrder => _roundOrder;
+  int get _currentNumberIndex => _currentRoundOrder[_currentRoundIndex];
   NumberData get _currentNumber => _currentSystem.numbers[_currentNumberIndex];
 
   @override
@@ -118,8 +89,10 @@ class _StateLearningScreenState extends State<StateLearningScreen>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
+    _roundOrder = _buildRoundOrder(_currentSystem.numbers.length);
     _ttsReady = _initTts();
     _prepareQuestion(autoSpeak: false);
+    _playScreenMusic(delayed: true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _speakCurrentPrompt();
@@ -135,7 +108,7 @@ class _StateLearningScreenState extends State<StateLearningScreen>
     await TtsVoiceHelper.applyPreferredVoice(
       _flutterTts,
       locale: 'en-IN',
-      fallbackLocales: const ['en-US', 'hi-IN', 'gu-IN'],
+      fallbackLocales: const ['en-US', 'en-GB'],
     );
     _flutterTts.setCompletionHandler(() {
       if (!mounted) return;
@@ -151,6 +124,30 @@ class _StateLearningScreenState extends State<StateLearningScreen>
     });
   }
 
+  List<int> _buildRoundOrder(int totalItems) {
+    final order = List<int>.generate(totalItems, (index) => index);
+    order.shuffle();
+    return order;
+  }
+
+  void _playScreenMusic({bool delayed = false}) {
+    final requestToken = ++_musicRequestToken;
+    Future<void>.delayed(
+      delayed ? const Duration(milliseconds: 180) : Duration.zero,
+      () {
+        if (!mounted || requestToken != _musicRequestToken || _showCelebration) {
+          return;
+        }
+        AppAudioService.instance.playStartCountingMusic();
+      },
+    );
+  }
+
+  void _stopScreenMusic() {
+    _musicRequestToken++;
+    AppAudioService.instance.stopBackgroundMusic();
+  }
+
   void _prepareQuestion({required bool autoSpeak}) {
     final allIndices =
         List<int>.generate(_currentSystem.numbers.length, (i) => i)
@@ -163,6 +160,7 @@ class _StateLearningScreenState extends State<StateLearningScreen>
     setState(() {
       _currentOptions = options;
       _selectedOptionIndex = null;
+      _answerLocked = false;
       _hasAnsweredCorrectly = false;
     });
 
@@ -185,24 +183,50 @@ class _StateLearningScreenState extends State<StateLearningScreen>
     await TtsVoiceHelper.applyPreferredVoice(
       _flutterTts,
       locale: _currentSystem.locale,
-      fallbackLocales: const ['en-IN', 'hi-IN', 'gu-IN', 'en-US'],
+      fallbackLocales: const ['en-IN', 'en-US', 'en-GB'],
     );
     await _flutterTts.setSpeechRate(0.42);
     await _flutterTts.speak(_currentNumber.word);
   }
 
+  Future<void> _speakCorrectAppreciation() async {
+    await _ttsReady;
+    await _flutterTts.stop();
+    setState(() => _isSpeaking = true);
+    await TtsVoiceHelper.applyPreferredVoice(
+      _flutterTts,
+      locale: 'en-IN',
+      fallbackLocales: const ['en-US', 'en-GB'],
+    );
+    await _flutterTts.setSpeechRate(0.44);
+    await _flutterTts.speak('Amazing! It is ${_currentNumber.word}.');
+  }
+
+  void _scheduleAutoAdvance() {
+    final requestToken = ++_autoAdvanceToken;
+    Future<void>.delayed(const Duration(milliseconds: 1500), () {
+      if (!mounted || requestToken != _autoAdvanceToken) return;
+      if (_currentRoundIndex == _currentSystem.numbers.length - 1) {
+        _showCompletionCelebration();
+      } else {
+        _nextNumber();
+      }
+    });
+  }
+
   void _handleAnswerTap(int optionIndex) {
-    if (_showCelebration) return;
+    if (_showCelebration || _answerLocked) return;
 
     final chosenIndex = _currentOptions[optionIndex];
     final isCorrect = chosenIndex == _currentNumberIndex;
 
     setState(() {
       _selectedOptionIndex = optionIndex;
+      _answerLocked = true;
       if (isCorrect) {
         _hasAnsweredCorrectly = true;
-        if (_correctAnswersCount < _currentNumberIndex + 1) {
-          _correctAnswersCount = _currentNumberIndex + 1;
+        if (_correctAnswersCount < _currentRoundIndex + 1) {
+          _correctAnswersCount = _currentRoundIndex + 1;
         }
       }
     });
@@ -210,39 +234,45 @@ class _StateLearningScreenState extends State<StateLearningScreen>
     if (isCorrect) {
       HapticFeedback.mediumImpact();
       _cardBounceController.forward(from: 0);
-      _speakCurrentPrompt();
-      if (_currentNumberIndex == _currentSystem.numbers.length - 1) {
-        Future<void>.delayed(const Duration(milliseconds: 900), () {
-          if (!mounted || _showCelebration) return;
-          if (!_hasAnsweredCorrectly) return;
-          _showCompletionCelebration();
-        });
-      }
+      _feedbackAudio.playSfx('sfx/correct.mp3');
+      _speakCorrectAppreciation();
+      _scheduleAutoAdvance();
     } else {
       HapticFeedback.heavyImpact();
+      _feedbackAudio.playWrongFeedback();
+      final requestToken = ++_autoAdvanceToken;
+      Future<void>.delayed(const Duration(milliseconds: 650), () {
+        if (!mounted || requestToken != _autoAdvanceToken) return;
+        setState(() {
+          _selectedOptionIndex = null;
+          _answerLocked = false;
+        });
+      });
     }
   }
 
   void _nextNumber() {
     if (!_hasAnsweredCorrectly) return;
 
-    if (_currentNumberIndex >= _currentSystem.numbers.length - 1) {
+    if (_currentRoundIndex >= _currentSystem.numbers.length - 1) {
       _showCompletionCelebration();
       return;
     }
 
+    _autoAdvanceToken++;
     setState(() {
-      _currentNumberIndex++;
+      _currentRoundIndex++;
     });
     _prepareQuestion(autoSpeak: true);
     HapticFeedback.lightImpact();
   }
 
   void _previousNumber() {
-    if (_currentNumberIndex == 0) return;
+    if (_currentRoundIndex == 0) return;
 
+    _autoAdvanceToken++;
     setState(() {
-      _currentNumberIndex--;
+      _currentRoundIndex--;
     });
     _prepareQuestion(autoSpeak: false);
     HapticFeedback.lightImpact();
@@ -251,16 +281,23 @@ class _StateLearningScreenState extends State<StateLearningScreen>
   void _showCompletionCelebration() {
     if (_showCelebration) return;
     _flutterTts.stop();
+    _stopScreenMusic();
+    RewardProgressService.instance.recordModuleCompletion(
+      RewardModuleIds.findNumber,
+    );
     setState(() => _showCelebration = true);
     _celebrationController.forward(from: 0);
     AppAudioService.instance.playCelebrationMusic();
   }
 
   void _resetCurrentSystem() {
+    _autoAdvanceToken++;
     AppAudioService.instance.stopCelebrationMusic();
     _flutterTts.stop();
+    _playScreenMusic(delayed: true);
     setState(() {
-      _currentNumberIndex = 0;
+      _roundOrder = _buildRoundOrder(_currentSystem.numbers.length);
+      _currentRoundIndex = 0;
       _correctAnswersCount = 0;
       _showCelebration = false;
     });
@@ -268,28 +305,47 @@ class _StateLearningScreenState extends State<StateLearningScreen>
   }
 
   void _goBackToLearningMenu() {
+    _autoAdvanceToken++;
     AppAudioService.instance.stopCelebrationMusic();
+    _stopScreenMusic();
     _flutterTts.stop();
     Navigator.of(context).pop();
   }
 
-  void _selectSystem(int index) {
-    if (_selectedSystemIndex == index) return;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute<dynamic>) {
+      appRouteObserver.unsubscribe(this);
+      appRouteObserver.subscribe(this, route);
+    }
+  }
 
-    AppAudioService.instance.stopCelebrationMusic();
-    setState(() {
-      _selectedSystemIndex = index;
-      _currentNumberIndex = 0;
-      _correctAnswersCount = 0;
-      _showCelebration = false;
-    });
-    _prepareQuestion(autoSpeak: true);
-    HapticFeedback.selectionClick();
+  @override
+  void didPush() {
+    _playScreenMusic(delayed: true);
+  }
+
+  @override
+  void didPopNext() {
+    if (!_showCelebration) {
+      _playScreenMusic(delayed: true);
+    }
+  }
+
+  @override
+  void didPushNext() {
+    _stopScreenMusic();
   }
 
   @override
   void dispose() {
+    appRouteObserver.unsubscribe(this);
+    _musicRequestToken++;
+    _autoAdvanceToken++;
     AppAudioService.instance.stopCelebrationMusic();
+    AppAudioService.instance.stopBackgroundMusic();
     _flutterTts.stop();
     _speakerPulseController.dispose();
     _cardBounceController.dispose();
@@ -306,32 +362,28 @@ class _StateLearningScreenState extends State<StateLearningScreen>
         children: [
           _buildBackground(),
           SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                  child: ConstrainedBox(
-                    constraints:
-                        BoxConstraints(minHeight: constraints.maxHeight),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildTopBar(),
+                  const SizedBox(height: 12),
+                  _buildProgressCard(),
+                  const SizedBox(height: 12),
+                  Expanded(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildTopBar(),
-                        const SizedBox(height: 16),
-                        _buildSystemSelector(),
-                        const SizedBox(height: 16),
-                        _buildProgressCard(),
-                        const SizedBox(height: 18),
-                        _buildLearningCard(),
-                        const SizedBox(height: 18),
+                        Expanded(child: _buildLearningCard()),
+                        const SizedBox(height: 12),
                         _buildAnswerSection(),
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 12),
                         _buildNavigationControls(),
                       ],
                     ),
                   ),
-                );
-              },
+                ],
+              ),
             ),
           ),
           if (_showCelebration) _buildCelebrationOverlay(),
@@ -372,13 +424,13 @@ class _StateLearningScreenState extends State<StateLearningScreen>
       children: [
         _CircleButton(
           icon: Icons.arrow_back_ios_new_rounded,
-          onTap: () => Navigator.of(context).pop(),
+          onTap: _goBackToLearningMenu,
         ),
         const Spacer(),
         Column(
           children: [
             Text(
-              'Number Recognition',
+              'Find Correct Number',
               style: AppTypography.h2.copyWith(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.w800,
@@ -386,7 +438,7 @@ class _StateLearningScreenState extends State<StateLearningScreen>
               ),
             ),
             Text(
-              _currentSystem.name,
+              'English',
               style: AppTypography.bodySmall.copyWith(
                 color: _currentSystem.color,
                 fontWeight: FontWeight.w700,
@@ -431,75 +483,10 @@ class _StateLearningScreenState extends State<StateLearningScreen>
     );
   }
 
-  Widget _buildSystemSelector() {
-    return SizedBox(
-      height: 54,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: _numberSystems.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (context, index) {
-          final system = _numberSystems[index];
-          final isSelected = index == _selectedSystemIndex;
-
-          return GestureDetector(
-            onTap: () => _selectSystem(index),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOut,
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? system.color
-                    : AppColors.surface.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(
-                  color: isSelected
-                      ? system.color
-                      : system.color.withValues(alpha: 0.35),
-                  width: 2,
-                ),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: system.color.withValues(alpha: 0.24),
-                          blurRadius: 14,
-                          offset: const Offset(0, 6),
-                        ),
-                      ]
-                    : const [
-                        BoxShadow(
-                          color: AppColors.shadow,
-                          blurRadius: 8,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(system.emoji, style: const TextStyle(fontSize: 18)),
-                  const SizedBox(width: 8),
-                  Text(
-                    system.name,
-                    style: AppTypography.bodyStrong.copyWith(
-                      color: isSelected ? AppColors.surface : system.color,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
   Widget _buildProgressCard() {
     final total = _currentSystem.numbers.length;
     final progress =
-        (_currentNumberIndex + (_hasAnsweredCorrectly ? 1 : 0)) / total;
+        (_currentRoundIndex + (_hasAnsweredCorrectly ? 1 : 0)) / total;
 
     return Container(
       width: double.infinity,
@@ -520,7 +507,7 @@ class _StateLearningScreenState extends State<StateLearningScreen>
           Row(
             children: [
               Text(
-                'Number ${_currentNumberIndex + 1} of $total',
+                'Round ${_currentRoundIndex + 1} of $total',
                 style: AppTypography.bodyStrong.copyWith(
                   color: AppColors.textPrimary,
                   fontSize: 15,
@@ -528,7 +515,7 @@ class _StateLearningScreenState extends State<StateLearningScreen>
               ),
               const Spacer(),
               Text(
-                _hasAnsweredCorrectly ? 'Correct!' : 'Listen carefully',
+                _hasAnsweredCorrectly ? 'Amazing!' : 'Listen carefully',
                 style: AppTypography.bodySmall.copyWith(
                   color: _hasAnsweredCorrectly
                       ? AppColors.gardenGreen
@@ -597,9 +584,9 @@ class _StateLearningScreenState extends State<StateLearningScreen>
                   color: _currentSystem.color.withValues(alpha: 0.28),
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
                   Icon(Icons.hearing_rounded,
                       size: 18, color: _currentSystem.color),
                   const SizedBox(width: 6),
@@ -615,7 +602,7 @@ class _StateLearningScreenState extends State<StateLearningScreen>
             ),
             const SizedBox(height: 16),
             Text(
-              'Tap the speaker and pick the correct number.',
+              'Listen carefully and tap the number you hear.',
               style: AppTypography.bodySmall.copyWith(
                 color: AppColors.textSecondary,
                 fontWeight: FontWeight.w700,
@@ -716,6 +703,44 @@ class _StateLearningScreenState extends State<StateLearningScreen>
                             fontSize: 88,
                           ),
                         ),
+                      ),
+                    ),
+            ),
+            const SizedBox(height: 14),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 220),
+              child: _hasAnsweredCorrectly
+                  ? Container(
+                      key: ValueKey('praise_${_currentNumber.symbol}'),
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.correctFeedback.withValues(alpha: 0.58),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: AppColors.gardenGreen.withValues(alpha: 0.55),
+                          width: 2,
+                        ),
+                      ),
+                      child: Text(
+                        'Amazing! You found ${_currentNumber.word}. Next one is coming...',
+                        textAlign: TextAlign.center,
+                        style: AppTypography.bodyStrong.copyWith(
+                          color: AppColors.gardenGreen,
+                          fontSize: 14,
+                        ),
+                      ),
+                    )
+                  : Text(
+                      'Tap the speaker any time if you want to hear it again.',
+                      key: const ValueKey('hint'),
+                      textAlign: TextAlign.center,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
             ),
@@ -842,7 +867,7 @@ class _StateLearningScreenState extends State<StateLearningScreen>
           child: _ActionButton(
             label: 'Previous',
             icon: Icons.arrow_back_rounded,
-            onTap: _currentNumberIndex > 0 ? _previousNumber : null,
+            onTap: _currentRoundIndex > 0 ? _previousNumber : null,
             backgroundColor: AppColors.surface.withValues(alpha: 0.92),
             foregroundColor: AppColors.textSecondary,
             borderColor: AppColors.outlineStrong,
@@ -851,18 +876,12 @@ class _StateLearningScreenState extends State<StateLearningScreen>
         const SizedBox(width: 12),
         Expanded(
           child: _ActionButton(
-            label: _currentNumberIndex == _currentSystem.numbers.length - 1
-                ? 'Finish'
-                : 'Next',
-            icon: Icons.arrow_forward_rounded,
-            onTap: _hasAnsweredCorrectly ? _nextNumber : null,
-            backgroundColor: _hasAnsweredCorrectly
-                ? _currentSystem.color
-                : AppColors.disabled,
+            label: 'Hear Again',
+            icon: Icons.volume_up_rounded,
+            onTap: _speakCurrentPrompt,
+            backgroundColor: _currentSystem.color,
             foregroundColor: AppColors.surface,
-            borderColor: _hasAnsweredCorrectly
-                ? _currentSystem.shadowColor
-                : AppColors.disabled,
+            borderColor: _currentSystem.shadowColor,
           ),
         ),
       ],
@@ -885,6 +904,7 @@ class _StateLearningScreenState extends State<StateLearningScreen>
           parent: _celebrationController,
           curve: const Interval(0.0, 0.65, curve: Curves.easeOutBack),
         );
+        final sparkleOpacity = sparkleCurve.value.clamp(0.0, 1.0);
         return Container(
           color: Colors.black.withValues(alpha: 0.28),
           child: Center(
@@ -913,7 +933,7 @@ class _StateLearningScreenState extends State<StateLearningScreen>
                         Transform.scale(
                           scale: 0.7 + (sparkleCurve.value * 0.3),
                           child: Opacity(
-                            opacity: sparkleCurve.value,
+                            opacity: sparkleOpacity,
                             child: Container(
                               width: 142,
                               height: 142,
@@ -937,7 +957,7 @@ class _StateLearningScreenState extends State<StateLearningScreen>
                           top: 6,
                           left: 16,
                           child: Opacity(
-                            opacity: sparkleCurve.value,
+                            opacity: sparkleOpacity,
                             child: const Text(
                               '✨',
                               style: TextStyle(fontSize: 24),
@@ -948,7 +968,7 @@ class _StateLearningScreenState extends State<StateLearningScreen>
                           right: 16,
                           bottom: 16,
                           child: Opacity(
-                            opacity: sparkleCurve.value,
+                            opacity: sparkleOpacity,
                             child: const Text(
                               '🎉',
                               style: TextStyle(fontSize: 22),
@@ -974,7 +994,7 @@ class _StateLearningScreenState extends State<StateLearningScreen>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'You finished all ${_currentSystem.name} numbers.',
+                      'You finished all ${_currentSystem.name} find-the-number rounds.',
                       style: AppTypography.body.copyWith(
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.w700,
