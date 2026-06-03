@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:math_kingdom_builder/features/StartLearning/start_learning_screen.dart';
 import 'package:math_kingdom_builder/features/count_objects/count_objects_screen.dart';
+import 'package:math_kingdom_builder/features/kingdom/kingdom_screen.dart';
 import 'package:math_kingdom_builder/features/learn_numbers/learn_numbers_screen.dart';
 import 'package:math_kingdom_builder/features/matching/match_numbers_screen.dart';
 import 'package:math_kingdom_builder/features/mini_quiz/mini_quiz_screen.dart';
@@ -78,12 +79,6 @@ final List<PlaceholderRouteSpec> appPlaceholderRoutes = [
     icon: Icons.auto_awesome_mosaic_rounded,
   ),
   const PlaceholderRouteSpec(
-    path: AppRoutes.kingdom,
-    title: 'Kingdom',
-    description: 'Placeholder screen for the interactive kingdom map.',
-    icon: Icons.castle_rounded,
-  ),
-  const PlaceholderRouteSpec(
     path: AppRoutes.parentDashboard,
     title: 'Parent Dashboard',
     description:
@@ -145,6 +140,10 @@ final GoRouter _appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.startlearning,
       builder: (context, state) => const StartLearningScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.kingdom,
+      builder: (context, state) => const KingdomScreen(),
     ),
     ...appPlaceholderRoutes.map(
       (route) => GoRoute(

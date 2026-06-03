@@ -135,7 +135,9 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
     Future<void>.delayed(
       delayed ? const Duration(milliseconds: 180) : Duration.zero,
       () {
-        if (!mounted || requestToken != _musicRequestToken || _showCelebration) {
+        if (!mounted ||
+            requestToken != _musicRequestToken ||
+            _showCelebration) {
           return;
         }
         AppAudioService.instance.playStartCountingMusic();
@@ -362,28 +364,58 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
         children: [
           _buildBackground(),
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildTopBar(),
-                  const SizedBox(height: 12),
-                  _buildProgressCard(),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: Column(
-                      children: [
-                        Expanded(child: _buildLearningCard()),
-                        const SizedBox(height: 12),
-                        _buildAnswerSection(),
-                        const SizedBox(height: 12),
-                        _buildNavigationControls(),
-                      ],
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final compactLayout = constraints.maxHeight < 860;
+
+                if (compactLayout) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                    child: ConstrainedBox(
+                      constraints:
+                          BoxConstraints(minHeight: constraints.maxHeight),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildTopBar(),
+                          const SizedBox(height: 12),
+                          _buildProgressCard(),
+                          const SizedBox(height: 12),
+                          _buildLearningCard(),
+                          const SizedBox(height: 12),
+                          _buildAnswerSection(),
+                          const SizedBox(height: 12),
+                          _buildNavigationControls(),
+                        ],
+                      ),
                     ),
+                  );
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildTopBar(),
+                      const SizedBox(height: 12),
+                      _buildProgressCard(),
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Expanded(child: _buildLearningCard()),
+                            const SizedBox(height: 12),
+                            _buildAnswerSection(),
+                            const SizedBox(height: 12),
+                            _buildNavigationControls(),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             ),
           ),
           if (_showCelebration) _buildCelebrationOverlay(),
@@ -426,27 +458,34 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
           icon: Icons.arrow_back_ios_new_rounded,
           onTap: _goBackToLearningMenu,
         ),
-        const Spacer(),
-        Column(
-          children: [
-            Text(
-              'Find Correct Number',
-              style: AppTypography.h2.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w800,
-                fontSize: 23,
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            children: [
+              Text(
+                'Find Correct Number',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: AppTypography.h2.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 23,
+                ),
               ),
-            ),
-            Text(
-              'English',
-              style: AppTypography.bodySmall.copyWith(
-                color: _currentSystem.color,
-                fontWeight: FontWeight.w700,
+              Text(
+                'English',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.bodySmall.copyWith(
+                  color: _currentSystem.color,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-        const Spacer(),
+        const SizedBox(width: 12),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
@@ -506,16 +545,22 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
         children: [
           Row(
             children: [
-              Text(
-                'Round ${_currentRoundIndex + 1} of $total',
-                style: AppTypography.bodyStrong.copyWith(
-                  color: AppColors.textPrimary,
-                  fontSize: 15,
+              Expanded(
+                child: Text(
+                  'Round ${_currentRoundIndex + 1} of $total',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodyStrong.copyWith(
+                    color: AppColors.textPrimary,
+                    fontSize: 15,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 12),
               Text(
                 _hasAnsweredCorrectly ? 'Amazing!' : 'Listen carefully',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: AppTypography.bodySmall.copyWith(
                   color: _hasAnsweredCorrectly
                       ? AppColors.gardenGreen
@@ -584,9 +629,9 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
                   color: _currentSystem.color.withValues(alpha: 0.28),
                 ),
               ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                   Icon(Icons.hearing_rounded,
                       size: 18, color: _currentSystem.color),
                   const SizedBox(width: 6),
@@ -718,7 +763,8 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
                         vertical: 10,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.correctFeedback.withValues(alpha: 0.58),
+                        color:
+                            AppColors.correctFeedback.withValues(alpha: 0.58),
                         borderRadius: BorderRadius.circular(18),
                         border: Border.all(
                           color: AppColors.gardenGreen.withValues(alpha: 0.55),
@@ -1104,7 +1150,7 @@ class _ActionButton extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: BorderRadius.circular(999),
@@ -1121,14 +1167,19 @@ class _ActionButton extends StatelessWidget {
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 18, color: foregroundColor),
             const SizedBox(width: 8),
-            Text(
-              label,
-              style: AppTypography.bodyStrong.copyWith(
-                color: foregroundColor,
-                fontSize: 14,
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.bodyStrong.copyWith(
+                  color: foregroundColor,
+                  fontSize: 14,
+                ),
               ),
             ),
           ],
