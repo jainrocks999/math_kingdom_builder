@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'core/constants/app_colors.dart';
 import 'core/constants/app_typography.dart';
 import 'core/router/app_router.dart';
+import 'core/services/app_session_service.dart';
 import 'core/services/audio_service.dart';
 
 class OnboardingPageData {
@@ -82,8 +83,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
-  void _onNextTap() {
+  Future<void> _onNextTap() async {
     if (_currentPage == _pages.length - 1) {
+      await AppSessionService.instance.markOnboardingComplete();
+      if (!mounted) return;
       context.go(AppRoutes.home);
       return;
     }

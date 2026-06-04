@@ -98,6 +98,12 @@ class HomeScreen extends StatefulWidget {
     ),
   ];
 
+  static const Set<String> _comingSoonQuestRoutes = {
+    AppRoutes.addition,
+    AppRoutes.sequencing,
+    AppRoutes.patterns,
+  };
+
   static const List<_QuestData> _quests = [
     _QuestData(
       label: 'Counting',
@@ -266,7 +272,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                           children: [
                             const _SunBadge(),
                             const Spacer(),
-                            _NotifButton(onTap: () {}),
+                            _NotifButton(
+                              onTap: () => _navigateWithoutHomeMusic(
+                                AppRoutes.kingdom,
+                              ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 18),
@@ -308,7 +318,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                         // Big Play button
                         _PrimaryPlayButton(
                           onPressed: () => _navigateWithoutHomeMusic(
-                            AppRoutes.numberRecognition,
+                            AppRoutes.startlearning,
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -373,19 +383,24 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                             crossAxisSpacing: 14,
                             childAspectRatio: 0.96,
                           ),
-                          itemBuilder: (context, index) => _QuestCard(
-                            quest: HomeScreen._quests[index],
-                            onTap: () => _navigateWithoutHomeMusic(
-                              HomeScreen._quests[index].route,
-                            ),
-                          ),
+                          itemBuilder: (context, index) {
+                            final quest = HomeScreen._quests[index];
+                            return _QuestCard(
+                              quest: quest,
+                              isComingSoon: HomeScreen._comingSoonQuestRoutes
+                                  .contains(quest.route),
+                              onTap: () => _navigateWithoutHomeMusic(
+                                quest.route,
+                              ),
+                            );
+                          },
                         ),
                         const SizedBox(height: 24),
 
                         // Daily challenge banner
                         _DailyChallengeBanner(
                           onTap: () => _navigateWithoutHomeMusic(
-                            AppRoutes.numberRecognition,
+                            AppRoutes.startlearning,
                           ),
                         ),
                       ],
@@ -531,7 +546,7 @@ class _PrimaryPlayButton extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Play Now!',
+                    'Start Learning!',
                     style: AppTypography.buttonLarge.copyWith(
                       color: AppColors.surface,
                       fontWeight: FontWeight.w800,
@@ -540,7 +555,7 @@ class _PrimaryPlayButton extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    'Start with number recognition',
+                    'All math adventures in one place',
                     style: AppTypography.bodySmall.copyWith(
                       color: AppColors.surface.withValues(alpha: 0.9),
                       fontSize: 12,
@@ -684,10 +699,12 @@ class _QuestCard extends StatelessWidget {
   const _QuestCard({
     required this.quest,
     required this.onTap,
+    this.isComingSoon = false,
   });
 
   final _QuestData quest;
   final VoidCallback onTap;
+  final bool isComingSoon;
 
   @override
   Widget build(BuildContext context) {
@@ -764,14 +781,38 @@ class _QuestCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              Text(
-                quest.label,
-                style: AppTypography.cardTitle.copyWith(
-                  color: const Color(0xFF1E1060),
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.2,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      quest.label,
+                      style: AppTypography.cardTitle.copyWith(
+                        color: const Color(0xFF1E1060),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                  ),
+                  if (isComingSoon)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceMuted,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        'Soon',
+                        style: AppTypography.caption.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(height: 4),
               Text(

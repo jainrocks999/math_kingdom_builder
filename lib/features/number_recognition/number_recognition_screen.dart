@@ -293,19 +293,6 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
     AppAudioService.instance.playCelebrationMusic();
   }
 
-  void _resetCurrentSystem() {
-    _autoAdvanceToken++;
-    AppAudioService.instance.stopCelebrationMusic();
-    _flutterTts.stop();
-    _playScreenMusic(delayed: true);
-    setState(() {
-      _roundOrder = _buildRoundOrder(_currentSystem.numbers.length);
-      _currentRoundIndex = 0;
-      _correctAnswersCount = 0;
-      _showCelebration = false;
-    });
-    _prepareQuestion(autoSpeak: true);
-  }
 
   void _prepareNextLearningNavigation() {
     _autoAdvanceToken++;

@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../features/kingdom/kingdom_service.dart';
+
 class RewardProgressSnapshot {
   const RewardProgressSnapshot({
     required this.totalStars,
@@ -118,6 +120,7 @@ class RewardProgressService {
     await prefs.setInt(_todayCompletionsKey, todayCompletions);
     await prefs.setString(_lastCompletionDateKey, todayKey);
     await prefs.setInt(_streakDaysKey, streakDays);
+    await KingdomService.instance.syncFromProgressOnly();
   }
 
   Future<void> claimReward(String rewardId) async {

@@ -449,18 +449,6 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
     setState(() => _showFinalCelebration = true);
   }
 
-  void _restartTracingJourney() {
-    AppAudioService.instance.stopCelebrationMusic();
-    _tts.stop();
-    _finalCelebrationToken++;
-    setState(() {
-      _completedLessons.clear();
-      _currentLessonIndex = 0;
-      _showFinalCelebration = false;
-      _resetLessonState(speakPrompt: false);
-    });
-    _speakLessonPrompt(includeStrokeHint: true);
-  }
 
   void _prepareNextLearningNavigation() {
     AppAudioService.instance.stopCelebrationMusic();

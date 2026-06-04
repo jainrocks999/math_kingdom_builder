@@ -298,17 +298,6 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
     _speakPrompt();
   }
 
-  void _restartGame() {
-    AppAudioService.instance.stopCelebrationMusic();
-    _playScreenMusic(delayed: true);
-    setState(() {
-      _rounds = _buildRoundPlan();
-      _roundIndex = 0;
-      _showCelebration = false;
-      _prepareRound();
-    });
-    _speakPrompt();
-  }
 
   void _showFinalCelebration() {
     if (!mounted || _showCelebration || !_roundSolved) return;

@@ -434,18 +434,6 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
     _celebrationController.forward(from: 0);
   }
 
-  void _restartQuiz() {
-    _autoAdvanceToken++;
-    AppAudioService.instance.stopCelebrationMusic();
-    _playScreenMusic(delayed: true);
-    setState(() {
-      _rounds = _buildRoundPlan();
-      _roundIndex = 0;
-      _showCelebration = false;
-      _prepareRound();
-    });
-    _speakPrompt();
-  }
 
   void _goBack() {
     _autoAdvanceToken++;

@@ -376,15 +376,6 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     AppAudioService.instance.playCelebrationMusic();
   }
 
-  Future<void> _restartLearningJourney() async {
-    AppAudioService.instance.stopCelebrationMusic();
-    _completionCelebrationToken++;
-    _tts.stop();
-    setState(() {
-      _showCompletionCelebration = false;
-    });
-    await _selectNumber(0);
-  }
 
   void _prepareNextLearningNavigation() {
     AppAudioService.instance.stopCelebrationMusic();

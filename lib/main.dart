@@ -19,7 +19,10 @@ void main() async {
 
   // Open boxes
   await Hive.openBox<ChildProfile>('profiles');
-  await Hive.openBox<KingdomState>('kingdoms');
+  final kingdomsBox = await Hive.openBox<KingdomState>('kingdoms');
+  if (kingdomsBox.get('current') == null) {
+    await kingdomsBox.put('current', KingdomState.empty());
+  }
   await Hive.openBox<LessonProgress>('progress');
 
   runApp(

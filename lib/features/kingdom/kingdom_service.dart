@@ -27,6 +27,18 @@ class KingdomService {
   static const _mapWidth = 1180.0;
   static const _mapHeight = 860.0;
 
+  /// Updates kingdom rewards from learning progress without unlock UI.
+  Future<void> syncFromProgressOnly() async {
+    final progress = await RewardProgressService.instance.loadSnapshot();
+    final box = Hive.box<KingdomState>('kingdoms');
+    final current = box.get('current') ?? KingdomState.empty();
+    final synced = _applyProgressToState(current, progress);
+
+    if (_stateChanged(current, synced)) {
+      await box.put('current', synced);
+    }
+  }
+
   Future<KingdomSyncResult> loadSyncedState() async {
     final progress = await RewardProgressService.instance.loadSnapshot();
     final box = Hive.box<KingdomState>('kingdoms');

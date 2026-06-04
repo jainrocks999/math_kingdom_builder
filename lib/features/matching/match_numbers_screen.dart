@@ -300,18 +300,6 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
     _speakPrompt();
   }
 
-  void _restartGame() {
-    _autoAdvanceToken++;
-    AppAudioService.instance.stopCelebrationMusic();
-    _playScreenMusic(delayed: true);
-    setState(() {
-      _rounds = _buildRoundPlan();
-      _roundIndex = 0;
-      _showCelebration = false;
-      _prepareRound();
-    });
-    _speakPrompt();
-  }
 
   void _showFinalCelebration() {
     if (!mounted || _showCelebration || !_roundSolved) return;
