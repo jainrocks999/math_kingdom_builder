@@ -2,6 +2,7 @@
 
 **File:** `lib/features/number_tracing/trace_numbers_screen.dart`  
 **Route:** `/tracing`
+**Status:** Implemented with deferred extraction/polish (2026-06-19)
 
 ## Current purpose
 
@@ -25,26 +26,26 @@ Trace digits 0–9+ with stroke templates, multi-stroke lessons, celebration.
 ## Development tasks
 
 ### Bug fixes
-- [ ] Auto-advance doesn’t skip mid-draw
+- [x] Auto-advance doesn’t skip mid-draw
 
 ### UI
-- [ ] Replace Google Fonts with `AppTypography`
-- [ ] Larger trace canvas on phones
+- [x] Replace Google Fonts with `AppTypography`
+- [x] Larger trace canvas on phones
 
 ### Existing functionality
-- [ ] RouteAware audio pattern
-- [ ] Scale tolerance by `size.shortestSide`
-- [ ] Speaker replay for stroke prompt
+- [x] RouteAware audio pattern
+- [x] Scale tolerance by `size.shortestSide`
+- [x] Speaker replay for stroke prompt
 
 ### New (optional)
-- [ ] Clear stroke / eraser button
+- [x] Clear stroke / eraser button
 - [ ] Ghost stroke hint after 2 failures
 
 ### Kids experience
-- [ ] Celebration bear on lesson complete
+- [x] Celebration bear on lesson complete
 
 ### Responsiveness
-- [ ] Canvas min height; bottom controls above gesture nav
+- [x] Canvas min height; bottom controls above gesture nav
 
 ## Assets
 
@@ -58,3 +59,8 @@ Trace digits 0–9+ with stroke templates, multi-stroke lessons, celebration.
 ## Acceptance criteria
 
 All digits traceable; kid-friendly tolerance; stars recorded; fonts consistent; no overflow.
+
+## Deferred
+
+- Extract `TraceCanvas` / board pieces into smaller widgets when the tracing flow is stable
+- Consider a ghost stroke hint only if real-device testing shows the friendlier tolerance still needs extra support

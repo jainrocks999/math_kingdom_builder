@@ -2,6 +2,7 @@
 
 **File:** `lib/features/math_operations/addition_screen.dart`  
 **Route:** `/addition`
+**Status:** Implemented with shared math-op polish applied (2026-06-19)
 
 ## Current purpose
 
@@ -23,18 +24,24 @@
 ## Development tasks
 
 ### Bug fixes
-- [ ] Drag hit boxes; music lifecycle
+- [x] Drag hit boxes; music lifecycle
 
 ### UI
-- [ ] Larger draggable objects
-- [ ] Clear equation: `2 + 3 = ?`
+- [x] Larger draggable objects
+- [x] Clear equation: `2 + 3 = ?`
 
 ### Existing functionality
-- [ ] “Tap to move all” after 2 failed drags (optional)
-- [ ] TTS reads equation
+- [x] “Tap to move all” after 2 failed drags (optional)
+- [x] TTS reads equation
 
 ### Responsiveness
-- [ ] Drag zone on narrow screens
+- [x] Drag zone on narrow screens
+
+## Notes
+
+- Objects now support both drag and tap, which makes the screen easier for younger kids.
+- After repeated failed drags, a helper CTA can complete the move-all action without blocking progress.
+- Narrow screens switch to a stacked tray layout so the drop zone stays usable.
 
 ## Assets
 

@@ -2,6 +2,7 @@
 
 **File:** `lib/features/rewards/rewards_screen.dart`  
 **Route:** `/stickers`
+**Status:** Implemented with deferred persistence/detail polish (2026-06-19)
 
 ## Current purpose
 
@@ -25,16 +26,16 @@ Browse stickers, badges, trophies; claim rewards unlocked by star threshold.
 ## Development tasks
 
 ### Bug fixes
-- [ ] Prevent double-claim taps
+- [x] Prevent double-claim taps
 
 ### UI
-- [ ] Locked: grayscale + lock icon
-- [ ] Category tabs min 48dp height
-- [ ] Change “Claim” → “Collect!”
+- [x] Locked: grayscale + lock icon
+- [x] Category tabs min 48dp height
+- [x] Change “Claim” → “Collect!”
 
 ### Existing functionality
 - [ ] Align persistence with claimed set (remove or wire `StickerAlbum`)
-- [ ] Progress to next reward in header
+- [x] Progress to next reward in header
 
 ### New (optional)
 - [ ] Sticker detail bottom sheet with TTS
@@ -43,7 +44,12 @@ Browse stickers, badges, trophies; claim rewards unlocked by star threshold.
 - [ ] Collect animation (scale + star burst)
 
 ### Responsiveness
-- [ ] Grid: 2 columns phone, 3 tablet
+- [x] Grid: 2 columns phone, 3 tablet
+
+## Deferred
+
+- [ ] Remove or properly wire unused `StickerAlbum` Hive model
+- [ ] Sticker detail bottom sheet with TTS
 
 ## Assets
 

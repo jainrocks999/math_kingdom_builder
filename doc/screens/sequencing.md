@@ -2,6 +2,7 @@
 
 **File:** `lib/features/sequencing/sequencing_screen.dart`  
 **Route:** `/sequencing`
+**Status:** Implemented with responsive/tap polish (2026-06-19)
 
 ## Current purpose
 
@@ -24,17 +25,23 @@
 ## Development tasks
 
 ### UI
-- [ ] Horizontal scroll for long sequences
+- [x] Responsive wrapped layout for long sequences
 
 ### Existing functionality
-- [ ] Tap option to fill gap (alternative to drag)
-- [ ] Round progress header
+- [x] Tap option to fill gap (alternative to drag)
+- [x] Round progress header
 
 ### Kids experience
-- [ ] TTS reads sequence pattern
+- [x] TTS reads sequence pattern
 
 ### Responsiveness
-- [ ] Sequence row on 320dp width
+- [x] Sequence row on 320dp width
+
+## Notes
+
+- Sequence row now wraps inside the visible area instead of scrolling off-screen.
+- Prompt speech now reads the actual pattern with a spoken blank.
+- Option tray wraps on narrow screens so tap targets stay usable.
 
 ## Assets
 

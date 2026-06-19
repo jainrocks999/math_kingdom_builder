@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -5,9 +7,14 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/router/app_router.dart';
+import '../../core/services/audio_service.dart';
+import '../../core/services/audio_settings_service.dart';
 import '../../core/services/child_profile_service.dart';
 import '../../core/services/parent_pin_service.dart';
 import '../../core/services/reward_progress_service.dart';
+import '../../core/utils/audio_service.dart';
+import '../../shared/widgets/game_back_button.dart';
+import '../../shared/widgets/kid_loading_view.dart';
 
 enum _MasteryLevel { exploring, practicing, confident }
 
@@ -71,9 +78,15 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   bool _isSubmitting = false;
   String? _errorMessage;
   int _cooldownSeconds = 0;
+  Timer? _cooldownTicker;
 
   RewardProgressSnapshot? _progress;
   ChildProfileSnapshot? _profiles;
+  AudioSettingsSnapshot _audioSettings = const AudioSettingsSnapshot(
+    musicEnabled: true,
+    sfxEnabled: true,
+    speechRateMode: 'normal',
+  );
 
   static const _reports = [
     (RewardModuleIds.addition, 'Addition', '➕'),
@@ -98,6 +111,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
 
   @override
   void dispose() {
+    _cooldownTicker?.cancel();
     for (final controller in _pinControllers) {
       controller.dispose();
     }
@@ -109,30 +123,51 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
 
   Future<void> _bootstrap() async {
     final hasPin = await ParentPinService.instance.hasPin();
+    final audioSettings = await AudioSettingsService.instance.loadSnapshot();
     if (!mounted) return;
     setState(() {
       _needsSetup = !hasPin;
+      _audioSettings = audioSettings;
       _isLoading = false;
     });
     await _refreshCooldown();
   }
 
-  Future<void> _refreshCooldown() async {
+  Future<int> _refreshCooldown() async {
     final inCooldown = await ParentPinService.instance.isInCooldown();
     final seconds = inCooldown
         ? await ParentPinService.instance.cooldownSecondsRemaining()
         : 0;
-    if (!mounted) return;
+    if (!mounted) return seconds;
     setState(() => _cooldownSeconds = seconds);
+    _cooldownTicker?.cancel();
+    if (seconds > 0) {
+      _cooldownTicker =
+          Timer.periodic(const Duration(seconds: 1), (timer) async {
+        final remaining =
+            await ParentPinService.instance.cooldownSecondsRemaining();
+        if (!mounted) {
+          timer.cancel();
+          return;
+        }
+        setState(() => _cooldownSeconds = remaining);
+        if (remaining <= 0) {
+          timer.cancel();
+        }
+      });
+    }
+    return seconds;
   }
 
   Future<void> _loadDashboardData() async {
     final progress = await RewardProgressService.instance.loadSnapshot();
     final profiles = await ChildProfileService.instance.loadSnapshot();
+    final audioSettings = await AudioSettingsService.instance.loadSnapshot();
     if (!mounted) return;
     setState(() {
       _progress = progress;
       _profiles = profiles;
+      _audioSettings = audioSettings;
     });
   }
 
@@ -165,18 +200,18 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
 
     final inCooldown = await ParentPinService.instance.isInCooldown();
     if (inCooldown) {
-      await _refreshCooldown();
+      final seconds = await _refreshCooldown();
       if (!mounted) return;
       setState(() {
         _isSubmitting = false;
         _errorMessage =
-            'Please wait $_cooldownSeconds seconds before trying again.';
+            'Please wait $seconds second${seconds == 1 ? '' : 's'} before trying again.';
       });
       return;
     }
 
     final valid = await ParentPinService.instance.verifyPin(pin);
-    await _refreshCooldown();
+    final seconds = await _refreshCooldown();
     if (!mounted) return;
 
     if (valid) {
@@ -193,8 +228,8 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
 
     setState(() {
       _isSubmitting = false;
-      _errorMessage = _cooldownSeconds > 0
-          ? 'Too many tries. Wait $_cooldownSeconds seconds.'
+      _errorMessage = seconds > 0
+          ? 'Too many tries. Wait $seconds second${seconds == 1 ? '' : 's'}.'
           : 'That PIN did not match. Try again.';
     });
     for (final controller in _pinControllers) {
@@ -221,13 +256,64 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     context.go(AppRoutes.home);
   }
 
+  Future<void> _updateMusicEnabled(bool enabled) async {
+    await AudioSettingsService.instance.setMusicEnabled(enabled);
+    if (!enabled) {
+      await AppAudioService.instance.stopBackgroundMusic();
+    }
+    if (!mounted) return;
+    setState(() {
+      _audioSettings = AudioSettingsSnapshot(
+        musicEnabled: enabled,
+        sfxEnabled: _audioSettings.sfxEnabled,
+        speechRateMode: _audioSettings.speechRateMode,
+      );
+    });
+  }
+
+  Future<void> _updateSfxEnabled(bool enabled) async {
+    await AudioSettingsService.instance.setSfxEnabled(enabled);
+    AudioService().setSfxEnabled(enabled);
+    if (!mounted) return;
+    setState(() {
+      _audioSettings = AudioSettingsSnapshot(
+        musicEnabled: _audioSettings.musicEnabled,
+        sfxEnabled: enabled,
+        speechRateMode: _audioSettings.speechRateMode,
+      );
+    });
+  }
+
+  Future<void> _updateSpeechRateMode(String mode) async {
+    await AudioSettingsService.instance.setSpeechRateMode(mode);
+    AudioService().setSpeechRate(mode);
+    if (!mounted) return;
+    setState(() {
+      _audioSettings = AudioSettingsSnapshot(
+        musicEnabled: _audioSettings.musicEnabled,
+        sfxEnabled: _audioSettings.sfxEnabled,
+        speechRateMode: mode,
+      );
+    });
+  }
+
+  Future<void> _switchProfile(int index) async {
+    await ChildProfileService.instance.setActiveProfileIndex(index);
+    await _loadDashboardData();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.parentBackground,
       body: SafeArea(
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? const KidLoadingView(
+                title: 'Parent Dashboard',
+                subtitle: 'Loading family progress.',
+                color: AppColors.parentAccent,
+                compact: true,
+              )
             : _isUnlocked
                 ? _buildDashboard()
                 : _buildPinGate(),
@@ -236,91 +322,116 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   }
 
   Widget _buildPinGate() {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          IconButton(
-            onPressed: _goBack,
-            icon: const Icon(Icons.arrow_back_rounded),
-            color: AppColors.parentAccent,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            _needsSetup ? 'Set Parent PIN' : 'Parent Zone',
-            style: AppTypography.h1.copyWith(color: const Color(0xFF1E1060)),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _needsSetup
-                ? 'Create a 4-digit PIN so only grown-ups can open this area.'
-                : 'Enter your parent PIN to view learning progress.',
-            style: AppTypography.body.copyWith(
-              color: const Color(0xFF5A6B7A),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 28),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(4, (index) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                child: SizedBox(
-                  width: 58,
-                  height: 64,
-                  child: TextField(
-                    controller: _pinControllers[index],
-                    focusNode: _pinFocusNodes[index],
-                    textAlign: TextAlign.center,
-                    keyboardType: TextInputType.number,
-                    maxLength: 1,
-                    obscureText: true,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    decoration: InputDecoration(
-                      counterText: '',
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final tablet = constraints.maxWidth >= 700;
+        final pinWidth = tablet ? 72.0 : 58.0;
+        final pinHeight = tablet ? 78.0 : 64.0;
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: tablet ? 520 : 420),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  GameBackButton(
+                    onTap: _goBack,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    _needsSetup ? 'Set Parent PIN' : 'Parent Zone',
+                    style: AppTypography.h1
+                        .copyWith(color: const Color(0xFF1E1060)),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _needsSetup
+                        ? 'Create a 4-digit PIN so only grown-ups can open this area.'
+                        : 'Enter your parent PIN to view learning progress.',
+                    style: AppTypography.body.copyWith(
+                      color: const Color(0xFF5A6B7A),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(4, (index) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: SizedBox(
+                          width: pinWidth,
+                          height: pinHeight,
+                          child: TextField(
+                            controller: _pinControllers[index],
+                            focusNode: _pinFocusNodes[index],
+                            textAlign: TextAlign.center,
+                            keyboardType: TextInputType.number,
+                            maxLength: 1,
+                            obscureText: true,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
+                            decoration: InputDecoration(
+                              counterText: '',
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                            onChanged: (value) => _onPinChanged(index, value),
+                            onSubmitted: (_) {
+                              if (index == 3) _submitPin();
+                            },
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  if (_errorMessage != null) ...[
+                    const SizedBox(height: 14),
+                    Text(
+                      _errorMessage!,
+                      style: AppTypography.bodySmall
+                          .copyWith(color: AppColors.primary),
+                    ),
+                  ],
+                  if (_cooldownSeconds > 0) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      'PIN locked for $_cooldownSeconds second${_cooldownSeconds == 1 ? '' : 's'}.',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: const Color(0xFF7A4A00),
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                    onChanged: (value) => _onPinChanged(index, value),
-                    onSubmitted: (_) {
-                      if (index == 3) _submitPin();
-                    },
+                  ],
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      onPressed: _isSubmitting ? null : _submitPin,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.parentAccent,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: Text(
+                        _isSubmitting
+                            ? 'Please wait...'
+                            : (_needsSetup ? 'Save PIN' : 'Unlock Dashboard'),
+                        style: AppTypography.button,
+                      ),
+                    ),
                   ),
-                ),
-              );
-            }),
-          ),
-          if (_errorMessage != null) ...[
-            const SizedBox(height: 14),
-            Text(
-              _errorMessage!,
-              style: AppTypography.bodySmall.copyWith(color: AppColors.primary),
-            ),
-          ],
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: _isSubmitting ? null : _submitPin,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.parentAccent,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: Text(
-                _isSubmitting
-                    ? 'Please wait...'
-                    : (_needsSetup ? 'Save PIN' : 'Unlock Dashboard'),
-                style: AppTypography.button,
+                ],
               ),
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -346,11 +457,10 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         children: [
           Row(
             children: [
-              IconButton(
-                onPressed: _goBack,
-                icon: const Icon(Icons.arrow_back_rounded),
-                color: AppColors.parentAccent,
+              GameBackButton(
+                onTap: _goBack,
               ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'Parent Dashboard',
@@ -409,6 +519,27 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
               ],
             ),
           ),
+          const SizedBox(height: 20),
+          _buildSectionHeader(
+            'Child Profile',
+            'Choose which child is active for the next learning session.',
+          ),
+          const SizedBox(height: 12),
+          _buildProfileSwitcher(),
+          const SizedBox(height: 20),
+          _buildSectionHeader(
+            'Audio Settings',
+            'These controls apply to music, sound effects, and spoken prompts.',
+          ),
+          const SizedBox(height: 12),
+          _buildSettingsSection(),
+          const SizedBox(height: 20),
+          _buildSectionHeader(
+            'Family Summary',
+            'A quick adult-friendly snapshot of today and the current streak.',
+          ),
+          const SizedBox(height: 12),
+          _buildSummaryCard(progress),
           const SizedBox(height: 20),
           Text(
             'Activity Levels',
@@ -486,6 +617,150 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       ),
     );
   }
+
+  Widget _buildSectionHeader(String title, String subtitle) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: AppTypography.h3.copyWith(color: const Color(0xFF1E1060)),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          subtitle,
+          style: AppTypography.bodySmall.copyWith(
+            color: const Color(0xFF5A6B7A),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProfileSwitcher() {
+    final profiles = _profiles;
+    if (profiles == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.outline),
+      ),
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: List.generate(profiles.profiles.length, (index) {
+          final profile = profiles.profiles[index];
+          final selected = index == profiles.activeIndex;
+          return ChoiceChip(
+            label: Text('${profile.avatarPath} ${profile.name}'),
+            selected: selected,
+            onSelected: (_) => _switchProfile(index),
+            selectedColor: AppColors.parentAccent.withValues(alpha: 0.18),
+            labelStyle: AppTypography.bodySmall.copyWith(
+              color: const Color(0xFF1E1060),
+              fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(999),
+              side: BorderSide(
+                color: selected ? AppColors.parentAccent : AppColors.outline,
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildSettingsSection() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.outline),
+      ),
+      child: Column(
+        children: [
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            value: _audioSettings.musicEnabled,
+            onChanged: _updateMusicEnabled,
+            title: const Text('Music'),
+            subtitle: const Text('Background music across the app'),
+          ),
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            value: _audioSettings.sfxEnabled,
+            onChanged: _updateSfxEnabled,
+            title: const Text('Sound Effects'),
+            subtitle: const Text('Correct / wrong feedback sounds'),
+          ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              'Speech Rate',
+              style: AppTypography.bodyStrong.copyWith(
+                color: const Color(0xFF1E1060),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SegmentedButton<String>(
+            segments: const [
+              ButtonSegment<String>(
+                value: 'normal',
+                label: Text('Normal'),
+              ),
+              ButtonSegment<String>(
+                value: 'slow',
+                label: Text('Slow'),
+              ),
+            ],
+            selected: {_audioSettings.speechRateMode},
+            onSelectionChanged: (selection) {
+              if (selection.isEmpty) return;
+              _updateSpeechRateMode(selection.first);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard(RewardProgressSnapshot? progress) {
+    final today = progress?.todayCompletions ?? 0;
+    final streak = progress?.streakDays ?? 0;
+    final stars = progress?.totalStars ?? 0;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.outline),
+      ),
+      child: Text(
+        'This week\'s focus: keep the ${_streakLabel(streak)} alive, celebrate $today adventures today, and build on $stars stars earned so far.',
+        style: AppTypography.body.copyWith(
+          color: const Color(0xFF1E1060),
+          fontWeight: FontWeight.w600,
+          height: 1.4,
+        ),
+      ),
+    );
+  }
+
+  String _streakLabel(int streak) => '$streak-day streak';
 }
 
 class _StatChip extends StatelessWidget {

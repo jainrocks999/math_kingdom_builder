@@ -2,6 +2,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
+import '../services/audio_settings_service.dart';
 import 'tts_voice_helper.dart';
 
 class AudioService {
@@ -24,7 +25,11 @@ class AudioService {
       locale: 'en-IN',
       fallbackLocales: const ['en-US', 'hi-IN'],
     );
-    await _tts.setSpeechRate(0.45); // Slow for young children
+    await TtsVoiceHelper.applyPreferredSpeechRate(
+      _tts,
+      normalRate: 0.45,
+      slowRate: 0.3,
+    );
     await _tts.setVolume(1.0);
     await _tts.setPitch(1.1); // Slightly warm/high
 
@@ -80,7 +85,9 @@ class AudioService {
   }
 
   Future<void> playSfx(String fileName) async {
-    if (!_sfxEnabled) return;
+    if (!_sfxEnabled || !await AudioSettingsService.instance.isSfxEnabled()) {
+      return;
+    }
     try {
       await _sfxPlayer.play(AssetSource('audio/$fileName'));
     } catch (e) {
@@ -89,7 +96,10 @@ class AudioService {
   }
 
   Future<void> playMusic(String fileName) async {
-    if (!_musicEnabled) return;
+    if (!_musicEnabled ||
+        !await AudioSettingsService.instance.isMusicEnabled()) {
+      return;
+    }
     try {
       await _musicPlayer.play(AssetSource('audio/$fileName'));
     } catch (e) {
@@ -109,6 +119,11 @@ class AudioService {
   void setSfxEnabled(bool enabled) => _sfxEnabled = enabled;
 
   void setSpeechRate(String rate) {
-    _tts.setSpeechRate(rate == 'slow' ? 0.3 : 0.45);
+    AudioSettingsService.instance.setSpeechRateMode(rate);
+    TtsVoiceHelper.applyPreferredSpeechRate(
+      _tts,
+      normalRate: 0.45,
+      slowRate: 0.3,
+    );
   }
 }

@@ -12,12 +12,14 @@ class KingdomTopBar extends StatelessWidget {
     required this.stars,
     required this.streakDays,
     required this.onBack,
+    required this.onFindMe,
     required this.onResetView,
   });
 
   final int stars;
   final int streakDays;
   final VoidCallback onBack;
+  final VoidCallback onFindMe;
   final VoidCallback onResetView;
 
   @override
@@ -90,9 +92,18 @@ class KingdomTopBar extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        KingdomCircleActionButton(
-          icon: Icons.center_focus_strong_rounded,
-          onTap: onResetView,
+        Column(
+          children: [
+            KingdomCircleActionButton(
+              icon: Icons.my_location_rounded,
+              onTap: onFindMe,
+            ),
+            const SizedBox(height: 8),
+            KingdomCircleActionButton(
+              icon: Icons.center_focus_strong_rounded,
+              onTap: onResetView,
+            ),
+          ],
         ),
       ],
     );

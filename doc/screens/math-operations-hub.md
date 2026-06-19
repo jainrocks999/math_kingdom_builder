@@ -2,6 +2,7 @@
 
 **File:** `lib/features/math_operations/math_operations_screen.dart`  
 **Route:** `/math-operations`
+**Status:** Implemented with audio polish deferred (2026-06-19)
 
 ## Current purpose
 
@@ -23,11 +24,17 @@ Lists Addition, Subtraction, Multiplication, Division entry cards.
 ## Development tasks
 
 ### UI
-- [ ] Match card style to Start Learning modules
+- [x] Match card style to Start Learning modules
 
 ### Existing functionality
-- [ ] Progress snapshot star badges on cards
-- [ ] Link back to Start Learning
+- [x] Progress snapshot star badges on cards
+- [x] Link back to Start Learning
+
+## Notes
+
+- Hub now loads live operation progress and refreshes when returning from any operation screen.
+- Header summary shows math stars earned, played operations, and a direct button back to Start Learning.
+- Audio is still deferred because it is not required for core navigation/progress visibility.
 
 ## Assets
 

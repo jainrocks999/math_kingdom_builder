@@ -2,6 +2,7 @@
 
 **File:** `lib/features/learn_numbers/learn_numbers_screen.dart`  
 **Route:** `/learn-numbers`
+**Status:** Implemented (2026-06-19)
 
 ## Current purpose
 
@@ -26,26 +27,26 @@ Explore numbers 0–30 with object themes, TTS, bear reactions, completion celeb
 ## Development tasks
 
 ### Bug fixes
-- [ ] Stop celebration music if user leaves mid-celebration
-- [ ] TTS stop in dispose (verify)
+- [x] Stop celebration music if user leaves mid-celebration
+- [x] TTS stop in dispose (verify)
 
 ### UI
-- [ ] Scale `numberDisplay` on small screens
-- [ ] Selector chips min 48dp touch
+- [x] Scale `numberDisplay` on small screens
+- [x] Selector chips min 48dp touch
 
 ### Existing functionality
-- [ ] RouteAware + `playStartCountingMusic`
-- [ ] “+4 stars” on completion
-- [ ] Hint: “Swipe numbers or tap 🔊”
+- [x] RouteAware + `playStartCountingMusic`
+- [x] “+4 stars” on completion
+- [x] Hint: “Swipe numbers or tap 🔊”
 
 ### New
-- [ ] Speaker replay button
+- [x] Speaker replay button
 
 ### Kids experience
-- [ ] Bear clap cycle; haptic on number change
+- [x] Bear clap cycle; haptic on number change
 
 ### Responsiveness
-- [ ] Object grid on short screens; safe area for next button
+- [x] Object grid on short screens; safe area for next button
 
 ## Assets
 

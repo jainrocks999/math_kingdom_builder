@@ -2,6 +2,7 @@
 
 **File:** `lib/features/home/home_screen.dart`  
 **Route:** `/home`
+**Status:** Implemented with deferred polish (2026-06-19)
 
 ## Current purpose
 
@@ -27,18 +28,18 @@ Main hub: Start Learning CTA, featured actions grid, quest grid, daily challenge
 ## Development tasks
 
 ### Bug fixes
-- [ ] Fix notification button → Rewards or split icons
-- [ ] Disable tap when `quest.isComingSoon`
+- [x] Fix notification button → Rewards or split icons
+- [x] Disable tap when `quest.isComingSoon`
 
 ### UI
 - [ ] Extract shared header component
-- [ ] Grid readability at 320dp
+- [x] Grid readability at 320dp
 - [ ] Resolve commented SVG bg
 
 ### Existing functionality
-- [ ] Bind quest stars to `RewardProgressService` or remove dots
-- [ ] Dynamic daily challenge from `todayCompletions`
-- [ ] Use `home_music.mp3` on this screen
+- [x] Bind quest stars to `RewardProgressService` or remove dots
+- [x] Dynamic daily challenge from `todayCompletions`
+- [x] Use `home_music.mp3` on this screen
 
 ### New (optional)
 - [ ] Star count chip in header
@@ -47,7 +48,7 @@ Main hub: Start Learning CTA, featured actions grid, quest grid, daily challenge
 - [ ] Bounce on Start Learning press; light haptic on card tap
 
 ### Responsiveness
-- [ ] Grid aspect ratios on narrow phones
+- [x] Grid aspect ratios on narrow phones
 - [ ] Scroll performance with nested GridViews
 
 ## Assets
@@ -62,3 +63,8 @@ Main hub: Start Learning CTA, featured actions grid, quest grid, daily challenge
 ## Acceptance criteria
 
 Icons match destinations; daily banner live; coming-soon guarded; music correct; no overflow on small Android.
+
+## Deferred
+
+- Extract shared header component with Onboarding when that shared scaffold work begins
+- Revisit SVG background and optional haptic polish in a later UI pass

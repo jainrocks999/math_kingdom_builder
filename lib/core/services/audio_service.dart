@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'audio_settings_service.dart';
+
 class AppAudioService {
   AppAudioService._();
 
@@ -67,6 +69,10 @@ class AppAudioService {
     required double volume,
   }) async {
     await _ensureConfigured();
+    if (!await AudioSettingsService.instance.isMusicEnabled()) {
+      await stopBackgroundMusic();
+      return;
+    }
     final assetPath = _assetPath(filePath);
     if (_isBackgroundMusicPlaying && _currentBackgroundTrack == assetPath) {
       return;

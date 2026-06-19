@@ -2,6 +2,7 @@
 
 **File:** `lib/features/number_recognition/number_recognition_screen.dart`  
 **Routes:** `/find-number`, `/number-recognition`
+**Status:** Implemented with deferred cleanup (2026-06-19)
 
 ## Current purpose
 
@@ -26,22 +27,22 @@ Hear number word, tap correct digit card (0–10 rounds).
 ## Development tasks
 
 ### Bug fixes
-- [ ] Remove `StateLearningScreen` alias
-- [ ] Deprecate duplicate route
+- [x] Remove `StateLearningScreen` alias
+- [x] Deprecate duplicate route
 
 ### UI
-- [ ] Option cards min 72dp
-- [ ] Speaker highlight when speaking
+- [x] Option cards min 72dp
+- [x] Speaker highlight when speaking
 
 ### Existing functionality
-- [ ] Subtle correct highlight after 2 wrongs
-- [ ] Speaker replay
+- [x] Subtle correct highlight after 2 wrongs
+- [x] Speaker replay
 
 ### Kids experience
-- [ ] Mini bear burst on correct
+- [x] Mini bear burst on correct
 
 ### Responsiveness
-- [ ] 2×2 option grid on narrow screens
+- [x] 2×2 option grid on narrow screens
 
 ## Assets
 
@@ -55,3 +56,8 @@ Hear number word, tap correct digit card (0–10 rounds).
 ## Acceptance criteria
 
 Audio clear; hints work; stars on complete; responsive grid.
+
+## Deferred
+
+- Remove or wire the unused `number_recognition_controller` in a broader cleanup pass
+- Consider consolidating this screen’s feedback patterns with other quiz-style screens if a shared helper is introduced

@@ -53,6 +53,7 @@ class _DivisionScreenState extends State<DivisionScreen>
   int _musicRequestToken = 0;
   int _autoAdvanceToken = 0;
   int _roundIndex = 0;
+  int _failedDragCount = 0;
   bool _roundSolved = false;
   bool _showCelebration = false;
   bool _isDragging = false;
@@ -60,8 +61,7 @@ class _DivisionScreenState extends State<DivisionScreen>
   _DivisionRound get _round => _rounds[_roundIndex];
   MathOperationTheme get _theme => mathOperationThemes[_round.themeIndex];
 
-  List<String> get _allIds =>
-      List.generate(_round.total, (i) => 'D_$i');
+  List<String> get _allIds => List.generate(_round.total, (i) => 'D_$i');
 
   @override
   void initState() {
@@ -87,7 +87,11 @@ class _DivisionScreenState extends State<DivisionScreen>
       fallbackLocales: const ['en-US', 'en-GB'],
     );
     await _tts.setPitch(1.05);
-    await _tts.setSpeechRate(0.42);
+    await TtsVoiceHelper.applyPreferredSpeechRate(
+      _tts,
+      normalRate: 0.42,
+      slowRate: 0.3,
+    );
     await _tts.setVolume(1.0);
   }
 
@@ -125,6 +129,20 @@ class _DivisionScreenState extends State<DivisionScreen>
   List<String> _bowlIds(int bowlIndex) =>
       _allIds.where((id) => _placements[id] == bowlIndex).toList();
 
+  int? _nextAvailableBowlIndex() {
+    int? bestIndex;
+    var bestCount = 1 << 30;
+    for (var bowlIndex = 0; bowlIndex < _round.groups; bowlIndex++) {
+      final count = _bowlIds(bowlIndex).length;
+      if (count >= _round.quotient) continue;
+      if (count < bestCount) {
+        bestCount = count;
+        bestIndex = bowlIndex;
+      }
+    }
+    return bestIndex;
+  }
+
   void _playScreenMusic({bool delayed = false}) {
     final token = ++_musicRequestToken;
     Future<void>.delayed(
@@ -146,13 +164,17 @@ class _DivisionScreenState extends State<DivisionScreen>
   Future<void> _speakPrompt() async {
     await _ttsReady;
     await _tts.stop();
-    await _tts.speak('${_round.total} divided by ${_round.groups}');
+    await _tts.speak(
+      '${_round.total} divided by ${_round.groups} equals what? Share the objects into equal groups.',
+    );
   }
 
   Future<void> _speakSuccess() async {
     await _ttsReady;
     await _tts.stop();
-    await _tts.speak('${_round.quotient}');
+    await _tts.speak(
+      '${_round.total} divided by ${_round.groups} equals ${_round.quotient}',
+    );
   }
 
   void _placeInBowl(String id, int bowlIndex) {
@@ -169,6 +191,12 @@ class _DivisionScreenState extends State<DivisionScreen>
     if (_pileIds().isEmpty && _allBowlsFilled()) {
       _completeRound();
     }
+  }
+
+  void _placeInNextBowl(String id) {
+    final bowlIndex = _nextAvailableBowlIndex();
+    if (bowlIndex == null) return;
+    _placeInBowl(id, bowlIndex);
   }
 
   bool _allBowlsFilled() {
@@ -195,11 +223,36 @@ class _DivisionScreenState extends State<DivisionScreen>
         setState(() {
           _roundIndex++;
           _roundSolved = false;
+          _failedDragCount = 0;
           _resetPlacements();
         });
         _speakPrompt();
       }
     });
+  }
+
+  void _handleFailedDrag() {
+    if (_roundSolved || _showCelebration) return;
+    setState(() {
+      _failedDragCount++;
+      _isDragging = false;
+    });
+  }
+
+  void _shareAllRemaining() {
+    if (_roundSolved || _showCelebration) return;
+    HapticFeedback.mediumImpact();
+    setState(() {
+      for (final id in _pileIds()) {
+        final bowlIndex = _nextAvailableBowlIndex();
+        if (bowlIndex == null) break;
+        _placements[id] = bowlIndex;
+      }
+      _isDragging = false;
+    });
+    if (_pileIds().isEmpty && _allBowlsFilled()) {
+      _completeRound();
+    }
   }
 
   void _showFinalCelebration() {
@@ -262,7 +315,8 @@ class _DivisionScreenState extends State<DivisionScreen>
         fit: StackFit.expand,
         children: [
           Positioned.fill(
-            child: Image.asset('assets/images/backround.png', fit: BoxFit.cover),
+            child:
+                Image.asset('assets/images/backround.png', fit: BoxFit.cover),
           ),
           DecoratedBox(
             decoration: BoxDecoration(
@@ -356,57 +410,155 @@ class _DivisionScreenState extends State<DivisionScreen>
   }
 
   Widget _buildPlayArea() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: _theme.color.withValues(alpha: 0.20)),
-      ),
-      child: Column(
-        children: [
-          Expanded(
-            child: _pileZone(),
-          ),
-          const SizedBox(height: 10),
-          Expanded(
-            child: Row(
-              children: List.generate(_round.groups, (bowlIndex) {
-                return Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      right: bowlIndex == _round.groups - 1 ? 0 : 8,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final remainingCount = _pileIds().length;
+        final useWrappedBowls = constraints.maxWidth < 380 || _round.groups > 3;
+        final bowlRows = (_round.groups / 2).ceil();
+        final helperHeight = _failedDragCount >= 2 ? 58.0 : 0.0;
+        final availableStageHeight = math.max(
+          260.0,
+          constraints.maxHeight - 70 - helperHeight,
+        );
+        final desiredPileHeight =
+            (140.0 + (math.min(remainingCount, 6) * 16.0)).clamp(160.0, 230.0);
+        final bowlCardHeight = (_round.quotient >= 4 ? 136.0 : 124.0);
+        final bowlsHeight = useWrappedBowls
+            ? (bowlRows * bowlCardHeight) + ((bowlRows - 1) * 8)
+            : 0.0;
+        final pileHeight = useWrappedBowls
+            ? math.min(
+                desiredPileHeight,
+                math.max(150.0, availableStageHeight - bowlsHeight - 10),
+              )
+            : math.min(desiredPileHeight, availableStageHeight * 0.42);
+        final singleRowBowlsHeight = math.max(120.0,
+            math.min(bowlCardHeight, availableStageHeight - pileHeight - 10));
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: mathOpStageDecoration(_theme.color),
+          child: Column(
+            children: [
+              Text(
+                'Share the top objects equally into the bowls.',
+                textAlign: TextAlign.center,
+                style: AppTypography.bodyStrong.copyWith(
+                  color: const Color(0xFF5A6B7A),
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              if (_failedDragCount >= 2 && !_roundSolved) ...[
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _shareAllRemaining,
+                    icon: const Icon(Icons.touch_app_rounded),
+                    label: const Text('Need help? Share all for me'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _theme.color,
+                      side: BorderSide(
+                        color: _theme.color.withValues(alpha: 0.32),
+                        width: 2,
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
                     ),
-                    child: _bowlZone(bowlIndex),
                   ),
-                );
-              }),
-            ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              SizedBox(height: pileHeight, child: _pileZone()),
+              const SizedBox(height: 10),
+              if (useWrappedBowls)
+                SizedBox(
+                  height: bowlsHeight,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children: List.generate(
+                      _round.groups,
+                      (bowlIndex) => SizedBox(
+                        width: ((constraints.maxWidth - 44) / 2)
+                            .clamp(120.0, 180.0),
+                        height: bowlCardHeight,
+                        child: _bowlZone(bowlIndex),
+                      ),
+                    ),
+                  ),
+                )
+              else
+                SizedBox(
+                  height: singleRowBowlsHeight,
+                  child: Row(
+                    children: List.generate(_round.groups, (bowlIndex) {
+                      return Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            right: bowlIndex == _round.groups - 1 ? 0 : 8,
+                          ),
+                          child: _bowlZone(bowlIndex),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Widget _pileZone() {
     final ids = _pileIds();
+    final remainingCount = ids.length;
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: _theme.color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: _theme.color.withValues(alpha: 0.26), width: 2),
+        border:
+            Border.all(color: _theme.color.withValues(alpha: 0.26), width: 2),
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return _objectGrid(
-            ids: ids,
-            constraints: constraints,
-            color: _theme.color,
-            draggable: true,
-          );
-        },
+      child: Column(
+        children: [
+          Text(
+            remainingCount == 0
+                ? 'All objects shared'
+                : '$remainingCount left to share',
+            style: AppTypography.bodyStrong.copyWith(
+              color: _theme.color,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${_round.total} total • ${_round.groups} bowls • ${_round.quotient} each',
+            style: AppTypography.caption.copyWith(
+              color: const Color(0xFF64748B),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return _objectGrid(
+                  ids: ids,
+                  constraints: constraints,
+                  color: _theme.color,
+                  draggable: true,
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -429,20 +581,52 @@ class _DivisionScreenState extends State<DivisionScreen>
         builder: (context, constraints) {
           if (ids.isEmpty) {
             return Center(
-              child: Text(
-                '${bowlIndex + 1}',
-                style: AppTypography.numberDisplay.copyWith(
-                  fontSize: 28,
-                  color: _theme.secondaryColor.withValues(alpha: 0.55),
-                ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Bowl ${bowlIndex + 1}',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.bodyStrong.copyWith(
+                      color: _theme.secondaryColor.withValues(alpha: 0.7),
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${_round.quotient} each',
+                    style: AppTypography.caption.copyWith(
+                      color: const Color(0xFF64748B),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
             );
           }
-          return _objectGrid(
-            ids: ids,
-            constraints: constraints,
-            color: _theme.secondaryColor,
-            draggable: false,
+          return Column(
+            children: [
+              Text(
+                'Bowl ${bowlIndex + 1}',
+                style: AppTypography.caption.copyWith(
+                  color: _theme.secondaryColor,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, innerConstraints) {
+                    return _objectGrid(
+                      ids: ids,
+                      constraints: innerConstraints,
+                      color: _theme.secondaryColor,
+                      draggable: false,
+                    );
+                  },
+                ),
+              ),
+            ],
           );
         },
       ),
@@ -462,15 +646,23 @@ class _DivisionScreenState extends State<DivisionScreen>
             : const SizedBox.shrink(),
       );
     }
-    final columns = ids.length <= 3 ? ids.length : 3;
+    final columns = draggable
+        ? (ids.length >= 4 ? 2 : ids.length)
+        : (ids.length <= 3 ? ids.length : 3);
     const spacing = 8.0;
+    const interactivePadding = 8.0;
     final rows = (ids.length / columns).ceil();
-    final size = math.min(
-      68.0,
-      math.min(
-        (constraints.maxWidth - ((columns - 1) * spacing)) / columns,
-        (constraints.maxHeight - ((rows - 1) * spacing)) / rows,
-      ),
+    final availableWidth =
+        (constraints.maxWidth - ((columns - 1) * spacing)) / columns;
+    final availableHeight =
+        (constraints.maxHeight - ((rows - 1) * spacing)) / rows;
+    final baseSize = math.min(
+      availableWidth - (draggable ? interactivePadding : 0),
+      availableHeight - (draggable ? interactivePadding : 0),
+    );
+    final size = math.max(
+      draggable ? 12.0 : 18.0,
+      math.min(draggable ? 54.0 : 60.0, baseSize),
     );
 
     return Center(
@@ -492,10 +684,20 @@ class _DivisionScreenState extends State<DivisionScreen>
             assetPath: _theme.assetPath,
             backgroundColor: color.withValues(alpha: 0.18),
             enabled: !_roundSolved,
+            onTap: () => _placeInNextBowl(id),
             onDragStarted: () {
               HapticFeedback.selectionClick();
               setState(() => _isDragging = true);
             },
+            onDragCompleted: () {
+              if (mounted) {
+                setState(() {
+                  _isDragging = false;
+                  _failedDragCount = 0;
+                });
+              }
+            },
+            onDragCanceled: _handleFailedDrag,
             onDragEnd: () {
               if (mounted) setState(() => _isDragging = false);
             },

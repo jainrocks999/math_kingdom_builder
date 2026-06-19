@@ -2,6 +2,7 @@
 
 **File:** `lib/features/matching/match_numbers_screen.dart`  
 **Route:** `/matching`
+**Status:** Implemented (2026-06-19)
 
 ## Current purpose
 
@@ -23,17 +24,17 @@ Show object group + number choices; match count to digit (10 rounds).
 ## Development tasks
 
 ### Bug fixes
-- [ ] Auto-advance race during celebration
+- [x] Auto-advance race during celebration
 
 ### UI
-- [ ] Stack layout on narrow width (objects above numbers)
+- [x] Stack layout on narrow width (objects above numbers)
 
 ### Existing functionality
-- [ ] Shared `counting_themes.dart`
-- [ ] Round progress header
+- [x] Shared `counting_themes.dart`
+- [x] Round progress header
 
 ### Responsiveness
-- [ ] Layout on 320dp width
+- [x] Layout on 320dp width
 
 ## Assets
 

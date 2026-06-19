@@ -3,6 +3,8 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
+import '../services/audio_settings_service.dart';
+
 class TtsVoiceHelper {
   static final Map<String, Map<String, String>?> _voiceCache = {};
 
@@ -44,6 +46,15 @@ class TtsVoiceHelper {
     }
 
     await tts.setLanguage(locale);
+  }
+
+  static Future<void> applyPreferredSpeechRate(
+    FlutterTts tts, {
+    required double normalRate,
+    double slowRate = 0.3,
+  }) async {
+    final mode = await AudioSettingsService.instance.speechRateMode();
+    await tts.setSpeechRate(mode == 'slow' ? slowRate : normalRate);
   }
 
   static String _cacheKey(String locale, List<String> fallbackLocales) =>

@@ -82,6 +82,21 @@ class _SequencingScreenState extends State<SequencingScreen>
   MathOperationTheme get _theme => mathOperationThemes[_round.themeIndex];
   bool get _showHint => _wrongAttempts >= 2;
 
+  String get _spokenSequencePrompt {
+    final spokenSequence = <String>[];
+    for (var i = 0; i < _round.sequence.length; i++) {
+      if (i == _round.missingIndex) {
+        spokenSequence.add('blank');
+      } else {
+        spokenSequence.add('${_round.sequence[i]}');
+      }
+    }
+    final direction = _round.stageLabel == 'Backward Order'
+        ? 'Count backward'
+        : 'Count forward';
+    return '$direction. ${spokenSequence.join(', ')}. Fill the missing number.';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -105,7 +120,11 @@ class _SequencingScreenState extends State<SequencingScreen>
       fallbackLocales: const ['en-US', 'en-GB'],
     );
     await _tts.setPitch(1.05);
-    await _tts.setSpeechRate(0.42);
+    await TtsVoiceHelper.applyPreferredSpeechRate(
+      _tts,
+      normalRate: 0.42,
+      slowRate: 0.3,
+    );
     await _tts.setVolume(1.0);
   }
 
@@ -251,7 +270,7 @@ class _SequencingScreenState extends State<SequencingScreen>
   Future<void> _speakPrompt() async {
     await _ttsReady;
     await _tts.stop();
-    await _tts.speak(_round.prompt);
+    await _tts.speak(_spokenSequencePrompt);
   }
 
   Future<void> _speakSuccess() async {
@@ -457,56 +476,64 @@ class _SequencingScreenState extends State<SequencingScreen>
   }
 
   Widget _buildPlayArea() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: _theme.color.withValues(alpha: 0.20)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildPromptCard(),
-          const SizedBox(height: 14),
-          Expanded(
-            child: Center(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    for (var i = 0; i < _round.sequence.length; i++) ...[
-                      if (i > 0) ...[
-                        const SizedBox(width: 8),
-                        Icon(
-                          _round.stageLabel == 'Backward Order'
-                              ? Icons.arrow_back_rounded
-                              : Icons.arrow_forward_rounded,
-                          color: _theme.color.withValues(alpha: 0.65),
-                          size: 28,
-                        ),
-                        const SizedBox(width: 8),
-                      ],
-                      if (i == _round.missingIndex)
-                        _missingSlot()
-                      else
-                        _numberSlot(_round.sequence[i], filled: true),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(18),
+          decoration: mathOpStageDecoration(_theme.color),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildPromptCard(),
+              const SizedBox(height: 14),
+              Expanded(
+                child: Center(
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    runAlignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 10,
+                    runSpacing: 12,
+                    children: [
+                      for (var i = 0; i < _round.sequence.length; i++)
+                        _buildSequenceStep(i),
                     ],
-                  ],
+                  ),
                 ),
               ),
-            ),
+              if (_showHint) ...[
+                const SizedBox(height: 10),
+                _buildHintCard(),
+              ],
+              const SizedBox(height: 14),
+              _optionsTray(),
+            ],
           ),
-          if (_showHint) ...[
-            const SizedBox(height: 10),
-            _buildHintCard(),
-          ],
-          const SizedBox(height: 14),
-          _optionsTray(),
+        );
+      },
+    );
+  }
+
+  Widget _buildSequenceStep(int index) {
+    final isBackward = _round.stageLabel == 'Backward Order';
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (index > 0) ...[
+          Icon(
+            isBackward ? Icons.arrow_back_rounded : Icons.arrow_forward_rounded,
+            color: _theme.color.withValues(alpha: 0.65),
+            size: 28,
+          ),
+          const SizedBox(width: 8),
         ],
-      ),
+        if (index == _round.missingIndex)
+          _missingSlot()
+        else
+          _numberSlot(_round.sequence[index], filled: true),
+      ],
     );
   }
 
@@ -516,38 +543,85 @@ class _SequencingScreenState extends State<SequencingScreen>
       decoration: BoxDecoration(
         color: _theme.softColor.withValues(alpha: 0.24),
         borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: _theme.color.withValues(alpha: 0.18)),
+        boxShadow: [
+          BoxShadow(
+            color: _theme.color.withValues(alpha: 0.14),
+            offset: const Offset(0, 5),
+            blurRadius: 0,
+          ),
+          BoxShadow(
+            color: _theme.color.withValues(alpha: 0.08),
+            offset: const Offset(0, 10),
+            blurRadius: 16,
+          ),
+        ],
       ),
       child: Row(
         children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Center(
-              child: Text(_theme.emoji, style: const TextStyle(fontSize: 26)),
-            ),
-          ),
-          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  _round.stageLabel,
-                  style: AppTypography.bodyStrong.copyWith(
-                    color: _theme.color,
-                    fontWeight: FontWeight.w800,
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: _theme.color.withValues(alpha: 0.16),
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(_theme.emoji,
+                            style: const TextStyle(fontSize: 26)),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _round.stageLabel,
+                            style: AppTypography.bodyStrong.copyWith(
+                              color: _theme.color,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _round.prompt,
+                            style: AppTypography.h3.copyWith(
+                              color: const Color(0xFF1A1060),
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  _round.prompt,
-                  style: AppTypography.h3.copyWith(
-                    color: const Color(0xFF1A1060),
-                    fontWeight: FontWeight.w800,
+                const SizedBox(height: 10),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.92),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: _theme.color.withValues(alpha: 0.18),
+                    ),
+                  ),
+                  child: Text(
+                    'Round ${_roundIndex + 1} of $_totalRounds',
+                    style: AppTypography.caption.copyWith(
+                      color: _theme.color,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ],
@@ -564,7 +638,19 @@ class _SequencingScreenState extends State<SequencingScreen>
       decoration: BoxDecoration(
         color: const Color(0xFFFFF7D6),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFF2D468)),
+        border: Border.all(color: const Color(0xFFF2D468), width: 2),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x26F2D468),
+            offset: Offset(0, 5),
+            blurRadius: 0,
+          ),
+          BoxShadow(
+            color: Color(0x14F2D468),
+            offset: Offset(0, 10),
+            blurRadius: 14,
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -607,6 +693,18 @@ class _SequencingScreenState extends State<SequencingScreen>
                   active ? _theme.color : _theme.color.withValues(alpha: 0.35),
               width: active ? 4 : 3,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: _theme.color.withValues(alpha: active ? 0.24 : 0.14),
+                offset: const Offset(0, 5),
+                blurRadius: 0,
+              ),
+              BoxShadow(
+                color: _theme.color.withValues(alpha: active ? 0.14 : 0.08),
+                offset: const Offset(0, 10),
+                blurRadius: 14,
+              ),
+            ],
           ),
           child: Center(
             child: Text(
@@ -638,6 +736,18 @@ class _SequencingScreenState extends State<SequencingScreen>
               highlight ? _theme.color : _theme.color.withValues(alpha: 0.30),
           width: highlight ? 3 : 2,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: _theme.color.withValues(alpha: highlight ? 0.24 : 0.14),
+            offset: const Offset(0, 5),
+            blurRadius: 0,
+          ),
+          BoxShadow(
+            color: _theme.color.withValues(alpha: 0.08),
+            offset: const Offset(0, 10),
+            blurRadius: 14,
+          ),
+        ],
       ),
       child: Center(
         child: Text(
@@ -654,25 +764,39 @@ class _SequencingScreenState extends State<SequencingScreen>
 
   Widget _optionsTray() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
       decoration: BoxDecoration(
         color: _theme.color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: _theme.color.withValues(alpha: 0.22)),
+        boxShadow: [
+          BoxShadow(
+            color: _theme.color.withValues(alpha: 0.14),
+            offset: const Offset(0, 5),
+            blurRadius: 0,
+          ),
+          BoxShadow(
+            color: _theme.color.withValues(alpha: 0.08),
+            offset: const Offset(0, 10),
+            blurRadius: 16,
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Tap or drag the missing number',
+            'Tap the missing number or hold to drag',
             style: AppTypography.bodyStrong.copyWith(
               color: _theme.color,
               fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            alignment: WrapAlignment.center,
             children: _round.options.map((value) {
               final used = _filledAnswer == value;
               return _DraggableNumberTile(
@@ -770,9 +894,10 @@ class _DraggableNumberTile extends StatelessWidget {
 
     if (!enabled) return tile(ghost: true);
 
-    return Draggable<int>(
+    return LongPressDraggable<int>(
       data: value,
       dragAnchorStrategy: pointerDragAnchorStrategy,
+      delay: const Duration(milliseconds: 180),
       feedback: Material(
         color: Colors.transparent,
         elevation: 8,
@@ -780,6 +905,8 @@ class _DraggableNumberTile extends StatelessWidget {
       ),
       childWhenDragging: tile(ghost: true),
       onDragStarted: onDragStarted,
+      onDragCompleted: onDragEnd,
+      onDraggableCanceled: (_, __) => onDragEnd?.call(),
       onDragEnd: (_) => onDragEnd?.call(),
       child: tile(),
     );

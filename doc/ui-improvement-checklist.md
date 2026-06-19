@@ -4,15 +4,17 @@ Grouped checklist for implementation passes. Apply globally then per screen.
 
 ## Colors
 
-- [ ] Remove duplicate `lib/app_colors.dart`; use `core/constants/app_colors.dart` only
+- [x] Remove duplicate `lib/app_colors.dart`; use `core/constants/app_colors.dart` only
 - [ ] Use `correctFeedback` / `incorrectFeedback` for answer states consistently
+- Progress: `Mini Quiz`, `Matching`, `Count Objects`, `Find Correct Number`, and `Number Recognition` now use semantic feedback colors
 - [ ] Parent zone keeps `parentAccent` — don’t mix into kid screens arbitrarily
 
 ## Typography
 
-- [ ] Fredoka everywhere; remove Google Fonts LilitaOne from `BouncingGameButton`
-- [ ] Responsive scaling for hero text (clamp by screen width)
+- [x] Fredoka everywhere; remove Google Fonts LilitaOne from `BouncingGameButton`
+- [x] Responsive scaling for hero text (clamp by screen width)
 - [ ] Minimum ~14sp for kid-readable subtitles
+- Progress: key header subtitles bumped to 14sp where practical (`Home`, `Rewards`, `Learn Numbers`, `Matching`)
 
 ## Spacing
 
@@ -23,17 +25,22 @@ Grouped checklist for implementation passes. Apply globally then per screen.
 ## Buttons
 
 - [ ] Minimum 48×48 touch targets; primary CTAs 52+ height
-- [ ] Shared back button style (from Start Learning `_BackButton`)
+- [x] Shared back button style (from Start Learning `_BackButton`)
 - [ ] `BouncingGameButton` for primary game actions where appropriate
+- Progress: shared math-ops circle buttons now use 52px touch targets
+- Progress: `BouncingGameButton`, onboarding controls, and Number Recognition controls now use `InkWell`
 
 ## Cards
 
 - [ ] Unified 3D shadow pattern (offset Y 5–6, blur 0)
 - [ ] Border radius 24–28 for large cards, 18 for chips
+- Progress: math operation stage cards now use a shared surface decoration for Addition/Subtraction/Multiplication/Division
+- Progress: Sequencing and Patterns prompt/hint/options cards now match the same layered card treatment
 
 ## Icons and images
 
 - [ ] `errorBuilder` with emoji/icon fallback on all `Image.asset` cards
+- Progress: high-traffic fallbacks added for onboarding illustrations, celebration bear, math-op object tokens, tracing celebration bear, learn/count/match object visuals, and mini quiz object visuals
 - [ ] Bear assets for celebrations consistently
 
 ## Animations
@@ -47,22 +54,24 @@ Grouped checklist for implementation passes. Apply globally then per screen.
 - [ ] Correct: `correct.mp3` + short TTS
 - [ ] Wrong: `wrong_soft.mp3` only (gentle)
 - [ ] Module complete: `celebration.mp3`
+- Progress: wrong feedback is centralized through `playWrongFeedback()`, celebration music is centralized through `playCelebrationMusic()`, and major game flows use `correct.mp3`
 
 ## Empty states
 
-- [ ] Shared kid-friendly “Oops” component with bear
+- [x] Shared kid-friendly “Oops” component with bear
 
 ## Error states
 
-- [ ] Home retry pattern for Kingdom/Rewards load failures
+- [x] Home retry pattern for Kingdom/Rewards load failures
 
 ## Loading states
 
-- [ ] Primary-color spinner or skeleton cards on kid screens (not bare spinner)
+- [x] Primary-color spinner or skeleton cards on key kid screens (not bare spinner)
 
 ## Touch targets
 
-- [ ] Audit `GestureDetector` without minimum hit area
+- [x] Audit `GestureDetector` without minimum hit area
+- Progress: remaining raw `GestureDetector` usage is intentional for tracing/canvas interactions plus `NumberBlock`
 
 ## Responsive layout
 

@@ -12,28 +12,9 @@ import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/audio_service.dart';
 import '../StartLearning/start_learning_next_action_button.dart';
+import '../count_objects/counting_themes.dart';
 import '../../core/utils/tts_voice_helper.dart';
 import '../../shared/widgets/celebration_bear.dart';
-
-class _MatchTheme {
-  const _MatchTheme({
-    required this.assetPath,
-    required this.singular,
-    required this.plural,
-    required this.emoji,
-    required this.color,
-    required this.softColor,
-    required this.shadowColor,
-  });
-
-  final String assetPath;
-  final String singular;
-  final String plural;
-  final String emoji;
-  final Color color;
-  final Color softColor;
-  final Color shadowColor;
-}
 
 class _MatchRound {
   const _MatchRound({
@@ -56,54 +37,6 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
     with TickerProviderStateMixin, RouteAware {
   static const int _totalRounds = 10;
 
-  static const List<_MatchTheme> _themes = [
-    _MatchTheme(
-      assetPath: 'assets/images/contingobjects/apple.jpeg',
-      singular: 'apple',
-      plural: 'apples',
-      emoji: '🍎',
-      color: AppColors.primary,
-      softColor: AppColors.primaryLight,
-      shadowColor: Color(0xFFC94A18),
-    ),
-    _MatchTheme(
-      assetPath: 'assets/images/contingobjects/candy.jpeg',
-      singular: 'candy',
-      plural: 'candies',
-      emoji: '🍬',
-      color: AppColors.warning,
-      softColor: AppColors.premiumGoldLight,
-      shadowColor: Color(0xFFD4A000),
-    ),
-    _MatchTheme(
-      assetPath: 'assets/images/contingobjects/car.jpeg',
-      singular: 'car',
-      plural: 'cars',
-      emoji: '🚗',
-      color: AppColors.bridgeBlue,
-      softColor: AppColors.secondaryLight,
-      shadowColor: Color(0xFF2890D0),
-    ),
-    _MatchTheme(
-      assetPath: 'assets/images/contingobjects/ballun.jpeg',
-      singular: 'balloon',
-      plural: 'balloons',
-      emoji: '🎈',
-      color: AppColors.stairsLavender,
-      softColor: AppColors.restBackground,
-      shadowColor: Color(0xFFA888E8),
-    ),
-    _MatchTheme(
-      assetPath: 'assets/images/contingobjects/start.jpeg',
-      singular: 'star',
-      plural: 'stars',
-      emoji: '⭐',
-      color: AppColors.secondary,
-      softColor: AppColors.secondaryLight,
-      shadowColor: Color(0xFF2AADA4),
-    ),
-  ];
-
   late final FlutterTts _tts;
   late final Future<void> _ttsReady;
   late final AnimationController _numberPulseController;
@@ -123,7 +56,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
   List<int> _options = const [];
 
   _MatchRound get _currentRound => _rounds[_roundIndex];
-  _MatchTheme get _theme => _themes[_currentRound.themeIndex];
+  CountingTheme get _theme => countingThemes[_currentRound.themeIndex];
   int get _correctCount => _currentRound.count;
 
   @override
@@ -156,7 +89,11 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
       fallbackLocales: const ['en-US', 'en-GB'],
     );
     await _tts.setPitch(1.04);
-    await _tts.setSpeechRate(0.4);
+    await TtsVoiceHelper.applyPreferredSpeechRate(
+      _tts,
+      normalRate: 0.4,
+      slowRate: 0.3,
+    );
     await _tts.setVolume(1.0);
   }
 
@@ -164,7 +101,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
     final counts = List<int>.generate(_totalRounds, (index) => index + 1)
       ..shuffle(_random);
     final rounds = <_MatchRound>[];
-    final themeUsage = List<int>.filled(_themes.length, 0);
+    final themeUsage = List<int>.filled(countingThemes.length, 0);
     var lastThemeIndex = -1;
 
     for (final count in counts) {
@@ -184,14 +121,15 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
     required List<int> themeUsage,
     required int lastThemeIndex,
   }) {
-    final candidates = List<int>.generate(_themes.length, (index) => index)
-      ..sort((a, b) => themeUsage[a].compareTo(themeUsage[b]));
+    final candidates =
+        List<int>.generate(countingThemes.length, (index) => index)
+          ..sort((a, b) => themeUsage[a].compareTo(themeUsage[b]));
     final leastUsed = themeUsage[candidates.first];
     final filtered = candidates
         .where(
           (index) =>
               themeUsage[index] <= leastUsed + 1 &&
-              (_themes.length == 1 || index != lastThemeIndex),
+              (countingThemes.length == 1 || index != lastThemeIndex),
         )
         .toList();
     final pool = filtered.isNotEmpty ? filtered : candidates;
@@ -228,6 +166,12 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
   void _stopScreenMusic() {
     _musicRequestToken++;
     AppAudioService.instance.stopBackgroundMusic();
+  }
+
+  void _stopAllAudioAndSpeech() {
+    _stopScreenMusic();
+    AppAudioService.instance.stopCelebrationMusic();
+    _tts.stop();
   }
 
   Future<void> _speakPrompt() async {
@@ -306,7 +250,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
     if (!mounted || _showCelebration || !_roundSolved) return;
     if (_roundIndex != _totalRounds - 1) return;
     _autoAdvanceToken++;
-    _stopScreenMusic();
+    _stopAllAudioAndSpeech();
     RewardProgressService.instance.recordModuleCompletion(
       RewardModuleIds.matchNumbers,
     );
@@ -319,15 +263,13 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
 
   void _goBack() {
     _autoAdvanceToken++;
-    AppAudioService.instance.stopCelebrationMusic();
-    _stopScreenMusic();
+    _stopAllAudioAndSpeech();
     context.pop();
   }
 
   void _prepareNextLearningNavigation() {
     _autoAdvanceToken++;
-    AppAudioService.instance.stopCelebrationMusic();
-    _stopScreenMusic();
+    _stopAllAudioAndSpeech();
     setState(() {
       _showCelebration = false;
     });
@@ -357,7 +299,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
 
   @override
   void didPushNext() {
-    _stopScreenMusic();
+    _stopAllAudioAndSpeech();
   }
 
   @override
@@ -365,9 +307,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
     appRouteObserver.unsubscribe(this);
     _musicRequestToken++;
     _autoAdvanceToken++;
-    AppAudioService.instance.stopCelebrationMusic();
-    AppAudioService.instance.stopBackgroundMusic();
-    _tts.stop();
+    _stopAllAudioAndSpeech();
     _numberPulseController.dispose();
     _celebrationController.dispose();
     super.dispose();
@@ -406,6 +346,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
               child: LayoutBuilder(
                 builder: (context, constraints) {
+                  final isNarrowWidth = constraints.maxWidth < 360;
                   final isVeryCompactHeight = constraints.maxHeight < 700;
                   final isCompactHeight = constraints.maxHeight < 760;
                   final gap = isVeryCompactHeight
@@ -414,17 +355,23 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
 
                   return Column(
                     children: [
-                      _buildTopBar(progress),
+                      _buildTopBar(
+                        progress,
+                        compact: isCompactHeight,
+                        narrowWidth: isNarrowWidth,
+                      ),
                       SizedBox(height: gap),
                       _buildPromptCard(
                         compact: isCompactHeight,
                         veryCompact: isVeryCompactHeight,
+                        narrowWidth: isNarrowWidth,
                       ),
                       SizedBox(height: gap),
                       Expanded(
                         child: _buildGameBoard(
                           isCompactHeight: isCompactHeight,
                           isVeryCompactHeight: isVeryCompactHeight,
+                          isNarrowWidth: isNarrowWidth,
                         ),
                       ),
                       SizedBox(height: isVeryCompactHeight ? 8 : 12),
@@ -444,6 +391,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
   Widget _buildGameBoard({
     required bool isCompactHeight,
     required bool isVeryCompactHeight,
+    required bool isNarrowWidth,
   }) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -464,79 +412,126 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
           );
         }
 
+        final numberCard = SizedBox(
+          height: isVeryCompactHeight ? 122 : (isCompactHeight ? 142 : 176),
+          child: _buildNumberCard(compact: true),
+        );
+
+        final choicesGrid = Expanded(
+          child: _buildChoicesGrid(
+            preferLargeCards: true,
+            compactHeight: isVeryCompactHeight,
+            narrowWidth: isNarrowWidth,
+          ),
+        );
+
         return Column(
           children: [
-            SizedBox(
-              height: isVeryCompactHeight ? 122 : (isCompactHeight ? 142 : 176),
-              child: _buildNumberCard(compact: true),
-            ),
+            if (isNarrowWidth) choicesGrid else numberCard,
             SizedBox(height: isVeryCompactHeight ? 8 : 12),
-            Expanded(
-              child: _buildChoicesGrid(
-                preferLargeCards: true,
-                compactHeight: isVeryCompactHeight,
-              ),
-            ),
+            if (isNarrowWidth) numberCard else choicesGrid,
           ],
         );
       },
     );
   }
 
-  Widget _buildTopBar(double progress) {
-    return Row(
+  Widget _buildTopBar(
+    double progress, {
+    required bool compact,
+    required bool narrowWidth,
+  }) {
+    return Column(
       children: [
-        _CircleButton(
-          icon: Icons.arrow_back_rounded,
-          color: _theme.color,
-          onTap: _goBack,
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
+        Row(
+          children: [
+            _CircleButton(
+              icon: Icons.arrow_back_rounded,
+              color: _theme.color,
+              onTap: _goBack,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
                 'Match Numbers',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: AppTypography.h1.copyWith(
-                  fontSize: 24,
+                  fontSize: narrowWidth ? 22 : 24,
                   color: const Color(0xFF1A1060),
                   fontWeight: FontWeight.w800,
                 ),
               ),
-              Text(
-                'Round ${_roundIndex + 1} of $_totalRounds',
-                style: AppTypography.bodySmall.copyWith(
-                  color: const Color(0xFF586374),
-                  fontWeight: FontWeight.w700,
-                ),
+            ),
+            const SizedBox(width: 10),
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: narrowWidth ? 10 : 12,
+                vertical: compact ? 8 : 10,
               ),
-            ],
-          ),
-        ),
-        Container(
-          width: 94,
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.92),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: _theme.color.withValues(alpha: 0.22)),
-          ),
-          child: Column(
-            children: [
-              Text(
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.92),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: _theme.color.withValues(alpha: 0.22)),
+              ),
+              child: Text(
                 '${(progress * 100).round()}%',
                 style: AppTypography.bodyStrong.copyWith(
                   color: _theme.color,
                   fontWeight: FontWeight.w800,
+                  fontSize: narrowWidth ? 13 : 14,
                 ),
               ),
-              const SizedBox(height: 6),
+            ),
+          ],
+        ),
+        SizedBox(height: compact ? 10 : 12),
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(
+            horizontal: narrowWidth ? 12 : 14,
+            vertical: compact ? 10 : 12,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.92),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: _theme.color.withValues(alpha: 0.16)),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Round ${_roundIndex + 1} of $_totalRounds',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodyStrong.copyWith(
+                        color: const Color(0xFF1A1060),
+                        fontSize: narrowWidth ? 14 : 15,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    _roundSolved ? 'Matched!' : 'Keep going',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.bodySmall.copyWith(
+                      color:
+                          _roundSolved ? AppColors.gardenGreen : _theme.color,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
               ClipRRect(
                 borderRadius: BorderRadius.circular(999),
                 child: LinearProgressIndicator(
                   value: progress,
-                  minHeight: 8,
+                  minHeight: 9,
                   backgroundColor: _theme.softColor,
                   valueColor: AlwaysStoppedAnimation<Color>(_theme.color),
                 ),
@@ -548,7 +543,11 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
     );
   }
 
-  Widget _buildPromptCard({bool compact = false, bool veryCompact = false}) {
+  Widget _buildPromptCard({
+    bool compact = false,
+    bool veryCompact = false,
+    bool narrowWidth = false,
+  }) {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(veryCompact ? 12 : (compact ? 16 : 18)),
@@ -564,60 +563,115 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Container(
-            width: veryCompact ? 50 : (compact ? 60 : 68),
-            height: veryCompact ? 50 : (compact ? 60 : 68),
-            decoration: BoxDecoration(
-              color: _theme.softColor,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Center(
-              child: Text(
-                _theme.emoji,
-                style:
-                    TextStyle(fontSize: veryCompact ? 24 : (compact ? 30 : 34)),
-              ),
-            ),
-          ),
-          SizedBox(width: veryCompact ? 10 : 14),
-          Expanded(
-            child: Column(
+      child: narrowWidth
+          ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Row(
+                  children: [
+                    Container(
+                      width: veryCompact ? 46 : 56,
+                      height: veryCompact ? 46 : 56,
+                      decoration: BoxDecoration(
+                        color: _theme.softColor,
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Center(
+                        child: Text(
+                          _theme.emoji,
+                          style: TextStyle(
+                            fontSize: veryCompact ? 22 : 28,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    _CircleButton(
+                      icon: Icons.volume_up_rounded,
+                      color: _theme.color,
+                      onTap: _speakPrompt,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
                 Text(
                   'Match the number to the right group.',
-                  maxLines: veryCompact ? 1 : 2,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.cardTitle.copyWith(
                     color: const Color(0xFF1A1060),
-                    fontSize: veryCompact ? 15 : (compact ? 17 : 19),
+                    fontSize: veryCompact ? 15 : 17,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
                 SizedBox(height: veryCompact ? 4 : 6),
                 Text(
                   'Tap the group that has exactly $_correctCount ${_correctCount == 1 ? _theme.singular : _theme.plural}.',
-                  maxLines: veryCompact ? 2 : 3,
+                  maxLines: veryCompact ? 3 : 4,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodySmall.copyWith(
                     color: const Color(0xFF5F6C7B),
-                    fontSize: veryCompact ? 11 : null,
+                    fontSize: veryCompact ? 12 : 14,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
+            )
+          : Row(
+              children: [
+                Container(
+                  width: veryCompact ? 50 : (compact ? 60 : 68),
+                  height: veryCompact ? 50 : (compact ? 60 : 68),
+                  decoration: BoxDecoration(
+                    color: _theme.softColor,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Center(
+                    child: Text(
+                      _theme.emoji,
+                      style: TextStyle(
+                        fontSize: veryCompact ? 24 : (compact ? 30 : 34),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: veryCompact ? 10 : 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Match the number to the right group.',
+                        maxLines: veryCompact ? 1 : 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.cardTitle.copyWith(
+                          color: const Color(0xFF1A1060),
+                          fontSize: veryCompact ? 15 : (compact ? 17 : 19),
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      SizedBox(height: veryCompact ? 4 : 6),
+                      Text(
+                        'Tap the group that has exactly $_correctCount ${_correctCount == 1 ? _theme.singular : _theme.plural}.',
+                        maxLines: veryCompact ? 2 : 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: const Color(0xFF5F6C7B),
+                          fontSize: veryCompact ? 12 : 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: veryCompact ? 8 : 10),
+                _CircleButton(
+                  icon: Icons.volume_up_rounded,
+                  color: _theme.color,
+                  onTap: _speakPrompt,
+                ),
+              ],
             ),
-          ),
-          SizedBox(width: veryCompact ? 8 : 10),
-          _CircleButton(
-            icon: Icons.volume_up_rounded,
-            color: _theme.color,
-            onTap: _speakPrompt,
-          ),
-        ],
-      ),
     );
   }
 
@@ -701,13 +755,16 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
   Widget _buildChoicesGrid({
     bool preferLargeCards = false,
     bool compactHeight = false,
+    bool narrowWidth = false,
   }) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final spacing = compactHeight ? 10.0 : (preferLargeCards ? 14.0 : 12.0);
+        final spacing = narrowWidth
+            ? 8.0
+            : (compactHeight ? 10.0 : (preferLargeCards ? 14.0 : 12.0));
         const crossAxisCount = 2;
         final rowCount = (_options.length / crossAxisCount).ceil();
-        final viewportPadding = compactHeight ? 4.0 : 6.0;
+        final viewportPadding = narrowWidth ? 2.0 : (compactHeight ? 4.0 : 6.0);
         final availableHeight = math.max(
           0.0,
           constraints.maxHeight - (viewportPadding * 2),
@@ -729,13 +786,18 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
           itemBuilder: (context, index) => _buildChoiceCard(
             _options[index],
             compactHeight: compactHeight,
+            narrowWidth: narrowWidth,
           ),
         );
       },
     );
   }
 
-  Widget _buildChoiceCard(int count, {bool compactHeight = false}) {
+  Widget _buildChoiceCard(
+    int count, {
+    bool compactHeight = false,
+    bool narrowWidth = false,
+  }) {
     final isSelected = _selectedCount == count;
     final isCorrect = count == _correctCount;
 
@@ -760,7 +822,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
         borderRadius: BorderRadius.circular(24),
         onTap: () => _handleOptionTap(count),
         child: Container(
-          padding: EdgeInsets.all(compactHeight ? 8 : 10),
+          padding: EdgeInsets.all(narrowWidth ? 6 : (compactHeight ? 8 : 10)),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: borderColor, width: 2),
@@ -776,8 +838,11 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
             children: [
               Expanded(
                 child: LayoutBuilder(
-                  builder: (context, constraints) =>
-                      _buildObjectPreview(count, constraints),
+                  builder: (context, constraints) => _buildObjectPreview(
+                    count,
+                    constraints,
+                    narrowWidth: narrowWidth,
+                  ),
                 ),
               ),
             ],
@@ -787,7 +852,11 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
     );
   }
 
-  Widget _buildObjectPreview(int count, BoxConstraints constraints) {
+  Widget _buildObjectPreview(
+    int count,
+    BoxConstraints constraints, {
+    bool narrowWidth = false,
+  }) {
     final columns = switch (count) {
       <= 2 => count,
       <= 4 => 2,
@@ -795,12 +864,12 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
       _ => 4,
     };
     final rows = (count / columns).ceil();
-    const spacing = 8.0;
+    final spacing = narrowWidth ? 6.0 : 8.0;
     final maxSize = switch (count) {
-      <= 2 => 54.0,
-      <= 4 => 50.0,
-      <= 6 => 44.0,
-      _ => 38.0,
+      <= 2 => narrowWidth ? 46.0 : 54.0,
+      <= 4 => narrowWidth ? 42.0 : 50.0,
+      <= 6 => narrowWidth ? 38.0 : 44.0,
+      _ => narrowWidth ? 34.0 : 38.0,
     };
     final itemSize = math.min(
       maxSize,
@@ -837,6 +906,15 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
                 child: Image.asset(
                   _theme.assetPath,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Center(
+                      child: Icon(
+                        Icons.auto_awesome_rounded,
+                        size: itemSize * 0.34,
+                        color: _theme.color,
+                      ),
+                    );
+                  },
                 ),
               ),
             ),

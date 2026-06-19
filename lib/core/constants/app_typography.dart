@@ -2,6 +2,17 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
 class AppTypography {
+  static double responsiveSize(
+    double width, {
+    required double min,
+    required double max,
+    double minWidth = 320,
+    double maxWidth = 430,
+  }) {
+    final t = ((width - minWidth) / (maxWidth - minWidth)).clamp(0.0, 1.0);
+    return min + ((max - min) * t);
+  }
+
   // Hero Text
   static const TextStyle hero = TextStyle(
     fontFamily: 'Fredoka',

@@ -205,7 +205,7 @@ class KingdomZoneArea extends StatelessWidget {
     final isLocked = !zone.unlocked;
 
     return Positioned.fromRect(
-      rect: zone.rect,
+      rect: zone.rect.inflate(8),
       child: Material(
         color: Colors.transparent,
         child: InkWell(

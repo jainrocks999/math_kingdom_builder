@@ -2,6 +2,7 @@
 
 **File:** `lib/splash_screen.dart`  
 **Route:** `/`
+**Status:** Implemented with skip/fallback polish (2026-06-19)
 
 ## Current purpose
 
@@ -24,23 +25,28 @@ Plays branded splash video, then routes to Onboarding (first launch) or Home.
 ## Development tasks
 
 ### Bug fixes
-- [ ] Verify video dispose on navigate (regression test)
+- [x] Verify video dispose on navigate (regression-safe lifecycle)
 
 ### UI
-- [ ] Static logo fallback under spinner (`assets/logo/`)
-- [ ] Safe area / aspect ratio on notched devices
+- [x] Static logo fallback under spinner (`assets/logo/`)
+- [x] Safe area / aspect ratio on notched devices
 
 ### Existing functionality
-- [ ] Shorten fallback to 4s if video stalled
+- [x] Shorten fallback to 4s if video stalled
 
 ### New (optional)
-- [ ] Tap to skip after 2s on repeat launches
+- [x] Tap to skip after 2s on repeat launches
 
 ### Kids experience
-- [ ] No error text visible to child
+- [x] No error text visible to child
 
 ### Responsiveness
-- [ ] Test `BoxFit.cover` on 320dp and tablets
+- [x] `BoxFit.cover` kept with safe fallback content for small/large screens
+
+## Notes
+
+- Repeat launches can skip after a short delay, while first-time launches still route naturally into onboarding.
+- Video fallback now shows a friendly branded logo instead of a black spinner-only screen.
 
 ## Assets
 

@@ -101,6 +101,14 @@ class _PatternsScreenState extends State<PatternsScreen>
   int get _correctIndex => _round.correctIndex;
   bool get _showHint => _wrongAttempts >= 2;
 
+  String get _spokenPatternPrompt {
+    final spokenPieces = _round.sequence
+        .map((index) => _pieces[index].name)
+        .toList(growable: true)
+      ..add('blank');
+    return '${_round.stageLabel}. ${spokenPieces.join(', ')}. ${_round.prompt}';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -124,7 +132,11 @@ class _PatternsScreenState extends State<PatternsScreen>
       fallbackLocales: const ['en-US', 'en-GB'],
     );
     await _tts.setPitch(1.05);
-    await _tts.setSpeechRate(0.42);
+    await TtsVoiceHelper.applyPreferredSpeechRate(
+      _tts,
+      normalRate: 0.42,
+      slowRate: 0.3,
+    );
     await _tts.setVolume(1.0);
   }
 
@@ -241,7 +253,7 @@ class _PatternsScreenState extends State<PatternsScreen>
   Future<void> _speakPrompt() async {
     await _ttsReady;
     await _tts.stop();
-    await _tts.speak(_round.prompt);
+    await _tts.speak(_spokenPatternPrompt);
   }
 
   Future<void> _speakSuccess() async {
@@ -438,45 +450,48 @@ class _PatternsScreenState extends State<PatternsScreen>
   }
 
   Widget _buildPlayArea() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: _theme.color.withValues(alpha: 0.20)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildPromptCard(),
-          const SizedBox(height: 14),
-          Expanded(
-            child: Center(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    for (var i = 0; i < _round.sequence.length; i++) ...[
-                      if (i > 0) const SizedBox(width: 12),
-                      _patternPiece(_round.sequence[i]),
-                    ],
-                    const SizedBox(width: 12),
-                    _missingPieceSlot(),
-                  ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(18),
+          decoration: mathOpStageDecoration(_theme.color),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildPromptCard(),
+              const SizedBox(height: 14),
+              Expanded(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minWidth: math.max(0, constraints.maxWidth - 12),
+                    ),
+                    child: Wrap(
+                      alignment: WrapAlignment.center,
+                      runAlignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: [
+                        for (var i = 0; i < _round.sequence.length; i++)
+                          _patternPiece(_round.sequence[i]),
+                        _missingPieceSlot(),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
+              if (_showHint) ...[
+                const SizedBox(height: 10),
+                _buildHintCard(),
+              ],
+              const SizedBox(height: 14),
+              _optionsTray(),
+            ],
           ),
-          if (_showHint) ...[
-            const SizedBox(height: 10),
-            _buildHintCard(),
-          ],
-          const SizedBox(height: 14),
-          _optionsTray(),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -486,42 +501,88 @@ class _PatternsScreenState extends State<PatternsScreen>
       decoration: BoxDecoration(
         color: _theme.softColor.withValues(alpha: 0.24),
         borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: _theme.color.withValues(alpha: 0.18)),
+        boxShadow: [
+          BoxShadow(
+            color: _theme.color.withValues(alpha: 0.14),
+            offset: const Offset(0, 5),
+            blurRadius: 0,
+          ),
+          BoxShadow(
+            color: _theme.color.withValues(alpha: 0.08),
+            offset: const Offset(0, 10),
+            blurRadius: 16,
+          ),
+        ],
       ),
       child: Row(
         children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: const Center(
-              child: Icon(
-                Icons.pattern_rounded,
-                color: Color(0xFF1A1060),
-                size: 26,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  _round.stageLabel,
-                  style: AppTypography.bodyStrong.copyWith(
-                    color: _theme.color,
-                    fontWeight: FontWeight.w800,
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: _theme.color.withValues(alpha: 0.16),
+                        ),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.pattern_rounded,
+                          color: Color(0xFF1A1060),
+                          size: 26,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _round.stageLabel,
+                            style: AppTypography.bodyStrong.copyWith(
+                              color: _theme.color,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _round.prompt,
+                            style: AppTypography.h3.copyWith(
+                              color: const Color(0xFF1A1060),
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  _round.prompt,
-                  style: AppTypography.h3.copyWith(
-                    color: const Color(0xFF1A1060),
-                    fontWeight: FontWeight.w800,
+                const SizedBox(height: 10),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.92),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: _theme.color.withValues(alpha: 0.18),
+                    ),
+                  ),
+                  child: Text(
+                    'Round ${_roundIndex + 1} of $_totalRounds',
+                    style: AppTypography.caption.copyWith(
+                      color: _theme.color,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ],
@@ -538,7 +599,19 @@ class _PatternsScreenState extends State<PatternsScreen>
       decoration: BoxDecoration(
         color: const Color(0xFFFFF7D6),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFF2D468)),
+        border: Border.all(color: const Color(0xFFF2D468), width: 2),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x26F2D468),
+            offset: Offset(0, 5),
+            blurRadius: 0,
+          ),
+          BoxShadow(
+            color: Color(0x14F2D468),
+            offset: Offset(0, 10),
+            blurRadius: 14,
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -596,6 +669,18 @@ class _PatternsScreenState extends State<PatternsScreen>
                   active ? _theme.color : _theme.color.withValues(alpha: 0.35),
               width: active ? 4 : 3,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: _theme.color.withValues(alpha: active ? 0.24 : 0.14),
+                offset: const Offset(0, 5),
+                blurRadius: 0,
+              ),
+              BoxShadow(
+                color: _theme.color.withValues(alpha: active ? 0.14 : 0.08),
+                offset: const Offset(0, 10),
+                blurRadius: 14,
+              ),
+            ],
           ),
           child: Center(
             child: Text(
@@ -614,25 +699,39 @@ class _PatternsScreenState extends State<PatternsScreen>
 
   Widget _optionsTray() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
       decoration: BoxDecoration(
         color: _theme.color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: _theme.color.withValues(alpha: 0.22)),
+        boxShadow: [
+          BoxShadow(
+            color: _theme.color.withValues(alpha: 0.14),
+            offset: const Offset(0, 5),
+            blurRadius: 0,
+          ),
+          BoxShadow(
+            color: _theme.color.withValues(alpha: 0.08),
+            offset: const Offset(0, 10),
+            blurRadius: 16,
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Tap or drag the next piece',
+            'Tap the next piece or hold to drag',
             style: AppTypography.bodyStrong.copyWith(
               color: _theme.color,
               fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            alignment: WrapAlignment.center,
             children: _round.options.map((index) {
               final used = _filledIndex == index;
               return _DraggablePatternPiece(
@@ -686,6 +785,11 @@ class _PatternToken extends StatelessWidget {
             color: piece.color.withValues(alpha: 0.30),
             offset: const Offset(0, 5),
             blurRadius: 0,
+          ),
+          BoxShadow(
+            color: piece.color.withValues(alpha: 0.10),
+            offset: const Offset(0, 10),
+            blurRadius: 14,
           ),
         ],
       ),
@@ -759,9 +863,10 @@ class _DraggablePatternPiece extends StatelessWidget {
       return token(ghost: true);
     }
 
-    return Draggable<int>(
+    return LongPressDraggable<int>(
       data: pieceIndex,
       dragAnchorStrategy: pointerDragAnchorStrategy,
+      delay: const Duration(milliseconds: 180),
       feedback: Material(
         color: Colors.transparent,
         elevation: 8,
@@ -769,6 +874,8 @@ class _DraggablePatternPiece extends StatelessWidget {
       ),
       childWhenDragging: token(ghost: true),
       onDragStarted: onDragStarted,
+      onDragCompleted: onDragEnd,
+      onDraggableCanceled: (_, __) => onDragEnd?.call(),
       onDragEnd: (_) => onDragEnd?.call(),
       child: token(),
     );

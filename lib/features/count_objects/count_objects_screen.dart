@@ -13,26 +13,7 @@ import '../StartLearning/start_learning_next_action_button.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/tts_voice_helper.dart';
 import '../../shared/widgets/celebration_bear.dart';
-
-class _CountTheme {
-  const _CountTheme({
-    required this.assetPath,
-    required this.singular,
-    required this.plural,
-    required this.emoji,
-    required this.color,
-    required this.softColor,
-    required this.shadowColor,
-  });
-
-  final String assetPath;
-  final String singular;
-  final String plural;
-  final String emoji;
-  final Color color;
-  final Color softColor;
-  final Color shadowColor;
-}
+import 'counting_themes.dart';
 
 class _RoundConfig {
   const _RoundConfig({
@@ -55,54 +36,6 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
     with TickerProviderStateMixin, RouteAware {
   static const int _totalRounds = 10;
 
-  static const List<_CountTheme> _themes = [
-    _CountTheme(
-      assetPath: 'assets/images/contingobjects/apple.jpeg',
-      singular: 'apple',
-      plural: 'apples',
-      emoji: '🍎',
-      color: AppColors.primary,
-      softColor: AppColors.primaryLight,
-      shadowColor: Color(0xFFC94A18),
-    ),
-    _CountTheme(
-      assetPath: 'assets/images/contingobjects/candy.jpeg',
-      singular: 'candy',
-      plural: 'candies',
-      emoji: '🍬',
-      color: AppColors.warning,
-      softColor: AppColors.premiumGoldLight,
-      shadowColor: Color(0xFFD4A000),
-    ),
-    _CountTheme(
-      assetPath: 'assets/images/contingobjects/car.jpeg',
-      singular: 'car',
-      plural: 'cars',
-      emoji: '🚗',
-      color: AppColors.bridgeBlue,
-      softColor: AppColors.secondaryLight,
-      shadowColor: Color(0xFF2890D0),
-    ),
-    _CountTheme(
-      assetPath: 'assets/images/contingobjects/ballun.jpeg',
-      singular: 'balloon',
-      plural: 'balloons',
-      emoji: '🎈',
-      color: AppColors.stairsLavender,
-      softColor: AppColors.restBackground,
-      shadowColor: Color(0xFFA888E8),
-    ),
-    _CountTheme(
-      assetPath: 'assets/images/contingobjects/start.jpeg',
-      singular: 'star',
-      plural: 'stars',
-      emoji: '⭐',
-      color: AppColors.premiumGold,
-      softColor: AppColors.premiumGoldLight,
-      shadowColor: Color(0xFFD4A000),
-    ),
-  ];
-
   late final FlutterTts _tts;
   late final Future<void> _ttsReady;
   late final AnimationController _cardPopController;
@@ -120,7 +53,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
   List<int> _options = const [];
 
   _RoundConfig get _currentRound => _rounds[_roundIndex];
-  _CountTheme get _theme => _themes[_currentRound.themeIndex];
+  CountingTheme get _theme => countingThemes[_currentRound.themeIndex];
   int get _correctCount => _currentRound.count;
 
   @override
@@ -153,7 +86,11 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
       fallbackLocales: const ['en-US', 'en-GB'],
     );
     await _tts.setPitch(1.04);
-    await _tts.setSpeechRate(0.38);
+    await TtsVoiceHelper.applyPreferredSpeechRate(
+      _tts,
+      normalRate: 0.38,
+      slowRate: 0.28,
+    );
     await _tts.setVolume(1.0);
   }
 
@@ -173,6 +110,12 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
     AppAudioService.instance.stopBackgroundMusic();
   }
 
+  void _stopAllAudioAndSpeech() {
+    _stopScreenMusic();
+    AppAudioService.instance.stopCelebrationMusic();
+    _tts.stop();
+  }
+
   void _prepareRound() {
     final correct = _correctCount;
     final options = <int>{correct};
@@ -190,7 +133,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
     final counts = List<int>.generate(_totalRounds, (index) => index + 1)
       ..shuffle(_random);
     final rounds = <_RoundConfig>[];
-    final themeUsage = List<int>.filled(_themes.length, 0);
+    final themeUsage = List<int>.filled(countingThemes.length, 0);
     var lastThemeIndex = -1;
 
     for (final count in counts) {
@@ -210,14 +153,15 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
     required List<int> themeUsage,
     required int lastThemeIndex,
   }) {
-    final candidates = List<int>.generate(_themes.length, (index) => index)
-      ..sort((a, b) => themeUsage[a].compareTo(themeUsage[b]));
+    final candidates =
+        List<int>.generate(countingThemes.length, (index) => index)
+          ..sort((a, b) => themeUsage[a].compareTo(themeUsage[b]));
     final leastUsedCount = themeUsage[candidates.first];
     final filtered = candidates
         .where(
           (index) =>
               themeUsage[index] <= leastUsedCount + 1 &&
-              (_themes.length == 1 || index != lastThemeIndex),
+              (countingThemes.length == 1 || index != lastThemeIndex),
         )
         .toList();
 
@@ -275,7 +219,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
         _roundSolved = true;
       });
     } else {
-      HapticFeedback.heavyImpact();
+      HapticFeedback.lightImpact();
       await _speakWrongAnswer();
       if (!mounted) return;
       setState(() {
@@ -298,7 +242,6 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
     _speakPrompt();
   }
 
-
   void _showFinalCelebration() {
     if (!mounted || _showCelebration || !_roundSolved) return;
     if (_roundIndex != _totalRounds - 1) return;
@@ -314,14 +257,12 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
   }
 
   void _goBack() {
-    AppAudioService.instance.stopCelebrationMusic();
-    _stopScreenMusic();
+    _stopAllAudioAndSpeech();
     context.pop();
   }
 
   void _prepareNextLearningNavigation() {
-    AppAudioService.instance.stopCelebrationMusic();
-    _stopScreenMusic();
+    _stopAllAudioAndSpeech();
     setState(() {
       _showCelebration = false;
     });
@@ -351,15 +292,14 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
 
   @override
   void didPushNext() {
-    _stopScreenMusic();
+    _stopAllAudioAndSpeech();
   }
 
   @override
   void dispose() {
     appRouteObserver.unsubscribe(this);
     _musicRequestToken++;
-    AppAudioService.instance.stopCelebrationMusic();
-    _tts.stop();
+    _stopAllAudioAndSpeech();
     _cardPopController.dispose();
     _celebrationController.dispose();
     super.dispose();
@@ -395,7 +335,12 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
           ),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+              padding: EdgeInsets.fromLTRB(
+                16,
+                12,
+                16,
+                20 + (MediaQuery.of(context).padding.bottom * 0.2),
+              ),
               child: Column(
                 children: [
                   _buildTopBar(progress),
@@ -529,7 +474,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Count each picture and tap the correct number.',
+                  'Count each picture and tap the correct number. Tap 🔊 to hear again.',
                   style: AppTypography.bodySmall.copyWith(
                     color: const Color(0xFF5F6C7B),
                     fontWeight: FontWeight.w700,
@@ -601,12 +546,23 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
                         color: _theme.color.withValues(alpha: 0.16),
                       ),
                     ),
-                    padding: const EdgeInsets.all(8),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.asset(
-                        _theme.assetPath,
-                        fit: BoxFit.cover,
+                    padding: const EdgeInsets.all(10),
+                    child: Center(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.asset(
+                          _theme.assetPath,
+                          fit: BoxFit.contain,
+                          width: itemSize * 0.72,
+                          height: itemSize * 0.72,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(
+                              Icons.auto_awesome_rounded,
+                              size: itemSize * 0.34,
+                              color: _theme.color,
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ),
@@ -620,57 +576,69 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
   }
 
   Widget _buildAnswerGrid() {
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
-      childAspectRatio: 2.2,
-      physics: const NeverScrollableScrollPhysics(),
-      children: _options.map((option) {
-        final isSelected = _selectedAnswer == option;
-        final isCorrect = option == _correctCount;
-        final bgColor = _answerLocked && isSelected
-            ? (isCorrect
-                ? AppColors.correctFeedback
-                : AppColors.incorrectFeedback)
-            : Colors.white.withValues(alpha: 0.94);
-        final borderColor = _answerLocked && isSelected
-            ? (isCorrect ? AppColors.gardenGreen : AppColors.primary)
-            : _theme.color.withValues(alpha: 0.20);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 360;
+        final buttonHeight = isNarrow ? 74.0 : 82.0;
 
-        return Material(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(24),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(24),
-            onTap: () => _handleAnswerTap(option),
-            child: Container(
-              decoration: BoxDecoration(
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: _options.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            mainAxisExtent: buttonHeight,
+          ),
+          itemBuilder: (context, index) {
+            final option = _options[index];
+            final isSelected = _selectedAnswer == option;
+            final isCorrect = option == _correctCount;
+            final bgColor = _answerLocked && isSelected
+                ? (isCorrect
+                    ? AppColors.correctFeedback
+                    : AppColors.incorrectFeedback)
+                : Colors.white.withValues(alpha: 0.94);
+            final borderColor = _answerLocked && isSelected
+                ? (isCorrect ? AppColors.gardenGreen : AppColors.primary)
+                : _theme.color.withValues(alpha: 0.20);
+
+            return Material(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(24),
+              child: InkWell(
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: borderColor, width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: borderColor.withValues(alpha: 0.18),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
+                onTap: () => _handleAnswerTap(option),
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 56),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: borderColor, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: borderColor.withValues(alpha: 0.18),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  '$option',
-                  style: AppTypography.numberDisplay.copyWith(
-                    fontSize: 42,
-                    color: const Color(0xFF1A1060),
-                    fontWeight: FontWeight.w800,
+                  child: Center(
+                    child: Text(
+                      '$option',
+                      style: AppTypography.numberDisplay.copyWith(
+                        fontSize: isNarrow ? 36 : 42,
+                        color: const Color(0xFF1A1060),
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         );
-      }).toList(),
+      },
     );
   }
 
@@ -760,6 +728,27 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
                         style: AppTypography.body.copyWith(
                           color: const Color(0xFF556172),
                           fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _theme.softColor,
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(
+                            color: _theme.color.withValues(alpha: 0.22),
+                          ),
+                        ),
+                        child: Text(
+                          '+3 stars earned!',
+                          style: AppTypography.bodyStrong.copyWith(
+                            color: _theme.color,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 22),

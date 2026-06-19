@@ -2,6 +2,7 @@
 
 **File:** `lib/features/math_operations/division_screen.dart`  
 **Route:** `/division`
+**Status:** Implemented with shared math-op polish applied (2026-06-19)
 
 ## Current purpose
 
@@ -19,10 +20,16 @@
 
 Same pattern as [addition.md](./addition.md):
 
-- [ ] Visual “sharing into groups” clarity
-- [ ] Equation display (e.g. `6 ÷ 2 = ?`)
-- [ ] Drag/tap targets for young users
-- [ ] Music lifecycle regression
+- [x] Visual “sharing into groups” clarity
+- [x] Equation display (e.g. `6 ÷ 2 = ?`)
+- [x] Drag/tap targets for young users
+- [x] Music lifecycle regression
+
+## Notes
+
+- Tap now auto-shares an object into the next valid bowl, so division is easier for younger kids.
+- Bowl cards show clearer labels and wrapped layout on smaller screens.
+- Repeated failed drags unlock a helper CTA to distribute all remaining objects safely.
 
 ## Acceptance criteria
 

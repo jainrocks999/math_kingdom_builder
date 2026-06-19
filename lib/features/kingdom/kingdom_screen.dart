@@ -118,6 +118,12 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
     _focusOnZone(zone);
   }
 
+  void _focusOnRecommended(List<KingdomZoneData> zones) {
+    final recommendedZone = recommendedKingdomZone(zones);
+    setState(() => _selectedZoneId = recommendedZone.id);
+    _focusOnZone(recommendedZone);
+  }
+
   void _handleSelectZone(String zoneId, List<KingdomZoneData> zones) {
     final zone = zones.firstWhere(
       (entry) => entry.id == zoneId,
@@ -129,6 +135,9 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
 
   void _openQuest(KingdomZoneData zone) {
     if (!zone.playable || !zone.unlocked) return;
+    if (_selectedZoneId != null && _selectedZoneId != zone.id) {
+      setState(() => _selectedZoneId = zone.id);
+    }
     context.push(zone.route);
   }
 
@@ -214,6 +223,7 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
                                   streakDays:
                                       _progressSnapshot?.streakDays ?? 0,
                                   onBack: _goBack,
+                                  onFindMe: () => _focusOnRecommended(zones),
                                   onResetView: _resetMapView,
                                 ),
                               ),
@@ -291,7 +301,7 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
                                                           vertical: 8,
                                                         ),
                                                         child: Text(
-                                                          'Drag to explore • Tap a place to focus',
+                                                          'Tap a place to focus • Find Me jumps to the best next quest',
                                                           style: AppTypography
                                                               .caption,
                                                         ),
@@ -300,16 +310,7 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
                                                   ),
                                                   if (_isLoading) ...[
                                                     const SizedBox(width: 10),
-                                                    const SizedBox(
-                                                      width: 26,
-                                                      height: 26,
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                        strokeWidth: 2.4,
-                                                        color:
-                                                            AppColors.primary,
-                                                      ),
-                                                    ),
+                                                    _buildLoadingDot(),
                                                   ],
                                                 ],
                                               ),
@@ -322,21 +323,27 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              _KingdomMascotHint(recommendedZone: recommendedZone),
+                              _KingdomMascotHint(
+                                  recommendedZone: recommendedZone),
                               const SizedBox(height: 10),
-                              KingdomBottomPanel(
-                                activeZone: activeZone,
-                                recommendedZone: recommendedZone,
-                                totalStars: _progressSnapshot?.totalStars ?? 0,
-                                todayCompletions:
-                                    _progressSnapshot?.todayCompletions ?? 0,
-                                onSelectZone: (zoneId) =>
-                                    _handleSelectZone(zoneId, zones),
-                                onPlayActiveZone: () => _openQuest(activeZone),
-                                onPlayRecommended: () =>
-                                    _openQuest(recommendedZone),
-                                zones: zones,
-                              ),
+                              _isLoading && _progressSnapshot == null
+                                  ? _buildBottomPanelSkeleton()
+                                  : KingdomBottomPanel(
+                                      activeZone: activeZone,
+                                      recommendedZone: recommendedZone,
+                                      totalStars:
+                                          _progressSnapshot?.totalStars ?? 0,
+                                      todayCompletions:
+                                          _progressSnapshot?.todayCompletions ??
+                                              0,
+                                      onSelectZone: (zoneId) =>
+                                          _handleSelectZone(zoneId, zones),
+                                      onPlayActiveZone: () =>
+                                          _openQuest(activeZone),
+                                      onPlayRecommended: () =>
+                                          _openQuest(recommendedZone),
+                                      zones: zones,
+                                    ),
                               const SizedBox(height: 8),
                             ],
                           ),
@@ -348,6 +355,76 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingDot() {
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.92),
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: const SizedBox(
+        width: 16,
+        height: 16,
+        child: CircularProgressIndicator(
+          strokeWidth: 2.2,
+          color: AppColors.primary,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomPanelSkeleton() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: AppColors.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          _KingdomSkeletonBar(widthFactor: 0.42, height: 20),
+          SizedBox(height: 10),
+          _KingdomSkeletonBar(widthFactor: 0.8, height: 14),
+          SizedBox(height: 18),
+          _KingdomSkeletonBar(widthFactor: 1, height: 12),
+          SizedBox(height: 16),
+          _KingdomSkeletonBar(widthFactor: 0.68, height: 44),
+          SizedBox(height: 12),
+          _KingdomSkeletonBar(widthFactor: 1, height: 92),
+        ],
+      ),
+    );
+  }
+}
+
+class _KingdomSkeletonBar extends StatelessWidget {
+  const _KingdomSkeletonBar({
+    required this.widthFactor,
+    required this.height,
+  });
+
+  final double widthFactor;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return FractionallySizedBox(
+      widthFactor: widthFactor,
+      child: Container(
+        height: height,
+        decoration: BoxDecoration(
+          color: AppColors.surfaceMuted,
+          borderRadius: BorderRadius.circular(16),
         ),
       ),
     );

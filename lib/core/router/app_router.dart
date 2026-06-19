@@ -69,7 +69,7 @@ final GoRouter _appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.numberRecognition,
-      builder: (context, state) => const FindCorrectNumberScreen(),
+      redirect: (context, state) => AppRoutes.findNumber,
     ),
     GoRoute(
       path: AppRoutes.findNumber,

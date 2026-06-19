@@ -51,6 +51,7 @@ class _AdditionScreenState extends State<AdditionScreen>
   int _musicRequestToken = 0;
   int _autoAdvanceToken = 0;
   int _roundIndex = 0;
+  int _failedDragCount = 0;
   bool _roundSolved = false;
   bool _showCelebration = false;
   bool _isDragging = false;
@@ -58,10 +59,8 @@ class _AdditionScreenState extends State<AdditionScreen>
   _AdditionRound get _round => _rounds[_roundIndex];
   MathOperationTheme get _theme => mathOperationThemes[_round.themeIndex];
 
-  List<String> get _groupAIds =>
-      List.generate(_round.groupA, (i) => 'A_$i');
-  List<String> get _groupBIds =>
-      List.generate(_round.groupB, (i) => 'B_$i');
+  List<String> get _groupAIds => List.generate(_round.groupA, (i) => 'A_$i');
+  List<String> get _groupBIds => List.generate(_round.groupB, (i) => 'B_$i');
   List<String> get _allIds => [..._groupAIds, ..._groupBIds];
 
   @override
@@ -87,7 +86,11 @@ class _AdditionScreenState extends State<AdditionScreen>
       fallbackLocales: const ['en-US', 'en-GB'],
     );
     await _tts.setPitch(1.05);
-    await _tts.setSpeechRate(0.42);
+    await TtsVoiceHelper.applyPreferredSpeechRate(
+      _tts,
+      normalRate: 0.42,
+      slowRate: 0.3,
+    );
     await _tts.setVolume(1.0);
   }
 
@@ -134,13 +137,15 @@ class _AdditionScreenState extends State<AdditionScreen>
   Future<void> _speakPrompt() async {
     await _ttsReady;
     await _tts.stop();
-    await _tts.speak('${_round.groupA} plus ${_round.groupB}');
+    await _tts.speak('${_round.groupA} plus ${_round.groupB} equals what?');
   }
 
   Future<void> _speakSuccess() async {
     await _ttsReady;
     await _tts.stop();
-    await _tts.speak('${_round.total}');
+    await _tts.speak(
+      '${_round.groupA} plus ${_round.groupB} equals ${_round.total}',
+    );
   }
 
   void _moveObject(String id) {
@@ -170,11 +175,30 @@ class _AdditionScreenState extends State<AdditionScreen>
         setState(() {
           _roundIndex++;
           _movedObjectIds.clear();
+          _failedDragCount = 0;
           _roundSolved = false;
         });
         _speakPrompt();
       }
     });
+  }
+
+  void _handleFailedDrag() {
+    if (_roundSolved || _showCelebration) return;
+    setState(() {
+      _failedDragCount++;
+      _isDragging = false;
+    });
+  }
+
+  void _moveAllRemaining() {
+    if (_roundSolved || _showCelebration) return;
+    HapticFeedback.mediumImpact();
+    setState(() {
+      _movedObjectIds.addAll(_allIds);
+      _isDragging = false;
+    });
+    _completeRound();
   }
 
   void _showFinalCelebration() {
@@ -237,7 +261,8 @@ class _AdditionScreenState extends State<AdditionScreen>
         fit: StackFit.expand,
         children: [
           Positioned.fill(
-            child: Image.asset('assets/images/backround.png', fit: BoxFit.cover),
+            child:
+                Image.asset('assets/images/backround.png', fit: BoxFit.cover),
           ),
           DecoratedBox(
             decoration: BoxDecoration(
@@ -331,53 +356,127 @@ class _AdditionScreenState extends State<AdditionScreen>
   }
 
   Widget _buildPlayArea() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: _theme.color.withValues(alpha: 0.20)),
-      ),
-      child: Column(
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  child: _sourceTray(
-                    count: _round.groupA,
-                    color: _theme.color,
-                    ids: _groupAIds,
-                  ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 360;
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: mathOpStageDecoration(_theme.color),
+          child: Column(
+            children: [
+              Text(
+                'Drag or tap every object into the bowl.',
+                textAlign: TextAlign.center,
+                style: AppTypography.bodyStrong.copyWith(
+                  color: const Color(0xFF5A6B7A),
+                  fontWeight: FontWeight.w800,
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(
-                    '+',
-                    style: AppTypography.numberDisplay.copyWith(
-                      fontSize: 32,
-                      color: _theme.color,
+              ),
+              if (_failedDragCount >= 2 && !_roundSolved) ...[
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _moveAllRemaining,
+                    icon: const Icon(Icons.touch_app_rounded),
+                    label: const Text('Need help? Tap to move all'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _theme.color,
+                      side: BorderSide(
+                        color: _theme.color.withValues(alpha: 0.32),
+                        width: 2,
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
                     ),
                   ),
                 ),
-                Expanded(
-                  child: _sourceTray(
-                    count: _round.groupB,
-                    color: _theme.secondaryColor,
-                    ids: _groupBIds,
-                  ),
-                ),
               ],
-            ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: isNarrow
+                    ? Column(
+                        children: [
+                          Expanded(
+                            child: _sourceTray(
+                              count: _round.groupA,
+                              color: _theme.color,
+                              ids: _groupAIds,
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Text(
+                              '+',
+                              style: AppTypography.numberDisplay.copyWith(
+                                fontSize: 30,
+                                color: _theme.color,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: _sourceTray(
+                              count: _round.groupB,
+                              color: _theme.secondaryColor,
+                              ids: _groupBIds,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Expanded(
+                            flex: 2,
+                            child: _bowl(),
+                          ),
+                        ],
+                      )
+                    : Column(
+                        children: [
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: _sourceTray(
+                                    count: _round.groupA,
+                                    color: _theme.color,
+                                    ids: _groupAIds,
+                                  ),
+                                ),
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 8),
+                                  child: Text(
+                                    '+',
+                                    style: AppTypography.numberDisplay.copyWith(
+                                      fontSize: 32,
+                                      color: _theme.color,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _sourceTray(
+                                    count: _round.groupB,
+                                    color: _theme.secondaryColor,
+                                    ids: _groupBIds,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Expanded(
+                            flex: 2,
+                            child: _bowl(),
+                          ),
+                        ],
+                      ),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
-          Expanded(
-            flex: 2,
-            child: _bowl(),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -393,15 +492,29 @@ class _AdditionScreenState extends State<AdditionScreen>
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: color.withValues(alpha: 0.26), width: 2),
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return _objectGrid(
-            ids: ids,
-            constraints: constraints,
-            color: color,
-            inBowl: false,
-          );
-        },
+      child: Column(
+        children: [
+          Text(
+            '$count',
+            style: AppTypography.bodyStrong.copyWith(
+              color: color,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return _objectGrid(
+                  ids: ids,
+                  constraints: constraints,
+                  color: color,
+                  inBowl: false,
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -414,9 +527,7 @@ class _AdditionScreenState extends State<AdditionScreen>
       softColor: _theme.softColor,
       isHighlighted: _isDragging,
       onWillAccept: (data) =>
-          data is String &&
-          !_roundSolved &&
-          !_movedObjectIds.contains(data),
+          data is String && !_roundSolved && !_movedObjectIds.contains(data),
       onAccept: (data) => _moveObject(data as String),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -459,12 +570,20 @@ class _AdditionScreenState extends State<AdditionScreen>
     if (ids.isEmpty) return const SizedBox.shrink();
     final columns = ids.length <= 2 ? ids.length : 2;
     const spacing = 8.0;
+    const interactivePadding = 8.0;
     final rows = (ids.length / columns).ceil();
-    final size = math.min(
-      72.0,
+    final availableWidth =
+        (constraints.maxWidth - ((columns - 1) * spacing)) / columns;
+    final availableHeight =
+        (constraints.maxHeight - ((rows - 1) * spacing)) / rows;
+    final size = math.max(
+      40.0,
       math.min(
-        (constraints.maxWidth - ((columns - 1) * spacing)) / columns,
-        (constraints.maxHeight - ((rows - 1) * spacing)) / rows,
+        inBowl ? 82.0 : 72.0,
+        math.min(
+          availableWidth - (inBowl ? 0 : interactivePadding),
+          availableHeight - (inBowl ? 0 : interactivePadding),
+        ),
       ),
     );
 
@@ -489,10 +608,20 @@ class _AdditionScreenState extends State<AdditionScreen>
             assetPath: _theme.assetPath,
             backgroundColor: color.withValues(alpha: 0.18),
             enabled: !moved && !_roundSolved,
+            onTap: () => _moveObject(id),
             onDragStarted: () {
               HapticFeedback.selectionClick();
               setState(() => _isDragging = true);
             },
+            onDragCompleted: () {
+              if (mounted) {
+                setState(() {
+                  _isDragging = false;
+                  _failedDragCount = 0;
+                });
+              }
+            },
+            onDragCanceled: _handleFailedDrag,
             onDragEnd: () {
               if (mounted) setState(() => _isDragging = false);
             },

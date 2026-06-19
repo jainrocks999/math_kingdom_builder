@@ -51,6 +51,7 @@ class _SubtractionScreenState extends State<SubtractionScreen>
   int _musicRequestToken = 0;
   int _autoAdvanceToken = 0;
   int _roundIndex = 0;
+  int _failedDragCount = 0;
   bool _roundSolved = false;
   bool _showCelebration = false;
   bool _isDragging = false;
@@ -82,7 +83,11 @@ class _SubtractionScreenState extends State<SubtractionScreen>
       fallbackLocales: const ['en-US', 'en-GB'],
     );
     await _tts.setPitch(1.05);
-    await _tts.setSpeechRate(0.42);
+    await TtsVoiceHelper.applyPreferredSpeechRate(
+      _tts,
+      normalRate: 0.42,
+      slowRate: 0.3,
+    );
     await _tts.setVolume(1.0);
   }
 
@@ -129,13 +134,17 @@ class _SubtractionScreenState extends State<SubtractionScreen>
   Future<void> _speakPrompt() async {
     await _ttsReady;
     await _tts.stop();
-    await _tts.speak('${_round.total} take away ${_round.removeCount}');
+    await _tts.speak(
+      '${_round.total} minus ${_round.removeCount} equals what? Take away ${_round.removeCount}.',
+    );
   }
 
   Future<void> _speakSuccess() async {
     await _ttsReady;
     await _tts.stop();
-    await _tts.speak('${_round.remaining}');
+    await _tts.speak(
+      '${_round.total} minus ${_round.removeCount} equals ${_round.remaining}',
+    );
   }
 
   void _removeObject(String id) {
@@ -165,11 +174,35 @@ class _SubtractionScreenState extends State<SubtractionScreen>
         setState(() {
           _roundIndex++;
           _removedObjectIds.clear();
+          _failedDragCount = 0;
           _roundSolved = false;
         });
         _speakPrompt();
       }
     });
+  }
+
+  void _handleFailedDrag() {
+    if (_roundSolved || _showCelebration) return;
+    setState(() {
+      _failedDragCount++;
+      _isDragging = false;
+    });
+  }
+
+  void _removeAllNeeded() {
+    if (_roundSolved || _showCelebration) return;
+    final remainingToRemove = _allIds
+        .where((id) => !_removedObjectIds.contains(id))
+        .take(_round.removeCount - _removedObjectIds.length);
+    HapticFeedback.mediumImpact();
+    setState(() {
+      _removedObjectIds.addAll(remainingToRemove);
+      _isDragging = false;
+    });
+    if (_removedObjectIds.length == _round.removeCount) {
+      _completeRound();
+    }
   }
 
   void _showFinalCelebration() {
@@ -329,14 +362,41 @@ class _SubtractionScreenState extends State<SubtractionScreen>
   Widget _buildPlayArea() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: _theme.color.withValues(alpha: 0.20)),
-      ),
+      padding: const EdgeInsets.all(16),
+      decoration: mathOpStageDecoration(_theme.color),
       child: Column(
         children: [
+          Text(
+            'Drag or tap the objects you want to take away.',
+            textAlign: TextAlign.center,
+            style: AppTypography.bodyStrong.copyWith(
+              color: const Color(0xFF5A6B7A),
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          if (_failedDragCount >= 2 && !_roundSolved) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _removeAllNeeded,
+                icon: const Icon(Icons.touch_app_rounded),
+                label: const Text('Need help? Tap to take away'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: _theme.color,
+                  side: BorderSide(
+                    color: _theme.color.withValues(alpha: 0.32),
+                    width: 2,
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
           Expanded(
             flex: 2,
             child: _groupTray(),
@@ -456,12 +516,20 @@ class _SubtractionScreenState extends State<SubtractionScreen>
     if (ids.isEmpty) return const SizedBox.shrink();
     final columns = ids.length <= 3 ? ids.length : 3;
     const spacing = 8.0;
+    const interactivePadding = 8.0;
     final rows = (ids.length / columns).ceil();
-    final size = math.min(
-      70.0,
+    final availableWidth =
+        (constraints.maxWidth - ((columns - 1) * spacing)) / columns;
+    final availableHeight =
+        (constraints.maxHeight - ((rows - 1) * spacing)) / rows;
+    final size = math.max(
+      38.0,
       math.min(
-        (constraints.maxWidth - ((columns - 1) * spacing)) / columns,
-        (constraints.maxHeight - ((rows - 1) * spacing)) / rows,
+        removed ? 70.0 : 64.0,
+        math.min(
+          availableWidth - (removed ? 0 : interactivePadding),
+          availableHeight - (removed ? 0 : interactivePadding),
+        ),
       ),
     );
 
@@ -486,10 +554,20 @@ class _SubtractionScreenState extends State<SubtractionScreen>
             assetPath: _theme.assetPath,
             backgroundColor: color.withValues(alpha: 0.18),
             enabled: !isRemoved && !_roundSolved,
+            onTap: () => _removeObject(id),
             onDragStarted: () {
               HapticFeedback.selectionClick();
               setState(() => _isDragging = true);
             },
+            onDragCompleted: () {
+              if (mounted) {
+                setState(() {
+                  _isDragging = false;
+                  _failedDragCount = 0;
+                });
+              }
+            },
+            onDragCanceled: _handleFailedDrag,
             onDragEnd: () {
               if (mounted) setState(() => _isDragging = false);
             },

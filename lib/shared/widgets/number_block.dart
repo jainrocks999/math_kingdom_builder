@@ -44,27 +44,27 @@ class _NumberBlockState extends State<NumberBlock>
 
   @override
   Widget build(BuildContext context) {
+    final visualSize = widget.size < 48 ? 48.0 : widget.size;
+
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: _handleTap,
       child: ScaleTransition(
         scale: _scaleAnim,
         child: Container(
-          width: widget.size,
-          height: widget.size,
+          width: visualSize,
+          height: visualSize,
           decoration: BoxDecoration(
-            color: widget.isSelected
-                ? AppColors.secondary
-                : AppColors.surface,
+            color: widget.isSelected ? AppColors.secondary : AppColors.surface,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: widget.isSelected
-                  ? AppColors.secondary
-                  : AppColors.primary,
+              color:
+                  widget.isSelected ? AppColors.secondary : AppColors.primary,
               width: 3,
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withValues(alpha:0.2),
+                color: AppColors.primary.withValues(alpha: 0.2),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -74,10 +74,9 @@ class _NumberBlockState extends State<NumberBlock>
             child: Text(
               '${widget.number}',
               style: AppTypography.numberDisplay.copyWith(
-                fontSize: widget.size * 0.6,
-                color: widget.isSelected
-                    ? AppColors.surface
-                    : AppColors.primary,
+                fontSize: visualSize * 0.6,
+                color:
+                    widget.isSelected ? AppColors.surface : AppColors.primary,
               ),
             ),
           ),

@@ -117,9 +117,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   double _heroTitleSize(double maxWidth) {
-    if (maxWidth < 340) return 28;
-    if (maxWidth < 380) return 32;
-    return 36;
+    return AppTypography.responsiveSize(maxWidth, min: 28, max: 36);
   }
 
   @override
@@ -316,49 +314,52 @@ class _PageIndicatorDot extends StatelessWidget {
     return Semantics(
       button: true,
       label: isActive ? 'Current step' : 'Go to step',
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-          child: SizedBox(
-            width: 44,
-            height: 44,
-            child: Center(
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 260),
-                width: isActive ? 34 : 16,
-                height: 16,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: isActive
-                        ? [
-                            page.color.withValues(alpha: 0.82),
-                            page.color,
-                          ]
-                        : [
-                            Colors.white,
-                            page.softColor,
-                          ],
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            child: SizedBox(
+              width: 48,
+              height: 48,
+              child: Center(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 260),
+                  width: isActive ? 34 : 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: isActive
+                          ? [
+                              page.color.withValues(alpha: 0.82),
+                              page.color,
+                            ]
+                          : [
+                              Colors.white,
+                              page.softColor,
+                            ],
+                    ),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isActive
+                            ? page.shadowColor
+                            : const Color(0xFFD6BFA9),
+                        offset: const Offset(0, 2),
+                        blurRadius: 0,
+                      ),
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.12),
+                        offset: const Offset(0, 4),
+                        blurRadius: 4,
+                      ),
+                    ],
                   ),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: Colors.white, width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: isActive
-                          ? page.shadowColor
-                          : const Color(0xFFD6BFA9),
-                      offset: const Offset(0, 2),
-                      blurRadius: 0,
-                    ),
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.12),
-                      offset: const Offset(0, 4),
-                      blurRadius: 4,
-                    ),
-                  ],
                 ),
               ),
             ),
@@ -456,6 +457,16 @@ class _OnboardingCard extends StatelessWidget {
                 child: Image.asset(
                   page.imageUrl,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: page.softColor.withValues(alpha: 0.65),
+                      alignment: Alignment.center,
+                      child: Text(
+                        page.emoji,
+                        style: const TextStyle(fontSize: 72),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -510,86 +521,90 @@ class _OnboardingCtaButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [color, color.withValues(alpha: 0.72)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(26),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [color, color.withValues(alpha: 0.72)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(color: color.withValues(alpha: 0.9), width: 3),
+            boxShadow: [
+              BoxShadow(
+                color: shadowColor,
+                offset: const Offset(0, 6),
+                blurRadius: 0,
+              ),
+              BoxShadow(
+                color: color.withValues(alpha: 0.26),
+                offset: const Offset(0, 10),
+                blurRadius: 18,
+              ),
+            ],
           ),
-          borderRadius: BorderRadius.circular(26),
-          border: Border.all(color: color.withValues(alpha: 0.9), width: 3),
-          boxShadow: [
-            BoxShadow(
-              color: shadowColor,
-              offset: const Offset(0, 6),
-              blurRadius: 0,
-            ),
-            BoxShadow(
-              color: color.withValues(alpha: 0.26),
-              offset: const Offset(0, 10),
-              blurRadius: 18,
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-        child: Row(
-          children: [
-            Container(
-              width: 54,
-              height: 54,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.22),
-                shape: BoxShape.circle,
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.22),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(emoji, style: const TextStyle(fontSize: 26)),
+                ),
               ),
-              child: Center(
-                child: Text(emoji, style: const TextStyle(fontSize: 26)),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    label,
-                    style: AppTypography.buttonLarge.copyWith(
-                      color: AppColors.surface,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 22,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      label,
+                      style: AppTypography.buttonLarge.copyWith(
+                        color: AppColors.surface,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 22,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    subtitle,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.surface.withValues(alpha: 0.92),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.surface.withValues(alpha: 0.92),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.22),
-                shape: BoxShape.circle,
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.22),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 16,
+                  color: AppColors.surface,
+                ),
               ),
-              child: const Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 16,
-                color: AppColors.surface,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -648,26 +663,29 @@ class _SkipButton extends StatelessWidget {
     return Semantics(
       button: true,
       label: 'Skip onboarding',
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Container(
-          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.82),
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: const Color(0xFFFFC83C).withValues(alpha: 0.45),
-              width: 2,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Container(
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.82),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: const Color(0xFFFFC83C).withValues(alpha: 0.45),
+                width: 2,
+              ),
             ),
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            'Skip',
-            style: AppTypography.bodyStrong.copyWith(
-              color: const Color(0xFF5A6B7A),
-              fontWeight: FontWeight.w800,
+            alignment: Alignment.center,
+            child: Text(
+              'Skip',
+              style: AppTypography.bodyStrong.copyWith(
+                color: const Color(0xFF5A6B7A),
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ),

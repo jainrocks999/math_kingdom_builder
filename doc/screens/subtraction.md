@@ -2,6 +2,7 @@
 
 **File:** `lib/features/math_operations/subtraction_screen.dart`  
 **Route:** `/subtraction`
+**Status:** Implemented with shared math-op polish applied (2026-06-19)
 
 ## Current purpose
 
@@ -19,11 +20,17 @@
 
 Same pattern as [addition.md](./addition.md):
 
-- [ ] Drag/touch targets on small screens
-- [ ] Equation display (e.g. `5 − 2 = ?`)
-- [ ] TTS reads equation
-- [ ] Optional tap helper after failed drags
-- [ ] Music lifecycle regression
+- [x] Drag/touch targets on small screens
+- [x] Equation display (e.g. `5 − 2 = ?`)
+- [x] TTS reads equation
+- [x] Optional tap helper after failed drags
+- [x] Music lifecycle regression
+
+## Notes
+
+- Objects now support both drag and tap removal.
+- Repeated failed drags show a helper CTA so kids can still finish the round.
+- Object sizing was tightened for smaller layouts to avoid clipping.
 
 ## Acceptance criteria
 

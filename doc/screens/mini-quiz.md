@@ -2,6 +2,7 @@
 
 **File:** `lib/features/mini_quiz/mini_quiz_screen.dart`  
 **Route:** `/mini-quiz`
+**Status:** Implemented with deferred celebration extraction polish (2026-06-19)
 
 ## Current purpose
 
@@ -9,39 +10,45 @@
 
 ## Existing functionality
 
-- Three quiz modes rotated
+- Five quiz modes rotated
 - Drag-and-drop and keypad write mode
 - Celebration, RouteAware music
 - Highest star reward (5★)
+- Resume from the last unfinished quiz step
 
 ## Current issues
 
-- Drag mode hard on small screens
-- Complex UX — needs clearer mode labels
-- Keypad layout for young kids
+- Celebration modal card still local to this screen
 
 ## Priority: P1 | Complexity: High
 
 ## Development tasks
 
 ### Bug fixes
-- [ ] Drag drop hit testing on various DPIs
+- [x] Drag drop hit testing on various DPIs
 
 ### UI
-- [ ] Mode badge: Tap / Drag / Type with emoji
-- [ ] Keypad buttons min 48dp
+- [x] Mode badge: Tap / Drag / Type with emoji
+- [x] Keypad buttons min 48dp
 
 ### Existing functionality
-- [ ] Shared celebration overlay
+- [x] Shared celebration overlay
+- [x] Resume from last unfinished step
+- [x] Expand quiz flow to 35 steps
 
 ### New (optional)
-- [ ] First-time drag hint overlay
+- [x] First-time drag hint overlay
+- [x] Add count-based extra modes: Missing Number, Compare Groups
 
 ### Kids experience
-- [ ] Extra praise TTS on complete
+- [x] Extra praise TTS on complete
 
 ### Responsiveness
-- [ ] Scroll for drag overflow; large write display
+- [x] Scroll for drag overflow; large write display
+
+## Deferred
+
+- [ ] Extract final celebration modal card itself into a reusable shared widget
 
 ## Assets
 

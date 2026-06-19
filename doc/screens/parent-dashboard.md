@@ -2,6 +2,7 @@
 
 **File:** `lib/features/parent_dashboard/parent_dashboard_screen.dart`  
 **Route:** `/parent-dashboard`
+**Status:** Implemented with export deferred (2026-06-19)
 
 ## Current purpose
 
@@ -24,23 +25,29 @@ PIN gate; view stars, streak, per-activity mastery (Exploring / Practicing / Con
 ## Development tasks
 
 ### Bug fixes
-- [ ] PIN cooldown message accuracy
+- [x] PIN cooldown message accuracy
 
 ### UI
-- [ ] Larger PIN fields on tablets
-- [ ] Clear section headers
+- [x] Larger PIN fields on tablets
+- [x] Clear section headers
 
 ### Existing functionality
-- [ ] Sound Effects ON/OFF, Music ON/OFF toggles
-- [ ] Optional speech rate slow/normal
-- [ ] Child profile switcher (reuse Start Learning pattern)
+- [x] Sound Effects ON/OFF, Music ON/OFF toggles
+- [x] Optional speech rate slow/normal
+- [x] Child profile switcher (reuse Start Learning pattern)
 
 ### New (optional)
-- [ ] Weekly summary line
+- [x] Weekly summary line
 - [ ] Export progress text — P4
 
 ### Responsiveness
-- [ ] Scroll reports on small phones
+- [x] Scroll reports on small phones
+
+## Notes
+
+- Audio preferences now persist and are wired into shared music/SFX/TTS helpers.
+- Child profile switching is available directly inside the parent zone.
+- Export remains deferred because it is explicitly low priority in the doc.
 
 ## Assets
 

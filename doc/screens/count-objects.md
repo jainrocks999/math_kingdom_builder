@@ -2,6 +2,7 @@
 
 **File:** `lib/features/count_objects/count_objects_screen.dart`  
 **Route:** `/count-objects`
+**Status:** Implemented with deferred shared-helper polish (2026-06-19)
 
 ## Current purpose
 
@@ -23,25 +24,25 @@
 ## Development tasks
 
 ### Bug fixes
-- [ ] Music stops on push/pop (regression)
+- [x] Music stops on push/pop (regression)
 
 ### UI
-- [ ] Consistent object image sizes
-- [ ] Answer buttons min 56dp
+- [x] Consistent object image sizes
+- [x] Answer buttons min 56dp
 
 ### Existing functionality
 - [ ] `FeedbackHelper` for correct/wrong
-- [ ] Round header “Round X of 10”
-- [ ] Star toast on round complete
+- [x] Round header “Round X of 10”
+- [x] Star toast on round complete
 
 ### New (optional)
 - [ ] Tap-to-count on objects
 
 ### Kids experience
-- [ ] Gentle wiggle on wrong; TTS “Try again!”
+- [x] Gentle wiggle on wrong; TTS “Try again!”
 
 ### Responsiveness
-- [ ] 2×2 answer grid on narrow width
+- [x] 2×2 answer grid on narrow width
 
 ## Assets
 
@@ -55,3 +56,8 @@
 ## Acceptance criteria
 
 10 rounds completable; scoring correct; music lifecycle; completion recorded.
+
+## Deferred
+
+- Extract a shared `FeedbackHelper` when more quiz/counting screens are aligned
+- Consider tap-to-count object interactions only if playtesting shows kids need more counting support

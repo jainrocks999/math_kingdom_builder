@@ -14,6 +14,7 @@ import '../StartLearning/start_learning_next_action_button.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/tts_voice_helper.dart';
 import '../../shared/widgets/celebration_bear.dart';
+import '../../shared/widgets/game_back_button.dart';
 
 // ─── Enums & data ─────────────────────────────────────────────────────────────
 
@@ -51,7 +52,7 @@ class LearnNumbersScreen extends StatefulWidget {
 }
 
 class _LearnNumbersScreenState extends State<LearnNumbersScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, RouteAware {
   // ── Data ──────────────────────────────────────────────────────────────────
   static const List<String> _numberWords = [
     'Zero',
@@ -147,6 +148,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   int _cardTransitionToken = 0;
   bool _showCompletionCelebration = false;
   int _completionCelebrationToken = 0;
+  int _musicRequestToken = 0;
 
   // ── Controllers ───────────────────────────────────────────────────────────
   late final FlutterTts _tts;
@@ -244,17 +246,47 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     );
 
     _ttsReady = _configureTts();
+    _playScreenMusic(delayed: true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollSelectorTo(_currentIndex, animated: false);
       _speakCurrentNumber();
     });
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute<dynamic>) {
+      appRouteObserver.unsubscribe(this);
+      appRouteObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void didPopNext() {
+    _playScreenMusic(delayed: true);
+  }
+
+  @override
+  void didPush() {
+    _playScreenMusic(delayed: true);
+  }
+
+  @override
+  void didPushNext() {
+    _stopAllAudioAndSpeech();
+  }
+
   Future<void> _configureTts() async {
     await TtsVoiceHelper.configureSharedAudio(_tts);
     await _applyIndianEnglishVoice();
     await _tts.setPitch(1.04);
-    await _tts.setSpeechRate(0.34);
+    await TtsVoiceHelper.applyPreferredSpeechRate(
+      _tts,
+      normalRate: 0.34,
+      slowRate: 0.26,
+    );
     await _tts.setVolume(1.0);
     _tts.setCompletionHandler(_onSpeechDone);
     _tts.setCancelHandler(_onSpeechDone);
@@ -299,6 +331,29 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
 
   Future<void> _speakCurrentNumber() async =>
       _speakPhrase(_numberWords[_currentIndex]);
+
+  void _playScreenMusic({bool delayed = false}) {
+    final requestToken = ++_musicRequestToken;
+    Future<void>.delayed(
+      delayed ? const Duration(milliseconds: 180) : Duration.zero,
+      () {
+        if (!mounted || requestToken != _musicRequestToken) return;
+        if (_showCompletionCelebration) return;
+        AppAudioService.instance.playStartCountingMusic();
+      },
+    );
+  }
+
+  void _stopScreenMusic() {
+    _musicRequestToken++;
+    AppAudioService.instance.stopBackgroundMusic();
+  }
+
+  void _stopAllAudioAndSpeech() {
+    _stopScreenMusic();
+    AppAudioService.instance.stopCelebrationMusic();
+    _tts.stop();
+  }
 
   Future<void> _selectNumber(int index, {bool speak = true}) async {
     if (index < 0 || index >= _numberWords.length) return;
@@ -366,6 +421,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   void _showLearnNumbersCompletion() {
     if (_showCompletionCelebration) return;
     _tts.stop();
+    _stopScreenMusic();
     RewardProgressService.instance.recordModuleCompletion(
       RewardModuleIds.learnNumbers,
     );
@@ -376,14 +432,23 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     AppAudioService.instance.playCelebrationMusic();
   }
 
-
   void _prepareNextLearningNavigation() {
-    AppAudioService.instance.stopCelebrationMusic();
+    _stopAllAudioAndSpeech();
     _completionCelebrationToken++;
-    _tts.stop();
     setState(() {
       _showCompletionCelebration = false;
     });
+  }
+
+  void _handleBackNavigation() {
+    _completionCelebrationToken++;
+    if (_showCompletionCelebration && mounted) {
+      setState(() {
+        _showCompletionCelebration = false;
+      });
+    }
+    _stopAllAudioAndSpeech();
+    context.pop();
   }
 
   Future<void> _handleObjectTap(int index) async {
@@ -405,9 +470,9 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
       });
       return;
     }
-    const itemWidth = 42.0 + 8.0;
+    const itemWidth = 48.0 + 8.0;
     final viewport = _selectorController.position.viewportDimension;
-    final target = (index * itemWidth) - ((viewport - 42.0) / 2);
+    final target = (index * itemWidth) - ((viewport - 48.0) / 2);
     final clamped =
         target.clamp(0.0, _selectorController.position.maxScrollExtent);
     if (animated) {
@@ -423,7 +488,8 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
 
   @override
   void dispose() {
-    AppAudioService.instance.stopCelebrationMusic();
+    appRouteObserver.unsubscribe(this);
+    _stopAllAudioAndSpeech();
     _selectorController.dispose();
     _numberPopController.dispose();
     _objectsRevealController.dispose();
@@ -431,7 +497,6 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     _bearFloatController.dispose();
     _bearBounceController.dispose();
     _cardTransitionController.dispose();
-    _tts.stop();
     super.dispose();
   }
 
@@ -477,13 +542,15 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
               builder: (context, constraints) {
                 final isCompact = constraints.maxHeight < 800;
                 final isVeryCompact = constraints.maxHeight < 710;
+                final isNarrow = constraints.maxWidth < 360;
 
                 return Padding(
                   padding: EdgeInsets.fromLTRB(
                     14,
                     isVeryCompact ? 8 : 12,
                     14,
-                    isVeryCompact ? 10 : 14,
+                    (isVeryCompact ? 10 : 14) +
+                        MediaQuery.of(context).padding.bottom * 0.2,
                   ),
                   child: Column(
                     children: [
@@ -493,6 +560,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
                       _buildMainCard(
                         isCompact: isCompact,
                         isVeryCompact: isVeryCompact,
+                        isNarrow: isNarrow,
                       ),
                       SizedBox(height: isVeryCompact ? 8 : 10),
                       // Count card — fills remaining space
@@ -558,6 +626,27 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
                     fontWeight: FontWeight.w700,
                   ),
                 ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _theme.softColor,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: _theme.color.withValues(alpha: 0.22),
+                    ),
+                  ),
+                  child: Text(
+                    '+4 stars earned!',
+                    style: AppTypography.bodyStrong.copyWith(
+                      color: _theme.color,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 18),
                 StartLearningNextActionButton(
                   currentRoute: AppRoutes.learnNumbers,
@@ -589,11 +678,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   Widget _buildHeader({required bool isCompact}) {
     return Row(
       children: [
-        _CircleButton(
-          icon: Icons.arrow_back_rounded,
-          onTap: () => context.pop(),
-          isCompact: isCompact,
-        ),
+        GameBackButton(onTap: _handleBackNavigation),
         const SizedBox(width: 10),
         Expanded(
           child: Column(
@@ -602,18 +687,22 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
               Text(
                 'Learn Numbers 🔢',
                 style: AppTypography.hero.copyWith(
-                  fontSize: isCompact ? 20 : 24,
+                  fontSize: AppTypography.responsiveSize(
+                    MediaQuery.sizeOf(context).width,
+                    min: 20,
+                    max: 24,
+                  ),
                   color: const Color(0xFF1A1060),
                   fontWeight: FontWeight.w800,
                 ),
               ),
               Text(
-                'Tap, hear, and count with bear buddy',
+                'Swipe numbers or tap 🔊 to hear again',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.bodySmall.copyWith(
                   color: const Color(0xFF5A6B7A),
-                  fontSize: isCompact ? 11 : 12,
+                  fontSize: isCompact ? 12 : 14,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -624,7 +713,10 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
           icon: _isSpeaking
               ? Icons.volume_up_rounded
               : Icons.record_voice_over_rounded,
-          onTap: _speakCurrentNumber,
+          onTap: () {
+            HapticFeedback.lightImpact();
+            _speakCurrentNumber();
+          },
           color: _theme.color,
           isActive: _isSpeaking,
           isCompact: isCompact,
@@ -637,73 +729,79 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   Widget _buildMainCard({
     required bool isCompact,
     required bool isVeryCompact,
+    required bool isNarrow,
   }) {
-    return GestureDetector(
-      onTap: _speakCurrentNumber,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 450),
-        curve: Curves.easeOutCubic,
-        padding: EdgeInsets.all(isVeryCompact ? 12 : 16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(28),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 450),
-              curve: Curves.easeOutCubic,
-              padding: EdgeInsets.all(isVeryCompact ? 14 : 18),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.78),
-                borderRadius: BorderRadius.circular(28),
-                border: Border.all(
-                  color: _theme.color.withValues(alpha: 0.35),
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: _theme.shadowColor.withValues(alpha: 0.55),
-                    offset: const Offset(0, 5),
-                    blurRadius: 0,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _speakCurrentNumber,
+        borderRadius: BorderRadius.circular(28),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 450),
+          curve: Curves.easeOutCubic,
+          padding: EdgeInsets.all(isVeryCompact ? 12 : 16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(28),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 450),
+                curve: Curves.easeOutCubic,
+                padding: EdgeInsets.all(isVeryCompact ? 14 : 18),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.78),
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(
+                    color: _theme.color.withValues(alpha: 0.35),
+                    width: 2,
                   ),
-                  BoxShadow(
-                    color: _theme.color.withValues(alpha: 0.14),
-                    offset: const Offset(0, 14),
-                    blurRadius: 24,
-                  ),
-                ],
-              ),
-              child: AnimatedBuilder(
-                animation: _cardTransitionController,
-                child: _buildMainCardContent(
-                  isCompact: isCompact,
-                  isVeryCompact: isVeryCompact,
-                ),
-                builder: (context, child) {
-                  final t = Curves.easeOutCubic.transform(
-                    _cardTransitionController.value,
-                  );
-                  final direction = _isCardTransitionExiting
-                      ? -_cardTransitionDirection
-                      : _cardTransitionDirection;
-                  final dx = lerpDouble(26.0 * direction, 0, t)!;
-                  final dy = lerpDouble(6.0, 0, t)!;
-                  final scale = lerpDouble(0.985, 1.0, t)!;
-                  final opacity = lerpDouble(0.18, 1.0, t)!;
-
-                  return Transform.translate(
-                    offset: Offset(dx, dy),
-                    child: Transform.scale(
-                      scale: scale,
-                      child: Opacity(
-                        opacity: opacity.clamp(0.0, 1.0),
-                        child: child,
-                      ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _theme.shadowColor.withValues(alpha: 0.55),
+                      offset: const Offset(0, 5),
+                      blurRadius: 0,
                     ),
-                  );
-                },
+                    BoxShadow(
+                      color: _theme.color.withValues(alpha: 0.14),
+                      offset: const Offset(0, 14),
+                      blurRadius: 24,
+                    ),
+                  ],
+                ),
+                child: AnimatedBuilder(
+                  animation: _cardTransitionController,
+                  child: _buildMainCardContent(
+                    isCompact: isCompact,
+                    isVeryCompact: isVeryCompact,
+                    isNarrow: isNarrow,
+                  ),
+                  builder: (context, child) {
+                    final t = Curves.easeOutCubic.transform(
+                      _cardTransitionController.value,
+                    );
+                    final direction = _isCardTransitionExiting
+                        ? -_cardTransitionDirection
+                        : _cardTransitionDirection;
+                    final dx = lerpDouble(26.0 * direction, 0, t)!;
+                    final dy = lerpDouble(6.0, 0, t)!;
+                    final scale = lerpDouble(0.985, 1.0, t)!;
+                    final opacity = lerpDouble(0.18, 1.0, t)!;
+
+                    return Transform.translate(
+                      offset: Offset(dx, dy),
+                      child: Transform.scale(
+                        scale: scale,
+                        child: Opacity(
+                          opacity: opacity.clamp(0.0, 1.0),
+                          child: child,
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ),
@@ -715,6 +813,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   Widget _buildMainCardContent({
     required bool isCompact,
     required bool isVeryCompact,
+    required bool isNarrow,
   }) {
     return SizedBox(
       width: double.infinity,
@@ -726,6 +825,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
             child: _buildNumberInfoCard(
               isVeryCompact: isVeryCompact,
               isCompact: isCompact,
+              isNarrow: isNarrow,
             ),
           ),
           SizedBox(width: isVeryCompact ? 8 : 12),
@@ -751,6 +851,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   Widget _buildNumberInfo({
     required bool isVeryCompact,
     required bool isCompact,
+    required bool isNarrow,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -821,11 +922,17 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
               '$_currentIndex',
               key: ValueKey(_currentIndex),
               style: AppTypography.numberDisplay.copyWith(
-                fontSize: isVeryCompact
-                    ? 62
-                    : isCompact
-                        ? 72
-                        : 84,
+                fontSize: isNarrow
+                    ? (isVeryCompact
+                        ? 54
+                        : isCompact
+                            ? 62
+                            : 70)
+                    : isVeryCompact
+                        ? 62
+                        : isCompact
+                            ? 72
+                            : 84,
                 color: _theme.color,
                 height: 0.9,
                 shadows: [
@@ -894,8 +1001,10 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
               ],
               Flexible(
                 child: Text(
-                  _isSpeaking ? 'Bear is speaking...' : 'Tap card to hear it',
-                  maxLines: 1,
+                  _isSpeaking
+                      ? 'Bear is speaking...'
+                      : 'Swipe numbers or tap 🔊',
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodySmall.copyWith(
                     color: _isSpeaking ? _theme.color : const Color(0xFF8E9BAD),
@@ -914,6 +1023,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   Widget _buildNumberInfoCard({
     required bool isVeryCompact,
     required bool isCompact,
+    required bool isNarrow,
   }) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
@@ -968,6 +1078,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
             _buildNumberInfo(
               isVeryCompact: isVeryCompact,
               isCompact: isCompact,
+              isNarrow: isNarrow,
             ),
           ],
         ),
@@ -1133,7 +1244,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
               ),
               SizedBox(height: isCompact ? 6 : 8),
               SizedBox(
-                height: isCompact ? 36 : 40,
+                height: 48,
                 child: ListView.separated(
                   controller: _selectorController,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1143,48 +1254,56 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
                   separatorBuilder: (_, __) => const SizedBox(width: 8),
                   itemBuilder: (context, index) {
                     final isSelected = index == _currentIndex;
-                    return GestureDetector(
-                      onTap: () => _selectNumber(index),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        curve: Curves.easeOutCubic,
-                        width: isCompact ? 36 : 42,
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? _theme.color
-                              : _theme.softColor.withValues(alpha: 0.7),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
+                    return Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _selectNumber(index),
+                        borderRadius: BorderRadius.circular(12),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          curve: Curves.easeOutCubic,
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
                             color: isSelected
-                                ? _theme.shadowColor.withValues(alpha: 0.5)
-                                : _theme.color.withValues(alpha: 0.22),
-                            width: isSelected ? 2 : 1,
-                          ),
-                          boxShadow: isSelected
-                              ? [
-                                  BoxShadow(
-                                    color: _theme.shadowColor
-                                        .withValues(alpha: 0.4),
-                                    offset: const Offset(0, 3),
-                                    blurRadius: 0,
-                                  ),
-                                  BoxShadow(
-                                    color: _theme.color.withValues(alpha: 0.25),
-                                    offset: const Offset(0, 6),
-                                    blurRadius: 12,
-                                  ),
-                                ]
-                              : [],
-                        ),
-                        child: Center(
-                          child: Text(
-                            '$index',
-                            style: AppTypography.bodyStrong.copyWith(
-                              fontSize: isCompact ? 13 : 15,
+                                ? _theme.color
+                                : _theme.softColor.withValues(alpha: 0.7),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
                               color: isSelected
-                                  ? Colors.white
-                                  : const Color(0xFF2D1B69),
-                              fontWeight: FontWeight.w800,
+                                  ? _theme.shadowColor.withValues(alpha: 0.5)
+                                  : _theme.color.withValues(alpha: 0.22),
+                              width: isSelected ? 2 : 1,
+                            ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: _theme.shadowColor.withValues(
+                                        alpha: 0.4,
+                                      ),
+                                      offset: const Offset(0, 3),
+                                      blurRadius: 0,
+                                    ),
+                                    BoxShadow(
+                                      color: _theme.color.withValues(
+                                        alpha: 0.25,
+                                      ),
+                                      offset: const Offset(0, 6),
+                                      blurRadius: 12,
+                                    ),
+                                  ]
+                                : [],
+                          ),
+                          child: Center(
+                            child: Text(
+                              '$index',
+                              style: AppTypography.bodyStrong.copyWith(
+                                fontSize: isCompact ? 13 : 15,
+                                color: isSelected
+                                    ? Colors.white
+                                    : const Color(0xFF2D1B69),
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                           ),
                         ),
@@ -1363,6 +1482,13 @@ class _BearBuddy extends StatelessWidget {
                 key: ValueKey('bear-image-$visualToken-$assetPath'),
                 height: imgH,
                 fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Text(
+                    '🐻',
+                    key: ValueKey('bear-fallback-$visualToken-$assetPath'),
+                    style: TextStyle(fontSize: imgH * 0.6),
+                  );
+                },
               ),
             ),
           ),
@@ -1519,53 +1645,68 @@ class _ObjectsGrid extends StatelessWidget {
                       opacity: itemAnim,
                       child: ScaleTransition(
                         scale: itemAnim,
-                        child: GestureDetector(
-                          onTap: () => onObjectTap(index),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            curve: Curves.easeOutCubic,
-                            width: tileSize,
-                            height: tileSize,
-                            decoration: BoxDecoration(
-                              color: isHighlighted
-                                  ? theme.color.withValues(alpha: 0.18)
-                                  : theme.softColor.withValues(alpha: 0.80),
-                              borderRadius:
-                                  BorderRadius.circular(tileSize * 0.28),
-                              border: Border.all(
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => onObjectTap(index),
+                            borderRadius:
+                                BorderRadius.circular(tileSize * 0.28),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              curve: Curves.easeOutCubic,
+                              width: tileSize,
+                              height: tileSize,
+                              decoration: BoxDecoration(
                                 color: isHighlighted
-                                    ? theme.color.withValues(alpha: 0.70)
-                                    : theme.color.withValues(alpha: 0.16),
-                                width: isHighlighted ? 2 : 1,
+                                    ? theme.color.withValues(alpha: 0.18)
+                                    : theme.softColor.withValues(alpha: 0.80),
+                                borderRadius:
+                                    BorderRadius.circular(tileSize * 0.28),
+                                border: Border.all(
+                                  color: isHighlighted
+                                      ? theme.color.withValues(alpha: 0.70)
+                                      : theme.color.withValues(alpha: 0.16),
+                                  width: isHighlighted ? 2 : 1,
+                                ),
+                                boxShadow: isHighlighted
+                                    ? [
+                                        BoxShadow(
+                                          color: theme.shadowColor.withValues(
+                                            alpha: 0.35,
+                                          ),
+                                          offset: const Offset(0, 3),
+                                          blurRadius: 0,
+                                        ),
+                                        BoxShadow(
+                                          color: theme.color.withValues(
+                                            alpha: 0.18,
+                                          ),
+                                          offset: const Offset(0, 6),
+                                          blurRadius: 10,
+                                        ),
+                                      ]
+                                    : [],
                               ),
-                              boxShadow: isHighlighted
-                                  ? [
-                                      BoxShadow(
-                                        color: theme.shadowColor
-                                            .withValues(alpha: 0.35),
-                                        offset: const Offset(0, 3),
-                                        blurRadius: 0,
-                                      ),
-                                      BoxShadow(
-                                        color:
-                                            theme.color.withValues(alpha: 0.18),
-                                        offset: const Offset(0, 6),
-                                        blurRadius: 10,
-                                      ),
-                                    ]
-                                  : [],
-                            ),
-                            child: Center(
-                              child: Transform.scale(
-                                scale: theme.imageScale,
-                                child: ClipRRect(
-                                  borderRadius:
-                                      BorderRadius.circular(tileSize * 0.18),
-                                  child: Image.asset(
-                                    theme.assetPath,
-                                    width: tileSize * 0.76,
-                                    height: tileSize * 0.76,
-                                    fit: BoxFit.contain,
+                              child: Center(
+                                child: Transform.scale(
+                                  scale: theme.imageScale,
+                                  child: ClipRRect(
+                                    borderRadius:
+                                        BorderRadius.circular(tileSize * 0.18),
+                                    child: Image.asset(
+                                      theme.assetPath,
+                                      width: tileSize * 0.76,
+                                      height: tileSize * 0.76,
+                                      fit: BoxFit.contain,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return Icon(
+                                          Icons.auto_awesome_rounded,
+                                          size: tileSize * 0.38,
+                                          color: theme.color,
+                                        );
+                                      },
+                                    ),
                                   ),
                                 ),
                               ),
@@ -1633,6 +1774,12 @@ class _ZeroStateCard extends StatelessWidget {
             'assets/images/bear/idle.png',
             height: isCompact ? 46 : 58,
             fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return Text(
+                '🐻',
+                style: TextStyle(fontSize: isCompact ? 34 : 42),
+              );
+            },
           ),
           SizedBox(height: isCompact ? 8 : 10),
           Text(
@@ -1689,53 +1836,57 @@ class _NavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: enabled ? onTap : null,
-      child: AnimatedOpacity(
-        duration: const Duration(milliseconds: 200),
-        opacity: enabled ? 1.0 : 0.38,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 350),
-          height: isCompact ? 44 : 50,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: borderColor, width: 1.5),
-            boxShadow: enabled
-                ? [
-                    BoxShadow(
-                      color: shadowColor,
-                      offset: const Offset(0, 4),
-                      blurRadius: 0,
-                    ),
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.20),
-                      offset: const Offset(0, 8),
-                      blurRadius: 14,
-                    ),
-                  ]
-                : [],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (iconLeading) ...[
-                Icon(icon, color: textColor, size: 22),
-                const SizedBox(width: 3),
-              ],
-              Text(
-                label,
-                style: AppTypography.button.copyWith(
-                  color: textColor,
-                  fontSize: isCompact ? 14 : 16,
-                  fontWeight: FontWeight.w700,
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 200),
+      opacity: enabled ? 1.0 : 0.38,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: enabled ? onTap : null,
+          borderRadius: BorderRadius.circular(16),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 350),
+            height: 50,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: borderColor, width: 1.5),
+              boxShadow: enabled
+                  ? [
+                      BoxShadow(
+                        color: shadowColor,
+                        offset: const Offset(0, 4),
+                        blurRadius: 0,
+                      ),
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.20),
+                        offset: const Offset(0, 8),
+                        blurRadius: 14,
+                      ),
+                    ]
+                  : [],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (iconLeading) ...[
+                  Icon(icon, color: textColor, size: 22),
+                  const SizedBox(width: 3),
+                ],
+                Text(
+                  label,
+                  style: AppTypography.button.copyWith(
+                    color: textColor,
+                    fontSize: isCompact ? 14 : 16,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-              if (!iconLeading) ...[
-                const SizedBox(width: 3),
-                Icon(icon, color: textColor, size: 22),
+                if (!iconLeading) ...[
+                  const SizedBox(width: 3),
+                  Icon(icon, color: textColor, size: 22),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -1762,35 +1913,39 @@ class _CircleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: isCompact ? 40 : 44,
-        height: isCompact ? 40 : 44,
-        decoration: BoxDecoration(
-          color: isActive
-              ? color.withValues(alpha: 0.14)
-              : Colors.white.withValues(alpha: 0.80),
-          shape: BoxShape.circle,
-          border: Border.all(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
             color: isActive
-                ? color.withValues(alpha: 0.38)
-                : color.withValues(alpha: 0.18),
-            width: 2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.10),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+                ? color.withValues(alpha: 0.14)
+                : Colors.white.withValues(alpha: 0.80),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: isActive
+                  ? color.withValues(alpha: 0.38)
+                  : color.withValues(alpha: 0.18),
+              width: 2,
             ),
-          ],
-        ),
-        child: Icon(
-          icon,
-          size: isCompact ? 21 : 23,
-          color: isActive ? color : const Color(0xFF5A6B7A),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.10),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Icon(
+            icon,
+            size: isCompact ? 22 : 23,
+            color: isActive ? color : const Color(0xFF5A6B7A),
+          ),
         ),
       ),
     );

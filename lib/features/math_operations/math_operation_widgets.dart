@@ -3,6 +3,32 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 
+BoxDecoration mathOpStageDecoration(
+  Color color, {
+  double radius = 28,
+}) {
+  return BoxDecoration(
+    color: Colors.white.withValues(alpha: 0.94),
+    borderRadius: BorderRadius.circular(radius),
+    border: Border.all(
+      color: color.withValues(alpha: 0.20),
+      width: 2,
+    ),
+    boxShadow: [
+      BoxShadow(
+        color: color.withValues(alpha: 0.24),
+        offset: const Offset(0, 6),
+        blurRadius: 0,
+      ),
+      BoxShadow(
+        color: color.withValues(alpha: 0.10),
+        offset: const Offset(0, 12),
+        blurRadius: 22,
+      ),
+    ],
+  );
+}
+
 class MathOpCircleButton extends StatelessWidget {
   const MathOpCircleButton({
     super.key,
@@ -20,15 +46,26 @@ class MathOpCircleButton extends StatelessWidget {
     return Material(
       color: Colors.white.withValues(alpha: 0.92),
       borderRadius: BorderRadius.circular(18),
+      shadowColor: color.withValues(alpha: 0.18),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
         onTap: onTap,
         child: Container(
-          width: 46,
-          height: 46,
+          width: 52,
+          height: 52,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white),
+            border: Border.all(
+              color: color.withValues(alpha: 0.16),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.12),
+                offset: const Offset(0, 4),
+                blurRadius: 10,
+              ),
+            ],
           ),
           child: Icon(icon, color: color),
         ),
@@ -52,12 +89,19 @@ class MathOpProgressPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 94,
-      padding: const EdgeInsets.all(8),
+      width: 98,
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: color.withValues(alpha: 0.22)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.10),
+            offset: const Offset(0, 4),
+            blurRadius: 10,
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -133,7 +177,19 @@ class MathOpObjectToken extends StatelessWidget {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.asset(assetPath, fit: BoxFit.cover),
+            child: Image.asset(
+              assetPath,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Center(
+                  child: Icon(
+                    Icons.auto_awesome_rounded,
+                    size: size * 0.46,
+                    color: Colors.white,
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -151,8 +207,11 @@ class MathOpDraggableItem<T extends Object> extends StatelessWidget {
     required this.backgroundColor,
     required this.enabled,
     this.placeholderOpacity = 0.15,
+    this.onTap,
     this.onDragStarted,
     this.onDragEnd,
+    this.onDragCompleted,
+    this.onDragCanceled,
   });
 
   final T data;
@@ -161,8 +220,11 @@ class MathOpDraggableItem<T extends Object> extends StatelessWidget {
   final Color backgroundColor;
   final bool enabled;
   final double placeholderOpacity;
+  final VoidCallback? onTap;
   final VoidCallback? onDragStarted;
   final VoidCallback? onDragEnd;
+  final VoidCallback? onDragCompleted;
+  final VoidCallback? onDragCanceled;
 
   @override
   Widget build(BuildContext context) {
@@ -200,11 +262,23 @@ class MathOpDraggableItem<T extends Object> extends StatelessWidget {
         ),
       ),
       onDragStarted: onDragStarted,
+      onDragCompleted: onDragCompleted,
+      onDraggableCanceled: (_, __) => onDragCanceled?.call(),
       onDragEnd: (_) => onDragEnd?.call(),
-      child: MathOpObjectToken(
-        size: size,
-        assetPath: assetPath,
-        backgroundColor: backgroundColor,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: MathOpObjectToken(
+              size: size,
+              assetPath: assetPath,
+              backgroundColor: backgroundColor,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -243,7 +317,7 @@ class MathOpDropZone extends StatelessWidget {
         return AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           width: double.infinity,
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: softColor.withValues(alpha: active ? 0.62 : 0.30),
             borderRadius: BorderRadius.circular(24),
@@ -251,15 +325,18 @@ class MathOpDropZone extends StatelessWidget {
               color: active ? color : color.withValues(alpha: 0.26),
               width: active ? 4 : 3,
             ),
-            boxShadow: active
-                ? [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.28),
-                      blurRadius: 18,
-                      offset: const Offset(0, 8),
-                    ),
-                  ]
-                : null,
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: active ? 0.24 : 0.14),
+                offset: const Offset(0, 5),
+                blurRadius: 0,
+              ),
+              BoxShadow(
+                color: color.withValues(alpha: active ? 0.16 : 0.08),
+                offset: const Offset(0, 10),
+                blurRadius: 16,
+              ),
+            ],
           ),
           child: Column(
             children: [
@@ -312,7 +389,7 @@ class MathOpEquationBanner extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       decoration: BoxDecoration(
         color: solved
             ? AppColors.correctFeedback.withValues(alpha: 0.40)
@@ -324,6 +401,20 @@ class MathOpEquationBanner extends StatelessWidget {
               : color.withValues(alpha: 0.20),
           width: 2,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: (solved ? AppColors.gardenGreen : color).withValues(
+              alpha: 0.18,
+            ),
+            offset: const Offset(0, 5),
+            blurRadius: 0,
+          ),
+          BoxShadow(
+            color: color.withValues(alpha: 0.08),
+            offset: const Offset(0, 10),
+            blurRadius: 18,
+          ),
+        ],
       ),
       child: FittedBox(
         child: Text(
@@ -370,7 +461,8 @@ class MathOpCelebrationOverlay extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(36),
-              border: Border.all(color: color.withValues(alpha: 0.22), width: 2),
+              border:
+                  Border.all(color: color.withValues(alpha: 0.22), width: 2),
               boxShadow: [
                 BoxShadow(
                   color: color.withValues(alpha: 0.24),

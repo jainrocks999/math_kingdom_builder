@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
@@ -53,7 +52,7 @@ class TraceNumbersScreen extends StatefulWidget {
 }
 
 class _TraceNumbersScreenState extends State<TraceNumbersScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, RouteAware {
   static const int _maxProgressJump = 6;
   static const Duration _autoAdvanceDelay = Duration(milliseconds: 1400);
 
@@ -356,6 +355,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
   String _statusText = 'Start at the green dot.';
   int _celebrationToken = 0;
   int _finalCelebrationToken = 0;
+  int _musicRequestToken = 0;
 
   _TraceLesson get _lesson => _lessons[_currentLessonIndex];
 
@@ -369,9 +369,35 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       duration: const Duration(milliseconds: 900),
     );
     _resetLessonState(speakPrompt: false);
+    _playScreenMusic(delayed: true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _speakLessonPrompt(includeStrokeHint: true);
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute<dynamic>) {
+      appRouteObserver.unsubscribe(this);
+      appRouteObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void didPopNext() {
+    _playScreenMusic(delayed: true);
+  }
+
+  @override
+  void didPush() {
+    _playScreenMusic(delayed: true);
+  }
+
+  @override
+  void didPushNext() {
+    _stopAllAudioAndSpeech();
   }
 
   Future<void> _configureTts() async {
@@ -382,7 +408,11 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       fallbackLocales: const ['en-US', 'hi-IN'],
     );
     await _tts.setPitch(1.05);
-    await _tts.setSpeechRate(0.36);
+    await TtsVoiceHelper.applyPreferredSpeechRate(
+      _tts,
+      normalRate: 0.36,
+      slowRate: 0.28,
+    );
     await _tts.setVolume(1.0);
   }
 
@@ -401,6 +431,29 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
     await _tts.speak('Amazing! You traced ${_lesson.word}.');
   }
 
+  void _playScreenMusic({bool delayed = false}) {
+    final requestToken = ++_musicRequestToken;
+    Future<void>.delayed(
+      delayed ? const Duration(milliseconds: 180) : Duration.zero,
+      () {
+        if (!mounted || requestToken != _musicRequestToken) return;
+        if (_showFinalCelebration) return;
+        AppAudioService.instance.playStartCountingMusic();
+      },
+    );
+  }
+
+  void _stopScreenMusic() {
+    _musicRequestToken++;
+    AppAudioService.instance.stopBackgroundMusic();
+  }
+
+  void _stopAllAudioAndSpeech() {
+    _stopScreenMusic();
+    AppAudioService.instance.stopCelebrationMusic();
+    _tts.stop();
+  }
+
   void _resetLessonState({bool speakPrompt = true}) {
     _currentStrokeIndex = 0;
     _currentProgressIndex = 0;
@@ -416,18 +469,21 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
 
   String _promptForCurrentStroke() {
     final strokeNumber = _currentStrokeIndex + 1;
-    return 'Stroke $strokeNumber: ${_lesson.strokes[_currentStrokeIndex].prompt}';
+    return 'Stroke $strokeNumber: ${_lesson.strokes[_currentStrokeIndex].prompt} Tap 🔊 to hear again.';
   }
 
   void _goToLesson(int index) {
     if (index < 0 || index >= _lessons.length) return;
+    _celebrationToken++;
     _finalCelebrationToken++;
+    _stopAllAudioAndSpeech();
     setState(() {
       _currentLessonIndex = index;
       _showFinalCelebration = false;
       _resetLessonState(speakPrompt: false);
     });
     HapticFeedback.selectionClick();
+    _playScreenMusic(delayed: true);
     _speakLessonPrompt(includeStrokeHint: true);
   }
 
@@ -442,6 +498,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
   void _showTracingCourseCelebration() {
     if (_showFinalCelebration) return;
     _tts.stop();
+    _stopScreenMusic();
     RewardProgressService.instance.recordModuleCompletion(
       RewardModuleIds.traceNumbers,
     );
@@ -449,14 +506,24 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
     setState(() => _showFinalCelebration = true);
   }
 
-
   void _prepareNextLearningNavigation() {
-    AppAudioService.instance.stopCelebrationMusic();
-    _tts.stop();
+    _stopAllAudioAndSpeech();
     _finalCelebrationToken++;
     setState(() {
       _showFinalCelebration = false;
     });
+  }
+
+  void _handleBackNavigation() {
+    _celebrationToken++;
+    _finalCelebrationToken++;
+    _stopAllAudioAndSpeech();
+    if (_showFinalCelebration && mounted) {
+      setState(() {
+        _showFinalCelebration = false;
+      });
+    }
+    context.pop();
   }
 
   void _handlePanStart(Offset position, Size size) {
@@ -605,9 +672,11 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
     return progress >= 0.96 && tracedDistance >= requiredDistance;
   }
 
-  double _startTolerance(Size size) => math.max(18, size.shortestSide * 0.055);
+  double _startTolerance(Size size) =>
+      (size.shortestSide * 0.075).clamp(22.0, 34.0);
 
-  double _followTolerance(Size size) => math.max(14, size.shortestSide * 0.045);
+  double _followTolerance(Size size) =>
+      (size.shortestSide * 0.060).clamp(18.0, 28.0);
 
   double _pathDistance(List<Offset> points) {
     if (points.length < 2) return 0;
@@ -662,9 +731,9 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
   @override
   void dispose() {
     _finalCelebrationToken++;
-    AppAudioService.instance.stopCelebrationMusic();
+    appRouteObserver.unsubscribe(this);
+    _stopAllAudioAndSpeech();
     _celebrationController.dispose();
-    _tts.stop();
     super.dispose();
   }
 
@@ -702,10 +771,10 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
               builder: (context, constraints) {
                 final isCompact = constraints.maxHeight < 780;
                 final boardSize = math.min(
-                  constraints.maxWidth - 36,
+                  constraints.maxWidth - 24,
                   math.max(
-                    isCompact ? 286.0 : 340.0,
-                    constraints.maxHeight * (isCompact ? 0.48 : 0.56),
+                    isCompact ? 308.0 : 340.0,
+                    constraints.maxHeight * (isCompact ? 0.52 : 0.58),
                   ),
                 );
 
@@ -714,7 +783,8 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
                     18,
                     isCompact ? 8 : 10,
                     18,
-                    isCompact ? 12 : 14,
+                    (isCompact ? 12 : 14) +
+                        MediaQuery.of(context).padding.bottom * 0.2,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -757,7 +827,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
             _CircleIconButton(
               icon: Icons.arrow_back_rounded,
               color: _lesson.color,
-              onTap: () => context.pop(),
+              onTap: _handleBackNavigation,
               size: isCompact ? 42 : 46,
             ),
             const SizedBox(width: 10),
@@ -779,6 +849,16 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
                       fontSize: isCompact ? 10 : 11,
                       fontWeight: FontWeight.w700,
                       color: const Color(0xFF586374),
+                    ),
+                  ),
+                  Text(
+                    'Trace the dotted path or tap 🔊 for help.',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.bodySmall.copyWith(
+                      fontSize: isCompact ? 10 : 11,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF7A849A),
                     ),
                   ),
                 ],
@@ -845,6 +925,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
                   _goNextLesson();
                   return;
                 }
+                _celebrationToken++;
                 setState(() => _resetLessonState(speakPrompt: false));
                 HapticFeedback.selectionClick();
                 _speakLessonPrompt(includeStrokeHint: true);
@@ -880,7 +961,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
           final infoHeight = isCompact ? 122.0 : 136.0;
           final statusHeight = isCompact ? 54.0 : 60.0;
           final availableBoard = math.max(
-            220.0,
+            240.0,
             cardConstraints.maxHeight - infoHeight - statusHeight,
           );
           final visualBoardSize = math.min(boardSize, availableBoard);
@@ -1377,7 +1458,7 @@ class _TracingBoardPainter extends CustomPainter {
     final watermark = TextPainter(
       text: TextSpan(
         text: lesson.display,
-        style: GoogleFonts.lilitaOne(
+        style: AppTypography.numberDisplay.copyWith(
           fontSize: size.width * 0.52,
           color: lesson.color.withValues(alpha: 0.05),
         ),
@@ -1490,9 +1571,10 @@ class _TracingBoardPainter extends CustomPainter {
     final endLabel = TextPainter(
       text: TextSpan(
         text: '★',
-        style: GoogleFonts.lilitaOne(
+        style: AppTypography.bodyStrong.copyWith(
           color: Colors.white,
           fontSize: 12,
+          fontWeight: FontWeight.w800,
         ),
       ),
       textDirection: TextDirection.ltr,
@@ -1604,6 +1686,12 @@ class _BoardCelebration extends StatelessWidget {
                             'assets/images/bear/clapping.png',
                             height: 110,
                             fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Text(
+                                '🐻',
+                                style: TextStyle(fontSize: 72),
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -1612,7 +1700,7 @@ class _BoardCelebration extends StatelessWidget {
                   const SizedBox(height: 10),
                   Text(
                     display,
-                    style: GoogleFonts.lilitaOne(
+                    style: AppTypography.numberDisplay.copyWith(
                       color: color,
                       fontSize: 46,
                     ),

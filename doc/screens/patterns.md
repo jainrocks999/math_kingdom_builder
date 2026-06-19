@@ -2,6 +2,7 @@
 
 **File:** `lib/features/patterns/patterns_screen.dart`  
 **Route:** `/patterns`
+**Status:** Implemented with responsive/tap polish (2026-06-19)
 
 ## Current purpose
 
@@ -24,14 +25,20 @@
 ## Development tasks
 
 ### UI
-- [ ] Horizontal scroll or wrap for pattern row
+- [x] Wrapped layout for pattern row
 
 ### Existing functionality
-- [ ] Tap-to-place fallback
-- [ ] TTS describes pattern (“red circle, blue square…”)
+- [x] Tap-to-place fallback
+- [x] TTS describes pattern (“red circle, blue square…”)
 
 ### Responsiveness
-- [ ] Pattern pieces on narrow screens
+- [x] Pattern pieces on narrow screens
+
+## Notes
+
+- Pattern row now stays inside the visible area instead of relying on squeeze/overflow.
+- Prompt speech now reads the actual pattern with a spoken blank at the end.
+- Option tiles are tap-first, with drag starting only on hold for more reliable child interaction.
 
 ## Assets
 

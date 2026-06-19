@@ -5,6 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/router/app_router.dart';
 import '../../shared/widgets/celebration_bear.dart';
+import '../../shared/widgets/game_back_button.dart';
 
 class PlaceholderScreen extends StatelessWidget {
   const PlaceholderScreen({
@@ -57,10 +58,8 @@ class PlaceholderScreen extends StatelessWidget {
                 children: [
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: IconButton(
-                      onPressed: () => _goBack(context),
-                      icon: const Icon(Icons.arrow_back_rounded),
-                      color: AppColors.textPrimary,
+                    child: GameBackButton(
+                      onTap: () => _goBack(context),
                     ),
                   ),
                   Expanded(

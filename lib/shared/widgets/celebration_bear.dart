@@ -63,6 +63,13 @@ class _CelebrationBearState extends State<CelebrationBear>
                 key: ValueKey<String>(_frames[frameIndex]),
                 height: widget.size,
                 fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Text(
+                    '🐻',
+                    key: ValueKey<String>('bear_fallback_$frameIndex'),
+                    style: TextStyle(fontSize: widget.size * 0.6),
+                  );
+                },
               ),
             ),
           ),

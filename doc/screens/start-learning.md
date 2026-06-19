@@ -2,6 +2,7 @@
 
 **File:** `lib/features/StartLearning/start_learning_screen.dart`  
 **Route:** `/start-learning`
+**Status:** Implemented (2026-06-19)
 
 ## Current purpose
 
@@ -26,24 +27,24 @@ Central learning hub: profile picker, daily goal, streak, locked/unlocked module
 ## Development tasks
 
 ### Bug fixes
-- [ ] Unlock dialog only once per route (regression)
+- [x] Unlock dialog only once per route (regression)
 
 ### UI
-- [ ] Reduce duplicate welcome when title shows profile
-- [ ] Stronger locked card visual
+- [x] Reduce duplicate welcome when title shows profile
+- [x] Stronger locked card visual
 
 ### Existing functionality
-- [ ] “More Adventures” links: Math Ops, Patterns, Sequencing
-- [ ] Fix Rewards card labels
+- [x] “More Adventures” links: Math Ops, Patterns, Sequencing
+- [x] Fix Rewards card labels
 
 ### New (optional)
-- [ ] Highlight recommended next module
+- [x] Highlight recommended next module
 
 ### Kids experience
-- [ ] Unlock sound on dialog; simpler locked text
+- [x] Unlock sound on dialog; simpler locked text
 
 ### Responsiveness
-- [ ] Momentum stat ellipsis; learning card layout on narrow width
+- [x] Momentum stat ellipsis; learning card layout on narrow width
 
 ## Assets
 
