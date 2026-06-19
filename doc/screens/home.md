@@ -18,7 +18,6 @@ Main hub: Start Learning CTA, featured actions grid, quest grid, daily challenge
 ## Current issues
 
 - Bell icon opens **Kingdom** — misleading
-- Daily Challenge banner is static
 - Quest star dots from JSON, not live progress
 - `isComingSoon` quests still tappable if flag set
 - Duplicated header vs Onboarding
@@ -39,10 +38,12 @@ Main hub: Start Learning CTA, featured actions grid, quest grid, daily challenge
 ### Existing functionality
 - [x] Bind quest stars to `RewardProgressService` or remove dots
 - [x] Dynamic daily challenge from `todayCompletions`
+- [x] Daily challenge routes to a real module and checks completion from progress
+- [x] Daily challenge gives one bonus reward per day and does not double-claim
 - [x] Use `home_music.mp3` on this screen
 
 ### New (optional)
-- [ ] Star count chip in header
+- [x] Star count chip in header
 
 ### Kids experience
 - [ ] Bounce on Start Learning press; light haptic on card tap
@@ -62,7 +63,7 @@ Main hub: Start Learning CTA, featured actions grid, quest grid, daily challenge
 
 ## Acceptance criteria
 
-Icons match destinations; daily banner live; coming-soon guarded; music correct; no overflow on small Android.
+Icons match destinations; daily banner is live, awards the daily bonus once, opens the real daily module; coming-soon guarded; music correct; no overflow on small Android.
 
 ## Deferred
 

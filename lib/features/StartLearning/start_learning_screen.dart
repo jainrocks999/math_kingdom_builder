@@ -1564,7 +1564,7 @@ class _LearningCard extends StatelessWidget {
                                       ? module.color
                                       : AppColors.disabled,
                                   fontWeight: FontWeight.w800,
-                                  fontSize: 11,
+                                  fontSize: 12,
                                 ),
                               ),
                             ],
@@ -1590,7 +1590,7 @@ class _LearningCard extends StatelessWidget {
                                     ? module.color
                                     : AppColors.textSecondary,
                                 fontWeight: FontWeight.w800,
-                                fontSize: 11,
+                                fontSize: 12,
                               ),
                             ),
                           ),
@@ -1823,7 +1823,7 @@ class _AdventureShortcutCard extends StatelessWidget {
                 style: AppTypography.bodySmall.copyWith(
                   color: const Color(0xFF7A849A),
                   fontWeight: FontWeight.w700,
-                  fontSize: 11,
+                  fontSize: 12,
                   height: 1.3,
                 ),
               ),

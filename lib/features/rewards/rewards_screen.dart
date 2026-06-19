@@ -48,7 +48,8 @@ class RewardsScreen extends StatefulWidget {
   State<RewardsScreen> createState() => _RewardsScreenState();
 }
 
-class _RewardsScreenState extends State<RewardsScreen> with RouteAware {
+class _RewardsScreenState extends State<RewardsScreen>
+    with RouteAware, SingleTickerProviderStateMixin {
   static const List<_RewardItem> _rewards = [
     _RewardItem(
       id: 'sticker-sun',
@@ -205,6 +206,8 @@ class _RewardsScreenState extends State<RewardsScreen> with RouteAware {
   bool _showClaimCelebration = false;
   bool _isLoadingProgress = true;
   bool _isClaimingReward = false;
+  String? _animatingRewardId;
+  late final AnimationController _collectAnimationController;
 
   List<_RewardItem> get _visibleRewards => _rewards
       .where((reward) => reward.category == _selectedCategory)
@@ -258,6 +261,27 @@ class _RewardsScreenState extends State<RewardsScreen> with RouteAware {
       ..sort();
     return unlockedThresholds.isEmpty ? 0 : unlockedThresholds.last;
   }
+
+  double get _collectPulse {
+    final pulseTween = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0, end: 1).chain(
+          CurveTween(curve: Curves.easeOutBack),
+        ),
+        weight: 55,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1, end: 0).chain(
+          CurveTween(curve: Curves.easeIn),
+        ),
+        weight: 45,
+      ),
+    ]);
+    return pulseTween.transform(_collectAnimationController.value);
+  }
+
+  double get _collectBurstProgress =>
+      Curves.easeOutCubic.transform(_collectAnimationController.value);
 
   bool _isUnlocked(_RewardItem reward) => reward.unlockStars <= _currentStars;
 
@@ -327,12 +351,18 @@ class _RewardsScreenState extends State<RewardsScreen> with RouteAware {
       _claimedRewardIds.add(reward.id);
       _showClaimCelebration = true;
       _isClaimingReward = false;
+      _animatingRewardId = reward.id;
     });
+    _collectAnimationController.forward(from: 0);
   }
 
   @override
   void initState() {
     super.initState();
+    _collectAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
     _playScreenMusic(delayed: true);
     _loadProgress();
   }
@@ -369,6 +399,7 @@ class _RewardsScreenState extends State<RewardsScreen> with RouteAware {
     appRouteObserver.unsubscribe(this);
     AppAudioService.instance.stopCelebrationMusic();
     _stopScreenMusic();
+    _collectAnimationController.dispose();
     super.dispose();
   }
 
@@ -548,12 +579,18 @@ class _RewardsScreenState extends State<RewardsScreen> with RouteAware {
         color: AppColors.secondary,
         softColor: AppColors.secondaryLight,
       ),
-      _SummaryCard(
-        title: 'Claimed',
-        value: '$_claimedCount',
-        emoji: '🏆',
-        color: AppColors.parentAccent,
-        softColor: AppColors.restBackground,
+      AnimatedBuilder(
+        animation: _collectAnimationController,
+        builder: (context, _) {
+          return _SummaryCard(
+            title: 'Claimed',
+            value: '$_claimedCount',
+            emoji: '🏆',
+            color: AppColors.parentAccent,
+            softColor: AppColors.restBackground,
+            pulse: _animatingRewardId == null ? 0 : _collectPulse,
+          );
+        },
       ),
       _SummaryCard(
         title: 'Wins',
@@ -665,156 +702,168 @@ class _RewardsScreenState extends State<RewardsScreen> with RouteAware {
               final selected = index == _selectedIndex;
               final unlocked = _isUnlocked(reward);
               final claimed = _isClaimed(reward);
+              final animateCollect = _animatingRewardId == reward.id;
 
-              return Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () => _selectReward(index),
-                  borderRadius: BorderRadius.circular(24),
-                  child: LayoutBuilder(
-                    builder: (context, cardConstraints) {
-                      final compactTile = cardConstraints.maxWidth < 150 ||
-                          cardConstraints.maxHeight < 150;
-                      final iconBoxSize = compactTile ? 40.0 : 46.0;
-                      final grayscale = !unlocked && !claimed;
+              return AnimatedBuilder(
+                animation: _collectAnimationController,
+                builder: (context, child) {
+                  final pulse = animateCollect ? _collectPulse : 0.0;
+                  return Transform.scale(
+                    scale: 1 + pulse * 0.08,
+                    child: child,
+                  );
+                },
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => _selectReward(index),
+                    borderRadius: BorderRadius.circular(24),
+                    child: LayoutBuilder(
+                      builder: (context, cardConstraints) {
+                        final compactTile = cardConstraints.maxWidth < 150 ||
+                            cardConstraints.maxHeight < 150;
+                        final iconBoxSize = compactTile ? 40.0 : 46.0;
+                        final grayscale = !unlocked && !claimed;
 
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 2),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          padding: EdgeInsets.all(compactTile ? 12 : 14),
-                          decoration: BoxDecoration(
-                            color: selected
-                                ? reward.softColor.withValues(alpha: 0.88)
-                                : Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 2),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            padding: EdgeInsets.all(compactTile ? 12 : 14),
+                            decoration: BoxDecoration(
                               color: selected
-                                  ? reward.color
-                                  : reward.color.withValues(alpha: 0.18),
-                              width: selected ? 2.5 : 2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: reward.shadowColor.withValues(
-                                  alpha: selected ? 0.28 : 0.12,
-                                ),
-                                blurRadius: selected ? 16 : 10,
-                                offset: const Offset(0, 6),
+                                  ? reward.softColor.withValues(alpha: 0.88)
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: selected
+                                    ? reward.color
+                                    : reward.color.withValues(alpha: 0.18),
+                                width: selected ? 2.5 : 2,
                               ),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.max,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  ColorFiltered(
-                                    colorFilter: grayscale
-                                        ? const ColorFilter.matrix([
-                                            0.2126,
-                                            0.7152,
-                                            0.0722,
-                                            0,
-                                            0,
-                                            0.2126,
-                                            0.7152,
-                                            0.0722,
-                                            0,
-                                            0,
-                                            0.2126,
-                                            0.7152,
-                                            0.0722,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                            0,
-                                            1,
-                                            0,
-                                          ])
-                                        : const ColorFilter.mode(
-                                            Colors.transparent,
-                                            BlendMode.srcOver,
-                                          ),
-                                    child: Container(
-                                      width: iconBoxSize,
-                                      height: iconBoxSize,
-                                      decoration: BoxDecoration(
-                                        color: reward.softColor,
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          reward.emoji,
-                                          style: TextStyle(
-                                            fontSize: compactTile ? 21 : 24,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: reward.shadowColor.withValues(
+                                    alpha: selected ? 0.28 : 0.12,
+                                  ),
+                                  blurRadius: selected ? 16 : 10,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.max,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    ColorFiltered(
+                                      colorFilter: grayscale
+                                          ? const ColorFilter.matrix([
+                                              0.2126,
+                                              0.7152,
+                                              0.0722,
+                                              0,
+                                              0,
+                                              0.2126,
+                                              0.7152,
+                                              0.0722,
+                                              0,
+                                              0,
+                                              0.2126,
+                                              0.7152,
+                                              0.0722,
+                                              0,
+                                              0,
+                                              0,
+                                              0,
+                                              0,
+                                              1,
+                                              0,
+                                            ])
+                                          : const ColorFilter.mode(
+                                              Colors.transparent,
+                                              BlendMode.srcOver,
+                                            ),
+                                      child: Container(
+                                        width: iconBoxSize,
+                                        height: iconBoxSize,
+                                        decoration: BoxDecoration(
+                                          color: reward.softColor,
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            reward.emoji,
+                                            style: TextStyle(
+                                              fontSize: compactTile ? 21 : 24,
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  const Spacer(),
-                                  Icon(
-                                    claimed
-                                        ? Icons.check_circle_rounded
-                                        : unlocked
-                                            ? Icons.lock_open_rounded
-                                            : Icons.lock_rounded,
-                                    color: claimed
-                                        ? AppColors.gardenGreen
-                                        : unlocked
-                                            ? reward.color
-                                            : AppColors.disabled,
-                                    size: compactTile ? 20 : 24,
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: compactTile ? 10 : 12),
-                              Text(
-                                reward.title,
-                                maxLines: compactTile ? 1 : 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTypography.bodyStrong.copyWith(
-                                  color: const Color(0xFF1A1060),
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: compactTile ? 14 : 15,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Expanded(
-                                child: Align(
-                                  alignment: Alignment.bottomLeft,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(bottom: 2),
-                                    child: Text(
+                                    const Spacer(),
+                                    Icon(
                                       claimed
-                                          ? 'Collected'
+                                          ? Icons.check_circle_rounded
                                           : unlocked
-                                              ? 'Ready to collect'
-                                              : 'Unlock at ${reward.unlockStars} stars',
-                                      maxLines: compactTile ? 2 : 3,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: AppTypography.bodySmall.copyWith(
-                                        color: claimed
-                                            ? AppColors.gardenGreen
+                                              ? Icons.lock_open_rounded
+                                              : Icons.lock_rounded,
+                                      color: claimed
+                                          ? AppColors.gardenGreen
+                                          : unlocked
+                                              ? reward.color
+                                              : AppColors.disabled,
+                                      size: compactTile ? 20 : 24,
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: compactTile ? 10 : 12),
+                                Text(
+                                  reward.title,
+                                  maxLines: compactTile ? 1 : 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTypography.bodyStrong.copyWith(
+                                    color: const Color(0xFF1A1060),
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: compactTile ? 14 : 15,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.bottomLeft,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(bottom: 2),
+                                      child: Text(
+                                        claimed
+                                            ? 'Collected'
                                             : unlocked
-                                                ? reward.color
-                                                : AppColors.textSecondary,
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: compactTile ? 11.5 : 12,
-                                        height: 1.25,
+                                                ? 'Ready to collect'
+                                                : 'Unlock at ${reward.unlockStars} stars',
+                                        maxLines: compactTile ? 2 : 3,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: AppTypography.bodySmall.copyWith(
+                                          color: claimed
+                                              ? AppColors.gardenGreen
+                                              : unlocked
+                                                  ? reward.color
+                                                  : AppColors.textSecondary,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: compactTile ? 11.5 : 12,
+                                          height: 1.25,
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                 ),
               );
@@ -832,6 +881,114 @@ class _RewardsScreenState extends State<RewardsScreen> with RouteAware {
     bool scrollable = true,
   }) {
     final starsNeeded = math.max(0, reward.unlockStars - _currentStars);
+    final detailContent = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildRewardShowcase(
+          reward: reward,
+          unlocked: unlocked,
+          claimed: claimed,
+        ),
+        const SizedBox(height: 16),
+        Text(
+          reward.description,
+          style: AppTypography.body.copyWith(
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w700,
+            height: 1.45,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'Progress to next reward',
+          style: AppTypography.bodyStrong.copyWith(
+            color: const Color(0xFF1A1060),
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(
+            value: _progressToNextUnlock,
+            minHeight: 12,
+            backgroundColor: AppColors.surfaceMuted,
+            valueColor: AlwaysStoppedAnimation<Color>(reward.color),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          unlocked
+              ? 'Unlocked now'
+              : '$starsNeeded more stars needed to unlock this reward',
+          style: AppTypography.bodySmall.copyWith(
+            color: unlocked ? AppColors.gardenGreen : AppColors.textSecondary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 16),
+        if (_showClaimCelebration && claimed) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.correctFeedback.withValues(alpha: 0.58),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: AppColors.gardenGreen.withValues(alpha: 0.55),
+                width: 2,
+              ),
+            ),
+            child: Column(
+              children: [
+                const CelebrationBear(size: 82),
+                const SizedBox(height: 8),
+                Text(
+                  'Reward Claimed!',
+                  style: AppTypography.bodyStrong.copyWith(
+                    color: AppColors.gardenGreen,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+        Row(
+          children: [
+            Expanded(
+              child: _ActionButton(
+                label: claimed
+                    ? 'Already Collected'
+                    : unlocked
+                        ? (_isClaimingReward ? 'Collecting...' : 'Collect!')
+                        : 'Locked',
+                icon: claimed
+                    ? Icons.check_rounded
+                    : unlocked
+                        ? Icons.card_giftcard_rounded
+                        : Icons.lock_rounded,
+                backgroundColor: claimed
+                    ? AppColors.gardenGreen
+                    : unlocked
+                        ? reward.color
+                        : AppColors.disabled,
+                foregroundColor: Colors.white,
+                borderColor: claimed
+                    ? const Color(0xFF3A9040)
+                    : unlocked
+                        ? reward.shadowColor
+                        : AppColors.disabled,
+                onTap: claimed || !unlocked || _isClaimingReward
+                    ? null
+                    : _claimSelectedReward,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -848,406 +1005,128 @@ class _RewardsScreenState extends State<RewardsScreen> with RouteAware {
           ),
         ],
       ),
-      child: (scrollable
-          ? SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: reward.softColor.withValues(alpha: 0.78),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: Column(
-                      children: [
-                        Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            ColorFiltered(
-                              colorFilter: !unlocked && !claimed
-                                  ? const ColorFilter.matrix([
-                                      0.2126,
-                                      0.7152,
-                                      0.0722,
-                                      0,
-                                      0,
-                                      0.2126,
-                                      0.7152,
-                                      0.0722,
-                                      0,
-                                      0,
-                                      0.2126,
-                                      0.7152,
-                                      0.0722,
-                                      0,
-                                      0,
-                                      0,
-                                      0,
-                                      0,
-                                      1,
-                                      0,
-                                    ])
-                                  : const ColorFilter.mode(
-                                      Colors.transparent,
-                                      BlendMode.srcOver,
-                                    ),
-                              child: Text(
-                                reward.emoji,
-                                style: const TextStyle(fontSize: 42),
-                              ),
-                            ),
-                            if (!unlocked && !claimed)
-                              Positioned(
-                                right: 0,
-                                child: Container(
-                                  width: 24,
-                                  height: 24,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.lock_rounded,
-                                    size: 14,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          reward.title,
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.h2.copyWith(
-                            color: const Color(0xFF1A1060),
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          reward.subtitle,
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: reward.color,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    reward.description,
-                    style: AppTypography.body.copyWith(
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w700,
-                      height: 1.45,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Progress to next reward',
-                    style: AppTypography.bodyStrong.copyWith(
-                      color: const Color(0xFF1A1060),
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(999),
-                    child: LinearProgressIndicator(
-                      value: _progressToNextUnlock,
-                      minHeight: 12,
-                      backgroundColor: AppColors.surfaceMuted,
-                      valueColor: AlwaysStoppedAnimation<Color>(reward.color),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    unlocked
-                        ? 'Unlocked now'
-                        : '$starsNeeded more stars needed to unlock this reward',
-                    style: AppTypography.bodySmall.copyWith(
-                      color: unlocked
-                          ? AppColors.gardenGreen
-                          : AppColors.textSecondary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  if (_showClaimCelebration && claimed) ...[
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color:
-                            AppColors.correctFeedback.withValues(alpha: 0.58),
-                        borderRadius: BorderRadius.circular(18),
-                        border: Border.all(
-                          color: AppColors.gardenGreen.withValues(alpha: 0.55),
-                          width: 2,
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          const CelebrationBear(size: 82),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Reward Claimed!',
-                            style: AppTypography.bodyStrong.copyWith(
-                              color: AppColors.gardenGreen,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _ActionButton(
-                          label: claimed
-                              ? 'Already Collected'
-                              : unlocked
-                                  ? (_isClaimingReward
-                                      ? 'Collecting...'
-                                      : 'Collect!')
-                                  : 'Locked',
-                          icon: claimed
-                              ? Icons.check_rounded
-                              : unlocked
-                                  ? Icons.card_giftcard_rounded
-                                  : Icons.lock_rounded,
-                          backgroundColor: claimed
-                              ? AppColors.gardenGreen
-                              : unlocked
-                                  ? reward.color
-                                  : AppColors.disabled,
-                          foregroundColor: Colors.white,
-                          borderColor: claimed
-                              ? const Color(0xFF3A9040)
-                              : unlocked
-                                  ? reward.shadowColor
-                                  : AppColors.disabled,
-                          onTap: claimed || !unlocked || _isClaimingReward
-                              ? null
-                              : _claimSelectedReward,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: scrollable
+          ? SingleChildScrollView(child: detailContent)
+          : detailContent,
+    );
+  }
+
+  Widget _buildRewardShowcase({
+    required _RewardItem reward,
+    required bool unlocked,
+    required bool claimed,
+  }) {
+    final animateCollect = _animatingRewardId == reward.id;
+
+    return AnimatedBuilder(
+      animation: _collectAnimationController,
+      builder: (context, child) {
+        final pulse = animateCollect ? _collectPulse : 0.0;
+        return Transform.scale(
+          scale: 1 + pulse * 0.08,
+          child: child,
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: reward.softColor.withValues(alpha: 0.78),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Column(
+          children: [
+            Stack(
+              alignment: Alignment.center,
+              clipBehavior: Clip.none,
               children: [
-                Container(
-                  width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: reward.softColor.withValues(alpha: 0.78),
-                    borderRadius: BorderRadius.circular(18),
+                if (animateCollect)
+                  AnimatedBuilder(
+                    animation: _collectAnimationController,
+                    builder: (context, _) {
+                      return _CollectStarBurst(
+                        progress: _collectBurstProgress,
+                        color: reward.color,
+                      );
+                    },
                   ),
-                  child: Column(
-                    children: [
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          ColorFiltered(
-                            colorFilter: !unlocked && !claimed
-                                ? const ColorFilter.matrix([
-                                    0.2126,
-                                    0.7152,
-                                    0.0722,
-                                    0,
-                                    0,
-                                    0.2126,
-                                    0.7152,
-                                    0.0722,
-                                    0,
-                                    0,
-                                    0.2126,
-                                    0.7152,
-                                    0.0722,
-                                    0,
-                                    0,
-                                    0,
-                                    0,
-                                    0,
-                                    1,
-                                    0,
-                                  ])
-                                : const ColorFilter.mode(
-                                    Colors.transparent,
-                                    BlendMode.srcOver,
-                                  ),
-                            child: Text(
-                              reward.emoji,
-                              style: const TextStyle(fontSize: 42),
-                            ),
-                          ),
-                          if (!unlocked && !claimed)
-                            Positioned(
-                              right: 0,
-                              child: Container(
-                                width: 24,
-                                height: 24,
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.lock_rounded,
-                                  size: 14,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        reward.title,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.h2.copyWith(
-                          color: const Color(0xFF1A1060),
-                          fontWeight: FontWeight.w800,
+                ColorFiltered(
+                  colorFilter: !unlocked && !claimed
+                      ? const ColorFilter.matrix([
+                          0.2126,
+                          0.7152,
+                          0.0722,
+                          0,
+                          0,
+                          0.2126,
+                          0.7152,
+                          0.0722,
+                          0,
+                          0,
+                          0.2126,
+                          0.7152,
+                          0.0722,
+                          0,
+                          0,
+                          0,
+                          0,
+                          0,
+                          1,
+                          0,
+                        ])
+                      : const ColorFilter.mode(
+                          Colors.transparent,
+                          BlendMode.srcOver,
                         ),
+                  child: Text(
+                    reward.emoji,
+                    style: const TextStyle(fontSize: 42),
+                  ),
+                ),
+                if (!unlocked && !claimed)
+                  Positioned(
+                    right: 0,
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        reward.subtitle,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: reward.color,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  reward.description,
-                  style: AppTypography.body.copyWith(
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w700,
-                    height: 1.45,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Progress to next reward',
-                  style: AppTypography.bodyStrong.copyWith(
-                    color: const Color(0xFF1A1060),
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
-                  child: LinearProgressIndicator(
-                    value: _progressToNextUnlock,
-                    minHeight: 12,
-                    backgroundColor: AppColors.surfaceMuted,
-                    valueColor: AlwaysStoppedAnimation<Color>(reward.color),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  unlocked
-                      ? 'Unlocked now'
-                      : '$starsNeeded more stars needed to unlock this reward',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: unlocked
-                        ? AppColors.gardenGreen
-                        : AppColors.textSecondary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                if (_showClaimCelebration && claimed) ...[
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.correctFeedback.withValues(alpha: 0.58),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: AppColors.gardenGreen.withValues(alpha: 0.55),
-                        width: 2,
+                      child: const Icon(
+                        Icons.lock_rounded,
+                        size: 14,
+                        color: AppColors.textSecondary,
                       ),
                     ),
-                    child: Column(
-                      children: [
-                        const CelebrationBear(size: 82),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Reward Claimed!',
-                          style: AppTypography.bodyStrong.copyWith(
-                            color: AppColors.gardenGreen,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
-                  const SizedBox(height: 16),
-                ],
-                Row(
-                  children: [
-                    Expanded(
-                      child: _ActionButton(
-                        label: claimed
-                            ? 'Already Collected'
-                            : unlocked
-                                ? (_isClaimingReward
-                                    ? 'Collecting...'
-                                    : 'Collect!')
-                                : 'Locked',
-                        icon: claimed
-                            ? Icons.check_rounded
-                            : unlocked
-                                ? Icons.card_giftcard_rounded
-                                : Icons.lock_rounded,
-                        backgroundColor: claimed
-                            ? AppColors.gardenGreen
-                            : unlocked
-                                ? reward.color
-                                : AppColors.disabled,
-                        foregroundColor: Colors.white,
-                        borderColor: claimed
-                            ? const Color(0xFF3A9040)
-                            : unlocked
-                                ? reward.shadowColor
-                                : AppColors.disabled,
-                        onTap: claimed || !unlocked || _isClaimingReward
-                            ? null
-                            : _claimSelectedReward,
-                      ),
-                    ),
-                  ],
-                ),
               ],
-            )),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              reward.title,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.h2.copyWith(
+                color: const Color(0xFF1A1060),
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              reward.subtitle,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.bodySmall.copyWith(
+                color: reward.color,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -1259,6 +1138,7 @@ class _SummaryCard extends StatelessWidget {
     required this.emoji,
     required this.color,
     required this.softColor,
+    this.pulse = 0,
   });
 
   final String title;
@@ -1266,53 +1146,120 @@ class _SummaryCard extends StatelessWidget {
   final String emoji;
   final Color color;
   final Color softColor;
+  final double pulse;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: color.withValues(alpha: 0.22)),
+    return Transform.scale(
+      scale: 1 + (pulse * 0.05),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.94),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: color.withValues(alpha: 0.22)),
+          boxShadow: pulse <= 0
+              ? null
+              : [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.18 + (pulse * 0.12)),
+                    blurRadius: 12 + (pulse * 8),
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: softColor,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Center(
+                child: Text(emoji, style: const TextStyle(fontSize: 22)),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    value,
+                    style: AppTypography.bodyStrong.copyWith(
+                      color: color,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: softColor,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Center(
-              child: Text(emoji, style: const TextStyle(fontSize: 22)),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w700,
+    );
+  }
+}
+
+class _CollectStarBurst extends StatelessWidget {
+  const _CollectStarBurst({
+    required this.progress,
+    required this.color,
+  });
+
+  final double progress;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final opacity = (1 - progress).clamp(0.0, 1.0);
+    const offsets = [
+      Offset(0, -34),
+      Offset(28, -18),
+      Offset(32, 20),
+      Offset(-30, 18),
+      Offset(-26, -20),
+    ];
+
+    return IgnorePointer(
+      child: SizedBox(
+        width: 116,
+        height: 116,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            for (var i = 0; i < offsets.length; i++)
+              Transform.translate(
+                offset: Offset(
+                  offsets[i].dx * progress,
+                  offsets[i].dy * progress,
+                ),
+                child: Opacity(
+                  opacity: opacity,
+                  child: Transform.scale(
+                    scale: 0.75 + ((1 - (i * 0.08)) * progress * 0.9),
+                    child: Icon(
+                      i.isEven
+                          ? Icons.star_rounded
+                          : Icons.auto_awesome_rounded,
+                      size: 14 + (i.isEven ? 4 : 0),
+                      color: color.withValues(alpha: 0.95),
+                    ),
                   ),
                 ),
-                Text(
-                  value,
-                  style: AppTypography.bodyStrong.copyWith(
-                    color: color,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+              ),
+          ],
+        ),
       ),
     );
   }

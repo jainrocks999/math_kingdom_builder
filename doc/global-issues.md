@@ -54,13 +54,12 @@ Issues that affect multiple screens. Fix in Phase 1 before deep screen work.
 ## Dead / unused code
 
 - `number_recognition_controller` + `CelebrationService` — not wired to current Find Number UI
-- `StickerAlbum` Hive model — Rewards screen uses SharedPreferences instead
+- Removed unused `StickerAlbum` Hive model so Rewards persistence has one source of truth
 - `StateLearningScreen` alias on Find Correct Number screen
 - Commented SVG background on Home
 
 ## Functionality gaps
 
-- Daily Challenge banner on Home is static — not tied to `todayCompletions`
 - Quest star dots from JSON are static — not live progress
 - Parent dashboard has no sound toggles despite `AudioService` flags
 - `isComingSoon` quests can still receive `onTap` if JSON flag changes

@@ -6,6 +6,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
+import '../../core/services/daily_challenge_service.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../data/models/home_action_model.dart';
 import '../../data/models/quest_model.dart';
@@ -30,6 +31,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
     todayCompletions: 0,
     streakDays: 0,
   );
+  DailyChallengeSnapshot? _dailyChallengeSnapshot;
 
   @override
   void initState() {
@@ -77,10 +79,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
   }
 
   Future<void> _loadProgress() async {
-    final snapshot = await RewardProgressService.instance.loadSnapshot();
+    var snapshot = await RewardProgressService.instance.loadSnapshot();
+    final dailyChallenge = await DailyChallengeService.instance.loadSnapshot(
+      progressSnapshot: snapshot,
+    );
+    if (dailyChallenge.rewardGrantedNow) {
+      snapshot = await RewardProgressService.instance.loadSnapshot();
+    }
     if (!mounted) return;
     setState(() {
       _progressSnapshot = snapshot;
+      _dailyChallengeSnapshot = dailyChallenge;
     });
   }
 
@@ -175,7 +184,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
               data: (content) => LayoutBuilder(
                 builder: (context, constraints) {
                   return SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(18, 16, 18, 32),
+                    padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
                     child: ConstrainedBox(
                       constraints:
                           BoxConstraints(minHeight: constraints.maxHeight),
@@ -183,17 +192,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const _SunBadge(),
-                              const Spacer(),
-                              _RewardsButton(
-                                onTap: () => _navigateWithoutHomeMusic(
+                              const Expanded(child: _SunBadge()),
+                              const SizedBox(width: 12),
+                              _HeaderActions(
+                                totalStars: _progressSnapshot.totalStars,
+                                onRewardsTap: () => _navigateWithoutHomeMusic(
                                   AppRoutes.stickers,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 18),
+                          const SizedBox(height: 12),
                           Text(
                             'Math Kingdom ✨',
                             style: AppTypography.hero.copyWith(
@@ -312,12 +323,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
                           ),
                           const SizedBox(height: 24),
                           _DailyChallengeBanner(
+                            challengeSnapshot: _dailyChallengeSnapshot,
                             todayCompletions:
                                 _progressSnapshot.todayCompletions,
                             dailyGoal: _dailyGoal,
                             streakDays: _progressSnapshot.streakDays,
                             onTap: () => _navigateWithoutHomeMusic(
-                              AppRoutes.startlearning,
+                              _dailyChallengeSnapshot?.challenge.route ??
+                                  AppRoutes.startlearning,
                             ),
                           ),
                         ],
@@ -375,6 +388,95 @@ class _SunBadge extends StatelessWidget {
               fontSize: 12,
               fontWeight: FontWeight.w800,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeaderActions extends StatelessWidget {
+  const _HeaderActions({
+    required this.totalStars,
+    required this.onRewardsTap,
+  });
+
+  final int totalStars;
+  final VoidCallback onRewardsTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _StarCountChip(totalStars: totalStars),
+        const SizedBox(width: 8),
+        _RewardsButton(onTap: onRewardsTap),
+      ],
+    );
+  }
+}
+
+class _StarCountChip extends StatelessWidget {
+  const _StarCountChip({required this.totalStars});
+
+  final int totalStars;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFF7B8), Color(0xFFFFE07A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: const Color(0xFFFFC83C).withValues(alpha: 0.7),
+          width: 2,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0xFFE2B22B),
+            offset: Offset(0, 3),
+            blurRadius: 0,
+          ),
+          BoxShadow(
+            color: Color(0x33F8C74E),
+            offset: Offset(0, 8),
+            blurRadius: 14,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.star_rounded,
+            color: Color(0xFFD99A00),
+            size: 16,
+          ),
+          const SizedBox(width: 5),
+          Text(
+            '$totalStars',
+            style: AppTypography.bodyStrong.copyWith(
+              color: const Color(0xFF8A6000),
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(width: 3),
+          Text(
+            totalStars == 1 ? 'star' : 'stars',
+            style: AppTypography.caption.copyWith(
+              color: const Color(0xFF8A6000),
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ],
       ),
@@ -394,8 +496,8 @@ class _RewardsButton extends StatelessWidget {
         onTap: onTap,
         customBorder: const CircleBorder(),
         child: Container(
-          width: 52,
-          height: 52,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.8),
             shape: BoxShape.circle,
@@ -407,7 +509,7 @@ class _RewardsButton extends StatelessWidget {
           child: const Icon(
             Icons.auto_awesome_rounded,
             color: Color(0xFFD4A000),
-            size: 22,
+            size: 19,
           ),
         ),
       ),
@@ -635,7 +737,7 @@ class _FeatureCard extends StatelessWidget {
                   action.subtitle,
                   style: AppTypography.bodySmall.copyWith(
                     color: const Color(0xFF7A849A),
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                     height: 1.3,
                   ),
@@ -801,7 +903,7 @@ class _QuestCard extends StatelessWidget {
                   quest.description,
                   style: AppTypography.bodySmall.copyWith(
                     color: const Color(0xFF7A849A),
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
                     height: 1.3,
                   ),
@@ -881,35 +983,71 @@ class _HomeErrorView extends StatelessWidget {
 class _DailyChallengeBanner extends StatelessWidget {
   const _DailyChallengeBanner({
     required this.onTap,
+    required this.challengeSnapshot,
     required this.todayCompletions,
     required this.dailyGoal,
     required this.streakDays,
   });
 
   final VoidCallback onTap;
+  final DailyChallengeSnapshot? challengeSnapshot;
   final int todayCompletions;
   final int dailyGoal;
   final int streakDays;
 
+  bool get _isRewardClaimed => challengeSnapshot?.isRewardClaimed ?? false;
+
+  bool get _isChallengeCompleted => challengeSnapshot?.isCompleted ?? false;
+
   String get _headline {
+    final challengeTitle = challengeSnapshot?.challenge.title;
+    if (_isRewardClaimed) {
+      return 'Daily bonus earned!';
+    }
+    if (_isChallengeCompleted) {
+      return challengeTitle == null
+          ? 'Daily challenge complete!'
+          : '$challengeTitle complete!';
+    }
     if (todayCompletions >= dailyGoal) {
-      return 'Daily goal complete!';
+      return challengeTitle == null
+          ? 'Daily goal complete!'
+          : '$challengeTitle complete!';
     }
     if (todayCompletions == 0) {
-      return 'Start today\'s challenge';
+      return challengeTitle == null
+          ? 'Start today\'s challenge'
+          : 'Play $challengeTitle';
     }
     return '$todayCompletions adventure${todayCompletions == 1 ? '' : 's'} done';
   }
 
   String get _subtitle {
+    final challenge = challengeSnapshot?.challenge;
+    if (_isRewardClaimed) {
+      final bonusStars = challengeSnapshot?.bonusStars ?? 0;
+      return challenge == null
+          ? '+$bonusStars stars have been added to today\'s adventure.'
+          : '+$bonusStars stars added for ${challenge.title}.';
+    }
+    if (_isChallengeCompleted) {
+      return challenge == null
+          ? 'You cleared today\'s challenge and unlocked the bonus.'
+          : 'You cleared ${challenge.title} and unlocked the daily bonus.';
+    }
     if (todayCompletions >= dailyGoal) {
       return streakDays > 1
           ? 'Your $streakDays-day streak is glowing bright.'
-          : 'You reached today\'s goal. Keep the magic going!';
+          : challenge == null
+              ? 'You reached today\'s goal. Keep the magic going!'
+              : 'You cleared ${challenge.title}. Keep the magic going!';
     }
 
     final remaining = dailyGoal - todayCompletions;
-    return '$remaining more adventure${remaining == 1 ? '' : 's'} to earn today\'s crown';
+    if (challenge == null) {
+      return '$remaining more adventure${remaining == 1 ? '' : 's'} to earn today\'s crown';
+    }
+    return '${challenge.subtitle} $remaining more adventure${remaining == 1 ? '' : 's'} to finish today\'s goal.';
   }
 
   @override
@@ -959,8 +1097,11 @@ class _DailyChallengeBanner extends StatelessWidget {
                     width: 2,
                   ),
                 ),
-                child: const Center(
-                  child: Text('🌟', style: TextStyle(fontSize: 30)),
+                child: Center(
+                  child: Text(
+                    challengeSnapshot?.challenge.emoji ?? '🌟',
+                    style: const TextStyle(fontSize: 30),
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
@@ -974,11 +1115,15 @@ class _DailyChallengeBanner extends StatelessWidget {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFE664).withValues(alpha: 0.9),
+                        color: _isRewardClaimed
+                            ? const Color(0xFFFFF2A8).withValues(alpha: 0.95)
+                            : const Color(0xFFFFE664).withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        '✦ Daily Challenge',
+                        _isRewardClaimed
+                            ? '⭐ +${challengeSnapshot?.bonusStars ?? 0} claimed'
+                            : '${challengeSnapshot?.challenge.emoji ?? '✦'} Daily Challenge',
                         style: AppTypography.bodySmall.copyWith(
                           color: const Color(0xFF8A6000),
                           fontSize: 10,
@@ -1024,9 +1169,11 @@ class _DailyChallengeBanner extends StatelessWidget {
                     width: 2,
                   ),
                 ),
-                child: const Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 16,
+                child: Icon(
+                  _isRewardClaimed
+                      ? Icons.check_rounded
+                      : Icons.arrow_forward_ios_rounded,
+                  size: _isRewardClaimed ? 20 : 16,
                   color: AppColors.surface,
                 ),
               ),

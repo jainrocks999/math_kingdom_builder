@@ -10,7 +10,7 @@ How current features can be improved without adding heavy new scope.
 | Reward system | Stars on completion; manual claim | Weak immediate loop | “+N stars” toast before celebration | All learning | P1 | Medium |
 | Progress tracking | Per-module counts; kingdom sync | Home quest stars static | Bind quest cards to `RewardProgressService` | Home | P2 | Medium |
 | Parent zone | PIN + activity list | No settings | Sound on/off, speech rate | Parent | P2 | Low |
-| Sticker system | Emoji rewards in UI | `StickerAlbum` Hive unused | Align or remove dead model | Rewards | P3 | Low |
+| Sticker system | Emoji rewards in UI | Detail view still basic | Add optional sticker detail sheet later | Rewards | P3 | Low |
 | Onboarding | 3 swipe cards + CTA | Skip breaks persistence | Mark complete on skip | Onboarding | P0 | Low |
 | Instructions | TTS auto-speaks | Kids miss text | One-line instruction + speaker replay | Learning screens | P1 | Low |
 | Celebrations | Per-screen custom overlays | Duplication | `CelebrationBear` + shared overlay | All learning | P2 | Medium |

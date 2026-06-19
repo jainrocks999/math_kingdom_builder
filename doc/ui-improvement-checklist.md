@@ -14,7 +14,7 @@ Grouped checklist for implementation passes. Apply globally then per screen.
 - [x] Fredoka everywhere; remove Google Fonts LilitaOne from `BouncingGameButton`
 - [x] Responsive scaling for hero text (clamp by screen width)
 - [ ] Minimum ~14sp for kid-readable subtitles
-- Progress: key header subtitles bumped to 14sp where practical (`Home`, `Rewards`, `Learn Numbers`, `Matching`)
+- Progress: key header subtitles bumped to 14sp where practical (`Home`, `Rewards`, `Learn Numbers`, `Matching`), and secondary card subtitles were raised from 11sp to 12sp in `Home` and `Start Learning`
 
 ## Spacing
 

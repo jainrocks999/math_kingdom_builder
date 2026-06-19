@@ -11,7 +11,6 @@
 | P2 | Router | Duplicate `/number-recognition` route | Dead URL confusion | Keep `/find-number` only |
 | P2 | Find Number | Dead `StateLearningScreen` class | Code noise | Remove alias |
 | P2 | CelebrationOverlay | `confetti.json` missing | Crash if widget used | Add asset or remove widget |
-| P2 | Home | Static daily challenge banner | Misleading motivation | Bind to `todayCompletions` |
 | P2 | Home | Quest stars static in JSON | False progress signal | Bind live data or remove dots |
 | P3 | Global | `mascot.riv` unused | Bundle size | Use later or remove |
 | P3 | Global | Legacy `lib/app_colors.dart` | Theme drift | Delete after migration |

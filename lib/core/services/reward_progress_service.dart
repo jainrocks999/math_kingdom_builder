@@ -135,6 +135,15 @@ class RewardProgressService {
     await KingdomService.instance.syncFromProgressOnly();
   }
 
+  Future<void> awardBonusStars(int stars) async {
+    if (stars <= 0) return;
+
+    final prefs = await _prefs;
+    final currentStars = prefs.getInt(_totalStarsKey) ?? 0;
+    await prefs.setInt(_totalStarsKey, currentStars + stars);
+    await KingdomService.instance.syncFromProgressOnly();
+  }
+
   Future<void> claimReward(String rewardId) async {
     final prefs = await _prefs;
     final claimed = prefs.getStringList(_claimedRewardsKey) ?? <String>[];

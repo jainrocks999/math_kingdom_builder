@@ -19,7 +19,7 @@ Browse stickers, badges, trophies; claim rewards unlocked by star threshold.
 
 - Emoji-only rewards (acceptable for v1)
 - “Claim” label less kid-friendly than “Collect!”
-- `StickerAlbum` Hive model unused
+- Claimed reward persistence now uses `RewardProgressService` only
 
 ## Priority: P2 | Complexity: Medium
 
@@ -34,21 +34,20 @@ Browse stickers, badges, trophies; claim rewards unlocked by star threshold.
 - [x] Change “Claim” → “Collect!”
 
 ### Existing functionality
-- [ ] Align persistence with claimed set (remove or wire `StickerAlbum`)
+- [x] Align persistence with claimed set (remove or wire `StickerAlbum`)
 - [x] Progress to next reward in header
 
 ### New (optional)
 - [ ] Sticker detail bottom sheet with TTS
 
 ### Kids experience
-- [ ] Collect animation (scale + star burst)
+- [x] Collect animation (scale + star burst)
 
 ### Responsiveness
 - [x] Grid: 2 columns phone, 3 tablet
 
 ## Deferred
 
-- [ ] Remove or properly wire unused `StickerAlbum` Hive model
 - [ ] Sticker detail bottom sheet with TTS
 
 ## Assets
@@ -58,4 +57,8 @@ Browse stickers, badges, trophies; claim rewards unlocked by star threshold.
 
 ## Acceptance criteria
 
-Claim persists; categories work; locked/unlocked clear; responsive grid.
+Claim persists through `RewardProgressService`; categories work; locked/unlocked clear; responsive grid.
+
+## Implementation notes
+
+- Collecting a reward now uses built-in Flutter animation only: selected reward pulse, detail-card star burst, and claimed summary bounce.
