@@ -6,6 +6,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
+import '../../core/services/reward_progress_service.dart';
 import '../../data/models/home_action_model.dart';
 import '../../data/models/quest_model.dart';
 import 'home_content_mappers.dart';
@@ -19,10 +20,21 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
+  static const int _dailyGoal = 3;
+
+  RewardProgressSnapshot _progressSnapshot = const RewardProgressSnapshot(
+    totalStars: 0,
+    completionCounts: {},
+    claimedRewardIds: <String>{},
+    todayCompletions: 0,
+    streakDays: 0,
+  );
+
   @override
   void initState() {
     super.initState();
     AppAudioService.instance.playHomeMusic();
+    _loadProgress();
   }
 
   @override
@@ -38,12 +50,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
   @override
   void dispose() {
     appRouteObserver.unsubscribe(this);
+    AppAudioService.instance.stopHomeMusic();
     super.dispose();
   }
 
   @override
   void didPopNext() {
     AppAudioService.instance.playHomeMusic();
+    _loadProgress();
   }
 
   @override
@@ -59,6 +73,64 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
     } else {
       context.push(route);
     }
+  }
+
+  Future<void> _loadProgress() async {
+    final snapshot = await RewardProgressService.instance.loadSnapshot();
+    if (!mounted) return;
+    setState(() {
+      _progressSnapshot = snapshot;
+    });
+  }
+
+  int _progressForQuest(QuestModel quest) {
+    switch (quest.id) {
+      case 'counting':
+        return _completionCountForModules([RewardModuleIds.countObjects]);
+      case 'tracing':
+        return _completionCountForModules([RewardModuleIds.traceNumbers]);
+      case 'matching':
+        return _completionCountForModules([RewardModuleIds.matchNumbers]);
+      case 'math_operations':
+        return _completionCountForModules([
+          RewardModuleIds.addition,
+          RewardModuleIds.subtraction,
+          RewardModuleIds.multiplication,
+          RewardModuleIds.division,
+        ]);
+      case 'sequencing':
+        return _completionCountForModules([RewardModuleIds.sequencing]);
+      case 'patterns':
+        return _completionCountForModules([RewardModuleIds.patterns]);
+      default:
+        return 0;
+    }
+  }
+
+  int _completionCountForModules(List<String> moduleIds) {
+    return moduleIds.fold<int>(
+      0,
+      (total, moduleId) =>
+          total + _progressSnapshot.completionCountFor(moduleId),
+    );
+  }
+
+  double _heroTitleSize(double maxWidth) {
+    if (maxWidth < 340) return 29;
+    if (maxWidth < 380) return 32;
+    return 36;
+  }
+
+  double _featuredAspectRatio(double maxWidth) {
+    if (maxWidth < 340) return 0.94;
+    if (maxWidth < 380) return 1.02;
+    return 1.14;
+  }
+
+  double _questAspectRatio(double maxWidth) {
+    if (maxWidth < 340) return 0.78;
+    if (maxWidth < 380) return 0.87;
+    return 0.96;
   }
 
   @override
@@ -115,9 +187,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
                             children: [
                               const _SunBadge(),
                               const Spacer(),
-                              _NotifButton(
+                              _RewardsButton(
                                 onTap: () => _navigateWithoutHomeMusic(
-                                  AppRoutes.kingdom,
+                                  AppRoutes.stickers,
                                 ),
                               ),
                             ],
@@ -126,7 +198,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
                           Text(
                             'Math Kingdom ✨',
                             style: AppTypography.hero.copyWith(
-                              fontSize: 36,
+                              fontSize: _heroTitleSize(constraints.maxWidth),
                               color: const Color(0xFF1A1060),
                               fontWeight: FontWeight.w800,
                               shadows: [
@@ -166,11 +238,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: content.featuredActions.length,
                             gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
                               mainAxisSpacing: 14,
                               crossAxisSpacing: 14,
-                              childAspectRatio: 1.14,
+                              childAspectRatio: _featuredAspectRatio(
+                                constraints.maxWidth,
+                              ),
                             ),
                             itemBuilder: (context, index) {
                               final action = content.featuredActions[index];
@@ -213,25 +287,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: content.quests.length,
                             gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
                               mainAxisSpacing: 14,
                               crossAxisSpacing: 14,
-                              childAspectRatio: 0.96,
+                              childAspectRatio: _questAspectRatio(
+                                constraints.maxWidth,
+                              ),
                             ),
                             itemBuilder: (context, index) {
                               final quest = content.quests[index];
                               return _QuestCard(
                                 quest: quest,
-                                isComingSoon: quest.isComingSoon,
-                                onTap: () => _navigateWithoutHomeMusic(
-                                  quest.route,
+                                progressStars: _progressForQuest(quest).clamp(
+                                  0,
+                                  3,
                                 ),
+                                onTap: quest.isComingSoon
+                                    ? null
+                                    : () => _navigateWithoutHomeMusic(
+                                          quest.route,
+                                        ),
                               );
                             },
                           ),
                           const SizedBox(height: 24),
                           _DailyChallengeBanner(
+                            todayCompletions:
+                                _progressSnapshot.todayCompletions,
+                            dailyGoal: _dailyGoal,
+                            streakDays: _progressSnapshot.streakDays,
                             onTap: () => _navigateWithoutHomeMusic(
                               AppRoutes.startlearning,
                             ),
@@ -298,8 +383,8 @@ class _SunBadge extends StatelessWidget {
   }
 }
 
-class _NotifButton extends StatelessWidget {
-  const _NotifButton({required this.onTap});
+class _RewardsButton extends StatelessWidget {
+  const _RewardsButton({required this.onTap});
   final VoidCallback onTap;
 
   @override
@@ -318,8 +403,8 @@ class _NotifButton extends StatelessWidget {
           ),
         ),
         child: const Icon(
-          Icons.notifications_none_rounded,
-          color: Color(0xFF5A6B7A),
+          Icons.auto_awesome_rounded,
+          color: Color(0xFFD4A000),
           size: 22,
         ),
       ),
@@ -532,6 +617,8 @@ class _FeatureCard extends StatelessWidget {
                   fontSize: 15.5,
                   fontWeight: FontWeight.w800,
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 4),
               Text(
@@ -542,6 +629,8 @@ class _FeatureCard extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                   height: 1.3,
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -557,12 +646,12 @@ class _QuestCard extends StatelessWidget {
   const _QuestCard({
     required this.quest,
     required this.onTap,
-    this.isComingSoon = false,
+    required this.progressStars,
   });
 
   final QuestModel quest;
-  final VoidCallback onTap;
-  final bool isComingSoon;
+  final VoidCallback? onTap;
+  final int progressStars;
 
   @override
   Widget build(BuildContext context) {
@@ -571,12 +660,15 @@ class _QuestCard extends StatelessWidget {
       quest.shadowColorHex,
       fallback: AppColors.secondary,
     );
+    final isComingSoon = quest.isComingSoon;
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: isComingSoon
+              ? AppColors.surfaceMuted.withValues(alpha: 0.94)
+              : AppColors.surface,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: color.withValues(alpha: 0.5),
@@ -666,6 +758,8 @@ class _QuestCard extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.2,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   if (isComingSoon)
@@ -697,12 +791,13 @@ class _QuestCard extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                   height: 1.3,
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
               const Spacer(),
-              // Colored star dots
               Row(
                 children: List.generate(3, (i) {
-                  final filled = i < quest.stars;
+                  final filled = i < progressStars;
                   return Padding(
                     padding: const EdgeInsets.only(right: 5),
                     child: Container(
@@ -795,8 +890,38 @@ class _HomeErrorView extends StatelessWidget {
 // ─── Daily Challenge Banner ───────────────────────────────────────────────────
 
 class _DailyChallengeBanner extends StatelessWidget {
-  const _DailyChallengeBanner({required this.onTap});
+  const _DailyChallengeBanner({
+    required this.onTap,
+    required this.todayCompletions,
+    required this.dailyGoal,
+    required this.streakDays,
+  });
+
   final VoidCallback onTap;
+  final int todayCompletions;
+  final int dailyGoal;
+  final int streakDays;
+
+  String get _headline {
+    if (todayCompletions >= dailyGoal) {
+      return 'Daily goal complete!';
+    }
+    if (todayCompletions == 0) {
+      return 'Start today\'s challenge';
+    }
+    return '$todayCompletions adventure${todayCompletions == 1 ? '' : 's'} done';
+  }
+
+  String get _subtitle {
+    if (todayCompletions >= dailyGoal) {
+      return streakDays > 1
+          ? 'Your $streakDays-day streak is glowing bright.'
+          : 'You reached today\'s goal. Keep the magic going!';
+    }
+
+    final remaining = dailyGoal - todayCompletions;
+    return '$remaining more adventure${remaining == 1 ? '' : 's'} to earn today\'s crown';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -872,21 +997,25 @@ class _DailyChallengeBanner extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    'Count the Magic Stars!',
+                    _headline,
                     style: AppTypography.cardTitle.copyWith(
                       color: AppColors.surface,
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Complete today\'s quest & earn a golden crown',
+                    _subtitle,
                     style: AppTypography.bodySmall.copyWith(
                       color: AppColors.surface.withValues(alpha: 0.85),
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

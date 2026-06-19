@@ -86,7 +86,7 @@ class AppAudioService {
 
   Future<void> playHomeMusic() async {
     await _playLoopingBackgroundMusic(
-      'assets/audio/bg/start_counting.mp3',
+      'assets/audio/bg/home_music.mp3',
       volume: 0.35,
     );
   }

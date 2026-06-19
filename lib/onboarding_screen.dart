@@ -79,15 +79,34 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   void dispose() {
+    AppAudioService.instance.stopHomeMusic();
     _pageController.dispose();
     super.dispose();
   }
 
+  Future<void> _completeOnboardingAndGoHome() async {
+    await AppSessionService.instance.markOnboardingComplete();
+    if (!mounted) return;
+    AppAudioService.instance.stopHomeMusic();
+    context.go(AppRoutes.home);
+  }
+
+  Future<void> _onSkipTap() async {
+    await _completeOnboardingAndGoHome();
+  }
+
+  void _goToPage(int index) {
+    if (index == _currentPage) return;
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
   Future<void> _onNextTap() async {
     if (_currentPage == _pages.length - 1) {
-      await AppSessionService.instance.markOnboardingComplete();
-      if (!mounted) return;
-      context.go(AppRoutes.home);
+      await _completeOnboardingAndGoHome();
       return;
     }
 
@@ -95,6 +114,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
+  }
+
+  double _heroTitleSize(double maxWidth) {
+    if (maxWidth < 340) return 28;
+    if (maxWidth < 380) return 32;
+    return 36;
   }
 
   @override
@@ -139,7 +164,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           const _SunnyBadge(),
                           const Spacer(),
                           _SkipButton(
-                            onTap: () => context.go(AppRoutes.home),
+                            onTap: _onSkipTap,
                           ),
                         ],
                       ),
@@ -147,7 +172,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       Text(
                         'Math Kingdom ✨',
                         style: AppTypography.hero.copyWith(
-                          fontSize: 36,
+                          fontSize: _heroTitleSize(constraints.maxWidth),
                           color: const Color(0xFF1A1060),
                           fontWeight: FontWeight.w800,
                           shadows: [
@@ -175,7 +200,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           height: 1.4,
                         ),
                       ),
-                      const SizedBox(height: 18),
+                      if (_currentPage == 0) ...[
+                        const _SwipeHintBanner(),
+                        const SizedBox(height: 10),
+                      ],
+                      const SizedBox(height: 8),
                       Expanded(
                         child: PageView.builder(
                           controller: _pageController,
@@ -189,6 +218,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             return _OnboardingCard(
                               page: _pages[index],
                               step: index + 1,
+                              maxContentWidth: constraints.maxWidth,
                             );
                           },
                         ),
@@ -212,42 +242,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         children: List.generate(_pages.length, (index) {
                           final page = _pages[index];
                           final isActive = _currentPage == index;
-                          return AnimatedContainer(
-                            duration: const Duration(milliseconds: 260),
-                            margin: const EdgeInsets.symmetric(horizontal: 6),
-                            width: isActive ? 34 : 16,
-                            height: 16,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: isActive
-                                    ? [
-                                        page.color.withValues(alpha: 0.82),
-                                        page.color,
-                                      ]
-                                    : [
-                                        Colors.white,
-                                        page.softColor,
-                                      ],
-                              ),
-                              borderRadius: BorderRadius.circular(999),
-                              border: Border.all(color: Colors.white, width: 2),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: isActive
-                                      ? page.shadowColor
-                                      : const Color(0xFFD6BFA9),
-                                  offset: const Offset(0, 2),
-                                  blurRadius: 0,
-                                ),
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.12),
-                                  offset: const Offset(0, 4),
-                                  blurRadius: 4,
-                                ),
-                              ],
-                            ),
+                          return _PageIndicatorDot(
+                            page: page,
+                            isActive: isActive,
+                            onTap: () => _goToPage(index),
                           );
                         }),
                       ),
@@ -263,14 +261,135 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
+class _SwipeHintBanner extends StatelessWidget {
+  const _SwipeHintBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.88),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.secondary.withValues(alpha: 0.35),
+          width: 2,
+        ),
+      ),
+      child: Row(
+        children: [
+          Text(
+            '👉',
+            style: AppTypography.bodyStrong.copyWith(fontSize: 18),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Swipe the card to see more surprises!',
+              style: AppTypography.bodySmall.copyWith(
+                color: const Color(0xFF4A5568),
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PageIndicatorDot extends StatelessWidget {
+  const _PageIndicatorDot({
+    required this.page,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  final OnboardingPageData page;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: isActive ? 'Current step' : 'Go to step',
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Center(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 260),
+                width: isActive ? 34 : 16,
+                height: 16,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: isActive
+                        ? [
+                            page.color.withValues(alpha: 0.82),
+                            page.color,
+                          ]
+                        : [
+                            Colors.white,
+                            page.softColor,
+                          ],
+                  ),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: Colors.white, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: isActive
+                          ? page.shadowColor
+                          : const Color(0xFFD6BFA9),
+                      offset: const Offset(0, 2),
+                      blurRadius: 0,
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      offset: const Offset(0, 4),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _OnboardingCard extends StatelessWidget {
   const _OnboardingCard({
     required this.page,
     required this.step,
+    required this.maxContentWidth,
   });
 
   final OnboardingPageData page;
   final int step;
+  final double maxContentWidth;
+
+  double get _titleSize {
+    if (maxContentWidth < 340) return 24;
+    if (maxContentWidth < 380) return 27;
+    return 31;
+  }
+
+  double get _descriptionSize {
+    if (maxContentWidth < 340) return 15;
+    return 17;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -345,22 +464,26 @@ class _OnboardingCard extends StatelessWidget {
           Text(
             page.title,
             style: AppTypography.h1.copyWith(
-              fontSize: 31,
+              fontSize: _titleSize,
               color: const Color(0xFF1A1060),
               fontWeight: FontWeight.w800,
             ),
             textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 10),
           Text(
             page.description,
             style: AppTypography.body.copyWith(
-              fontSize: 17,
+              fontSize: _descriptionSize,
               color: const Color(0xFF5A6B7A),
               fontWeight: FontWeight.w700,
               height: 1.45,
             ),
             textAlign: TextAlign.center,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -447,6 +570,8 @@ class _OnboardingCtaButton extends StatelessWidget {
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -520,23 +645,30 @@ class _SkipButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.82),
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-            color: const Color(0xFFFFC83C).withValues(alpha: 0.45),
-            width: 2,
+    return Semantics(
+      button: true,
+      label: 'Skip onboarding',
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.82),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: const Color(0xFFFFC83C).withValues(alpha: 0.45),
+              width: 2,
+            ),
           ),
-        ),
-        child: Text(
-          'Skip',
-          style: AppTypography.bodyStrong.copyWith(
-            color: const Color(0xFF5A6B7A),
-            fontWeight: FontWeight.w800,
+          alignment: Alignment.center,
+          child: Text(
+            'Skip',
+            style: AppTypography.bodyStrong.copyWith(
+              color: const Color(0xFF5A6B7A),
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
       ),
