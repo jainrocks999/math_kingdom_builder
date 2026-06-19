@@ -1,0 +1,6 @@
+module RiveNative {
+    header "rive_native/external.hpp"
+    header "rive_native/external_objc.h"
+    header "rive_native/rive_binding.hpp"
+    export *
+}

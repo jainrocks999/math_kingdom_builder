@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -83,11 +85,21 @@ class KingdomService {
         progress.completionCountFor(RewardModuleIds.traceNumbers);
     final matchingProgress =
         progress.completionCountFor(RewardModuleIds.matchNumbers);
+    final additionProgress =
+        progress.completionCountFor(RewardModuleIds.addition);
+    final subtractionProgress =
+        progress.completionCountFor(RewardModuleIds.subtraction);
+    final sequencingProgress =
+        progress.completionCountFor(RewardModuleIds.sequencing);
+    final patternsProgress =
+        progress.completionCountFor(RewardModuleIds.patterns);
 
     final gardenTarget = learnProgress.clamp(0, 8);
     final meadowTarget = countingProgress.clamp(0, 6);
     final castleTarget = tracingProgress.clamp(0, 6);
-    final pathTarget = matchingProgress.clamp(0, 5);
+    final pathTarget = math.max(matchingProgress, patternsProgress).clamp(0, 5);
+    final bridgeTarget = additionProgress.clamp(0, 6);
+    final stairsTarget = sequencingProgress.clamp(0, 6);
 
     return state.copyWith(
       gardenItems: _ensureItems(
@@ -124,6 +136,14 @@ class KingdomService {
         state.patternDecorations,
         pathTarget,
       ),
+      bridgeLength:
+          state.bridgeLength > bridgeTarget ? state.bridgeLength : bridgeTarget,
+      bridgeSunshine: state.bridgeSunshine ||
+          additionProgress > 0 ||
+          subtractionProgress > 0,
+      staircaseSteps: state.staircaseSteps > stairsTarget
+          ? state.staircaseSteps
+          : stairsTarget,
     );
   }
 
@@ -184,6 +204,10 @@ class KingdomService {
         progress.completionCountFor(RewardModuleIds.traceNumbers);
     final matchingProgress =
         progress.completionCountFor(RewardModuleIds.matchNumbers);
+    final additionProgress =
+        progress.completionCountFor(RewardModuleIds.addition);
+    final subtractionProgress =
+        progress.completionCountFor(RewardModuleIds.subtraction);
 
     final unlocked = <String>{'garden'};
 
@@ -199,7 +223,9 @@ class KingdomService {
     if (state.patternDecorations.isNotEmpty || matchingProgress > 0) {
       unlocked.add('bridge');
     }
-    if (state.bridgeLength > 0) {
+    if (state.bridgeLength > 0 ||
+        additionProgress > 0 ||
+        subtractionProgress > 0) {
       unlocked.add('stairs');
     }
 

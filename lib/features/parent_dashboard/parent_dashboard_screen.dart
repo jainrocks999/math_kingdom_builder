@@ -76,6 +76,12 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   ChildProfileSnapshot? _profiles;
 
   static const _reports = [
+    (RewardModuleIds.addition, 'Addition', '➕'),
+    (RewardModuleIds.subtraction, 'Subtraction', '➖'),
+    (RewardModuleIds.multiplication, 'Multiplication', '✖️'),
+    (RewardModuleIds.division, 'Division', '➗'),
+    (RewardModuleIds.sequencing, 'Sequencing', '🪜'),
+    (RewardModuleIds.patterns, 'Patterns', '🔷'),
     (RewardModuleIds.learnNumbers, 'Learn Numbers', '🔢'),
     (RewardModuleIds.traceNumbers, 'Trace Numbers', '✏️'),
     (RewardModuleIds.countObjects, 'Count Objects', '🍎'),
@@ -394,8 +400,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                       color: AppColors.primary,
                     ),
                     _StatChip(
-                      label:
-                          '${progress?.todayCompletions ?? 0} today',
+                      label: '${progress?.todayCompletions ?? 0} today',
                       icon: Icons.today_rounded,
                       color: AppColors.secondary,
                     ),

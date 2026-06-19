@@ -46,8 +46,7 @@ class KingdomZoneData {
   final int itemCount;
   final bool sunshine;
 
-  double get progressFraction =>
-      (progress / math.max(goal, 1)).clamp(0.0, 1.0);
+  double get progressFraction => (progress / math.max(goal, 1)).clamp(0.0, 1.0);
 
   bool get isComplete => progress >= goal;
 }
@@ -65,6 +64,10 @@ List<KingdomZoneData> buildKingdomZones(
       progress?.completionCountFor(RewardModuleIds.traceNumbers) ?? 0;
   final matchingProgress =
       progress?.completionCountFor(RewardModuleIds.matchNumbers) ?? 0;
+  final patternsProgress =
+      progress?.completionCountFor(RewardModuleIds.patterns) ?? 0;
+  final sequencingProgress =
+      progress?.completionCountFor(RewardModuleIds.sequencing) ?? 0;
 
   final gardenProgress =
       math.max(storedState.gardenItems.length, learnProgress);
@@ -74,7 +77,7 @@ List<KingdomZoneData> buildKingdomZones(
       math.max(storedState.castleItems.length, tracingProgress);
   final pathProgress = math.max(
     storedState.patternDecorations.length,
-    matchingProgress,
+    math.max(matchingProgress, patternsProgress),
   );
 
   return [
@@ -135,10 +138,10 @@ List<KingdomZoneData> buildKingdomZones(
     KingdomZoneData(
       id: 'path',
       title: 'Pattern Pathway',
-      subtitle: 'Matching wins add shining tiles to the walkway.',
-      hint: 'Matching quests add colorful tiles until pattern play arrives.',
-      route: AppRoutes.matching,
-      ctaLabel: 'Play Matching Quest',
+      subtitle: 'Pattern quests add shining tiles to the walkway.',
+      hint: 'Complete pattern adventures to decorate the path.',
+      route: AppRoutes.patterns,
+      ctaLabel: 'Play Patterns',
       emoji: '🔷',
       icon: Icons.auto_awesome_mosaic_rounded,
       color: AppColors.pathwayPeach,
@@ -153,10 +156,10 @@ List<KingdomZoneData> buildKingdomZones(
     KingdomZoneData(
       id: 'bridge',
       title: 'Math Bridge',
-      subtitle: 'Bridge stones will appear when addition opens soon.',
-      hint: 'Keep learning — addition quests will build this bridge.',
-      route: AppRoutes.startlearning,
-      ctaLabel: 'Open Start Learning',
+      subtitle: 'Add and take away to grow bridge stones.',
+      hint: 'Play addition and subtraction here.',
+      route: AppRoutes.mathOperations,
+      ctaLabel: 'Play Math Ops',
       emoji: '🌉',
       icon: Icons.architecture_rounded,
       color: AppColors.bridgeBlue,
@@ -166,27 +169,27 @@ List<KingdomZoneData> buildKingdomZones(
       goal: 6,
       unlocked:
           storedState.patternDecorations.isNotEmpty || matchingProgress > 0,
-      playable: false,
+      playable: true,
       itemCount: storedState.bridgeLength,
       sunshine: storedState.bridgeSunshine,
     ),
     KingdomZoneData(
       id: 'stairs',
       title: 'Sequence Stairs',
-      subtitle: 'Each future sequence quest will raise another step.',
-      hint: 'This staircase will light up after sequencing is built.',
-      route: AppRoutes.startlearning,
-      ctaLabel: 'Open Start Learning',
+      subtitle: 'Sequencing adventures raise the glowing steps here.',
+      hint: 'Put numbers in order to climb higher.',
+      route: AppRoutes.sequencing,
+      ctaLabel: 'Open Sequencing',
       emoji: '🪜',
       icon: Icons.stairs_rounded,
       color: AppColors.stairsLavender,
       softColor: const Color(0xFFF0E8FF),
       rect: const Rect.fromLTWH(105, 115, 220, 160),
-      progress: storedState.staircaseSteps,
+      progress: math.max(storedState.staircaseSteps, sequencingProgress),
       goal: 6,
       unlocked: storedState.bridgeLength > 0,
-      playable: false,
-      itemCount: storedState.staircaseSteps,
+      playable: true,
+      itemCount: math.max(storedState.staircaseSteps, sequencingProgress),
     ),
   ];
 }

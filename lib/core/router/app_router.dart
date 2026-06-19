@@ -4,17 +4,22 @@ import 'package:math_kingdom_builder/features/StartLearning/start_learning_scree
 import 'package:math_kingdom_builder/features/count_objects/count_objects_screen.dart';
 import 'package:math_kingdom_builder/features/kingdom/kingdom_screen.dart';
 import 'package:math_kingdom_builder/features/learn_numbers/learn_numbers_screen.dart';
+import 'package:math_kingdom_builder/features/math_operations/addition_screen.dart';
+import 'package:math_kingdom_builder/features/math_operations/math_operations_screen.dart';
+import 'package:math_kingdom_builder/features/math_operations/division_screen.dart';
+import 'package:math_kingdom_builder/features/math_operations/multiplication_screen.dart';
+import 'package:math_kingdom_builder/features/math_operations/subtraction_screen.dart';
 import 'package:math_kingdom_builder/features/matching/match_numbers_screen.dart';
 import 'package:math_kingdom_builder/features/mini_quiz/mini_quiz_screen.dart';
 import 'package:math_kingdom_builder/features/number_tracing/trace_numbers_screen.dart';
 import 'package:math_kingdom_builder/features/parent_dashboard/parent_dashboard_screen.dart';
+import 'package:math_kingdom_builder/features/patterns/patterns_screen.dart';
 import 'package:math_kingdom_builder/features/rewards/rewards_screen.dart';
+import 'package:math_kingdom_builder/features/sequencing/sequencing_screen.dart';
 import 'package:math_kingdom_builder/onboarding_screen.dart';
 
-import '../../core/constants/app_colors.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/number_recognition/number_recognition_screen.dart';
-import '../../shared/widgets/placeholder_screen.dart';
 import '../../splash_screen.dart';
 
 final RouteObserver<ModalRoute<dynamic>> appRouteObserver =
@@ -23,7 +28,7 @@ final RouteObserver<ModalRoute<dynamic>> appRouteObserver =
 class AppRoutes {
   static const splash = '/';
   static const home = '/home';
-  static const onbording = '/onbording';
+  static const onboarding = '/onboarding';
   static const numberRecognition = '/number-recognition';
   static const findNumber = '/find-number';
   static const learnNumbers = '/learn-numbers';
@@ -31,8 +36,11 @@ class AppRoutes {
   static const tracing = '/tracing';
   static const matching = '/matching';
   static const miniQuiz = '/mini-quiz';
+  static const mathOperations = '/math-operations';
   static const addition = '/addition';
   static const subtraction = '/subtraction';
+  static const multiplication = '/multiplication';
+  static const division = '/division';
   static const sequencing = '/sequencing';
   static const patterns = '/patterns';
   static const kingdom = '/kingdom';
@@ -40,63 +48,6 @@ class AppRoutes {
   static const parentDashboard = '/parent-dashboard';
   static const startlearning = '/start-learning';
 }
-
-class PlaceholderRouteSpec {
-  const PlaceholderRouteSpec({
-    required this.path,
-    required this.title,
-    required this.description,
-    required this.icon,
-    this.emoji = '✨',
-    this.accentColor = AppColors.primary,
-  });
-
-  final String path;
-  final String title;
-  final String description;
-  final IconData icon;
-  final String emoji;
-  final Color accentColor;
-}
-
-final List<PlaceholderRouteSpec> appPlaceholderRoutes = [
-  const PlaceholderRouteSpec(
-    path: AppRoutes.addition,
-    title: 'Addition',
-    description:
-        'Add numbers with candy visuals and cheerful bear hints. This adventure is almost ready.',
-    icon: Icons.add_circle_outline_rounded,
-    emoji: '➕',
-    accentColor: AppColors.warning,
-  ),
-  const PlaceholderRouteSpec(
-    path: AppRoutes.subtraction,
-    title: 'Subtraction',
-    description:
-        'Take away objects gently and learn subtraction through play. Coming in the next update.',
-    icon: Icons.remove_circle_outline_rounded,
-    emoji: '➖',
-    accentColor: AppColors.secondary,
-  ),
-  const PlaceholderRouteSpec(
-    path: AppRoutes.sequencing,
-    title: 'Sequencing',
-    description:
-        'Climb the number stairs by finding what comes next. This quest unlocks soon.',
-    icon: Icons.stairs_rounded,
-    emoji: '🪜',
-    accentColor: AppColors.stairsLavender,
-  ),
-  const PlaceholderRouteSpec(
-    path: AppRoutes.patterns,
-    title: 'Patterns',
-    description:
-        'Complete AB and ABB patterns with colorful tiles. Pattern play arrives soon.',
-    icon: Icons.auto_awesome_mosaic_rounded,
-    emoji: '🔷',
-    accentColor: AppColors.gardenGreen,
-  ),
-];
 
 GoRouter get appRouter => _appRouter;
 
@@ -109,7 +60,7 @@ final GoRouter _appRouter = GoRouter(
       builder: (context, state) => const SplashScreen(),
     ),
     GoRoute(
-      path: AppRoutes.onbording,
+      path: AppRoutes.onboarding,
       builder: (context, state) => const OnboardingScreen(),
     ),
     GoRoute(
@@ -145,6 +96,34 @@ final GoRouter _appRouter = GoRouter(
       builder: (context, state) => const MiniQuizScreen(),
     ),
     GoRoute(
+      path: AppRoutes.mathOperations,
+      builder: (context, state) => const MathOperationsScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.addition,
+      builder: (context, state) => const AdditionScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.subtraction,
+      builder: (context, state) => const SubtractionScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.multiplication,
+      builder: (context, state) => const MultiplicationScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.division,
+      builder: (context, state) => const DivisionScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.sequencing,
+      builder: (context, state) => const SequencingScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.patterns,
+      builder: (context, state) => const PatternsScreen(),
+    ),
+    GoRoute(
       path: AppRoutes.stickers,
       builder: (context, state) => const RewardsScreen(),
     ),
@@ -159,18 +138,6 @@ final GoRouter _appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.parentDashboard,
       builder: (context, state) => const ParentDashboardScreen(),
-    ),
-    ...appPlaceholderRoutes.map(
-      (route) => GoRoute(
-        path: route.path,
-        builder: (context, state) => PlaceholderScreen(
-          title: route.title,
-          description: route.description,
-          icon: route.icon,
-          emoji: route.emoji,
-          accentColor: route.accentColor,
-        ),
-      ),
     ),
   ],
 );

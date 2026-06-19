@@ -252,7 +252,9 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
     Future<void>.delayed(
       delayed ? const Duration(milliseconds: 180) : Duration.zero,
       () {
-        if (!mounted || requestToken != _musicRequestToken || _showCelebration) {
+        if (!mounted ||
+            requestToken != _musicRequestToken ||
+            _showCelebration) {
           return;
         }
         AppAudioService.instance.playStartCountingMusic();
@@ -286,8 +288,7 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
     final label = _objectLabel(_correctAnswer);
     final prompt = switch (_currentRound.mode) {
       _QuizMode.tapNumber => 'Tap the number $_correctAnswer.',
-      _QuizMode.dragMatch =>
-        'Drag number $_correctAnswer to match the $label.',
+      _QuizMode.dragMatch => 'Drag number $_correctAnswer to match the $label.',
       _QuizMode.writeNumber =>
         'Count the $label and write number $_correctAnswer.',
     };
@@ -433,7 +434,6 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
     });
     _celebrationController.forward(from: 0);
   }
-
 
   void _goBack() {
     _autoAdvanceToken++;
@@ -801,8 +801,8 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
                   builder: (context, candidateData, rejectedData) {
                     final isHovering = candidateData.isNotEmpty;
                     final isCorrectDrop = _droppedNumber == _correctAnswer;
-                    final isWrongDrop =
-                        _droppedNumber != null && _droppedNumber != _correctAnswer;
+                    final isWrongDrop = _droppedNumber != null &&
+                        _droppedNumber != _correctAnswer;
 
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 180),
@@ -846,54 +846,77 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
           ),
         ),
         const SizedBox(height: 12),
-        Row(
-          children: _dragOptions.map((value) {
-            return Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: LongPressDraggable<int>(
-                  data: value,
-                  feedback: _DragNumberChip(
-                    value: value,
-                    color: _theme.color,
-                    softColor: _theme.softColor,
-                    shadowColor: _theme.shadowColor,
+        LayoutBuilder(
+          builder: (context, constraints) {
+            const spacing = 8.0;
+            final cardWidth =
+                (constraints.maxWidth - (spacing * (_dragOptions.length - 1))) /
+                    _dragOptions.length;
+            final cardHeight = math.min(
+              96.0,
+              math.max(76.0, cardWidth * 0.74),
+            );
+
+            return Row(
+              children: _dragOptions.map((value) {
+                return Padding(
+                  padding: EdgeInsets.only(
+                    right: value == _dragOptions.last ? 0 : spacing,
                   ),
-                  childWhenDragging: Opacity(
-                    opacity: 0.35,
+                  child: LongPressDraggable<int>(
+                    data: value,
+                    feedback: Material(
+                      color: Colors.transparent,
+                      child: _DragNumberChip(
+                        value: value,
+                        color: _theme.color,
+                        softColor: _theme.softColor,
+                        shadowColor: _theme.shadowColor,
+                        width: cardWidth,
+                        height: cardHeight,
+                        isFeedback: true,
+                      ),
+                    ),
+                    childWhenDragging: Opacity(
+                      opacity: 0.35,
+                      child: _DragNumberChip(
+                        value: value,
+                        color: _theme.color,
+                        softColor: _theme.softColor,
+                        shadowColor: _theme.shadowColor,
+                        width: cardWidth,
+                        height: cardHeight,
+                      ),
+                    ),
+                    onDragStarted: () {
+                      setState(() {
+                        _draggedNumber = value;
+                      });
+                    },
+                    onDraggableCanceled: (_, __) {
+                      setState(() {
+                        _draggedNumber = null;
+                      });
+                    },
+                    onDragEnd: (_) {
+                      setState(() {
+                        _draggedNumber = null;
+                      });
+                    },
                     child: _DragNumberChip(
                       value: value,
                       color: _theme.color,
                       softColor: _theme.softColor,
                       shadowColor: _theme.shadowColor,
+                      width: cardWidth,
+                      height: cardHeight,
+                      isActive: _draggedNumber == value,
                     ),
                   ),
-                  onDragStarted: () {
-                    setState(() {
-                      _draggedNumber = value;
-                    });
-                  },
-                  onDraggableCanceled: (_, __) {
-                    setState(() {
-                      _draggedNumber = null;
-                    });
-                  },
-                  onDragEnd: (_) {
-                    setState(() {
-                      _draggedNumber = null;
-                    });
-                  },
-                  child: _DragNumberChip(
-                    value: value,
-                    color: _theme.color,
-                    softColor: _theme.softColor,
-                    shadowColor: _theme.shadowColor,
-                    isActive: _draggedNumber == value,
-                  ),
-                ),
-              ),
+                );
+              }).toList(),
             );
-          }).toList(),
+          },
         ),
       ],
     );
@@ -1008,7 +1031,8 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: _theme.color.withValues(alpha: 0.22), width: 2),
+        border:
+            Border.all(color: _theme.color.withValues(alpha: 0.22), width: 2),
       ),
       child: Column(
         children: [
@@ -1029,7 +1053,8 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
                 final itemSize = math.min(
                   46.0,
                   math.min(
-                    (constraints.maxWidth - ((columns - 1) * spacing)) / columns,
+                    (constraints.maxWidth - ((columns - 1) * spacing)) /
+                        columns,
                     (constraints.maxHeight - ((rows - 1) * spacing)) / rows,
                   ),
                 );
@@ -1105,7 +1130,9 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
               statusText,
               textAlign: TextAlign.center,
               style: AppTypography.bodyStrong.copyWith(
-                color: _roundSolved ? AppColors.gardenGreen : AppColors.textSecondary,
+                color: _roundSolved
+                    ? AppColors.gardenGreen
+                    : AppColors.textSecondary,
                 fontWeight: FontWeight.w800,
                 fontSize: 13,
               ),
@@ -1351,6 +1378,9 @@ class _DragNumberChip extends StatelessWidget {
     required this.softColor,
     required this.shadowColor,
     this.isActive = false,
+    this.isFeedback = false,
+    this.width,
+    this.height,
   });
 
   final int value;
@@ -1358,10 +1388,15 @@ class _DragNumberChip extends StatelessWidget {
   final Color softColor;
   final Color shadowColor;
   final bool isActive;
+  final bool isFeedback;
+  final double? width;
+  final double? height;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final card = Container(
+      width: width,
+      height: height,
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
         color: isActive ? softColor : Colors.white,
@@ -1370,8 +1405,8 @@ class _DragNumberChip extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: shadowColor.withValues(alpha: 0.24),
-            offset: const Offset(0, 6),
-            blurRadius: 12,
+            offset: Offset(0, isFeedback ? 10 : 6),
+            blurRadius: isFeedback ? 18 : 12,
           ),
         ],
       ),
@@ -1386,6 +1421,8 @@ class _DragNumberChip extends StatelessWidget {
         ),
       ),
     );
+
+    return isFeedback ? Transform.scale(scale: 1.0, child: card) : card;
   }
 }
 

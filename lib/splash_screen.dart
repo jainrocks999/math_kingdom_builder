@@ -56,7 +56,7 @@ class _SplashScreenState extends State<SplashScreen> {
         await AppSessionService.instance.isOnboardingComplete();
     if (!mounted) return;
 
-    context.go(onboardingDone ? AppRoutes.home : AppRoutes.onbording);
+    context.go(onboardingDone ? AppRoutes.home : AppRoutes.onboarding);
   }
 
   @override

@@ -21,6 +21,8 @@
 | `09_monetization.md` | Freemium model, IAP setup, RevenueCat |
 | `10_compliance_and_testing.md` | COPPA, GDPR-K, accessibility, app store submission |
 | `09_home_screen_guide.md` | Home screen layout, asset mapping, and where images should come from |
+| `10_static_content_sqlite_assets_guide.md` | When to use SQLite vs JSON/Hive, plus how to structure asset-driven home content |
+| `11_release_setup.md` | Android signing, keystore wiring, and iOS signing handoff |
 
 ---
 

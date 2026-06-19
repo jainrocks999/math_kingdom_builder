@@ -1,183 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
+import '../../data/models/home_action_model.dart';
+import '../../data/models/quest_model.dart';
+import 'home_content_mappers.dart';
+import 'home_content_provider.dart';
 
-class _HomeActionData {
-  const _HomeActionData({
-    required this.title,
-    required this.subtitle,
-    required this.route,
-    required this.icon,
-    required this.color,
-    required this.softColor,
-    required this.shadowColor,
-    required this.emoji,
-  });
-
-  final String title;
-  final String subtitle;
-  final String route;
-  final IconData icon;
-  final Color color;
-  final Color softColor;
-  final Color shadowColor;
-  final String emoji;
-}
-
-class _QuestData {
-  const _QuestData({
-    required this.label,
-    required this.route,
-    required this.icon,
-    required this.color,
-    required this.softColor,
-    required this.shadowColor,
-    required this.emoji,
-    required this.description,
-    required this.stars,
-  });
-
-  final String label;
-  final String route;
-  final IconData icon;
-  final Color color;
-  final Color softColor;
-  final Color shadowColor;
-  final String emoji;
-  final String description;
-  final int stars;
-}
-
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
-  static const List<_HomeActionData> _featuredActions = [
-    _HomeActionData(
-      title: 'Start Learning',
-      subtitle: 'Number magic & playful counting',
-      route: AppRoutes.startlearning,
-      icon: Icons.play_arrow_rounded,
-      color: AppColors.primary,
-      softColor: AppColors.primaryLight,
-      shadowColor: Color(0xFFC94A18),
-      emoji: '🎮',
-    ),
-    _HomeActionData(
-      title: 'Kingdom Map',
-      subtitle: 'Visit the castle & unlock places',
-      route: AppRoutes.kingdom,
-      icon: Icons.castle_rounded,
-      color: AppColors.stairsLavender,
-      softColor: AppColors.restBackground,
-      shadowColor: Color(0xFFA888E8),
-      emoji: '🏰',
-    ),
-    _HomeActionData(
-      title: 'Sticker Album',
-      subtitle: 'Stars, stickers & shiny rewards',
-      route: AppRoutes.stickers,
-      icon: Icons.auto_awesome_rounded,
-      color: AppColors.premiumGold,
-      softColor: AppColors.premiumGoldLight,
-      shadowColor: Color(0xFFD4A000),
-      emoji: '⭐',
-    ),
-    _HomeActionData(
-      title: 'Parent Zone',
-      subtitle: 'Settings, progress & tools',
-      route: AppRoutes.parentDashboard,
-      icon: Icons.lock_outline_rounded,
-      color: AppColors.parentAccent,
-      softColor: AppColors.parentBackground,
-      shadowColor: Color(0xFF3A58C8),
-      emoji: '🔐',
-    ),
-  ];
-
-  static const Set<String> _comingSoonQuestRoutes = {
-    AppRoutes.addition,
-    AppRoutes.sequencing,
-    AppRoutes.patterns,
-  };
-
-  static const List<_QuestData> _quests = [
-    _QuestData(
-      label: 'Counting',
-      route: AppRoutes.counting,
-      icon: Icons.tag_rounded,
-      color: AppColors.secondary,
-      softColor: AppColors.secondaryLight,
-      shadowColor: Color(0xFF2AADA4),
-      emoji: '🔢',
-      description: 'Count objects and numbers 1–20',
-      stars: 3,
-    ),
-    _QuestData(
-      label: 'Tracing',
-      route: AppRoutes.tracing,
-      icon: Icons.gesture_rounded,
-      color: AppColors.primary,
-      softColor: AppColors.primaryLight,
-      shadowColor: Color(0xFFC94A18),
-      emoji: '✏️',
-      description: 'Trace and write numbers beautifully',
-      stars: 2,
-    ),
-    _QuestData(
-      label: 'Matching',
-      route: AppRoutes.matching,
-      icon: Icons.view_week_rounded,
-      color: AppColors.stairsLavender,
-      softColor: AppColors.restBackground,
-      shadowColor: Color(0xFFA888E8),
-      emoji: '🃏',
-      description: 'Match numbers to their groups',
-      stars: 2,
-    ),
-    _QuestData(
-      label: 'Addition',
-      route: AppRoutes.addition,
-      icon: Icons.add_circle_outline_rounded,
-      color: AppColors.warning,
-      softColor: AppColors.premiumGoldLight,
-      shadowColor: Color(0xFFD4A000),
-      emoji: '➕',
-      description: 'Add numbers with fun candy visuals',
-      stars: 1,
-    ),
-    _QuestData(
-      label: 'Sequencing',
-      route: AppRoutes.sequencing,
-      icon: Icons.format_list_numbered_rounded,
-      color: AppColors.bridgeBlue,
-      softColor: AppColors.secondaryLight,
-      shadowColor: Color(0xFF2890D0),
-      emoji: '📶',
-      description: 'Put numbers in the right order',
-      stars: 2,
-    ),
-    _QuestData(
-      label: 'Patterns',
-      route: AppRoutes.patterns,
-      icon: Icons.auto_awesome_mosaic_rounded,
-      color: AppColors.gardenGreen,
-      softColor: AppColors.success,
-      shadowColor: Color(0xFF3A9040),
-      emoji: '🔷',
-      description: 'Spot and complete magical patterns',
-      stars: 3,
-    ),
-  ];
-
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with RouteAware {
+class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
   @override
   void initState() {
     super.initState();
@@ -222,6 +63,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
+    final homeContent = ref.watch(homeContentProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
@@ -257,157 +100,152 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             ),
           ),
           SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(18, 16, 18, 32),
-                  child: ConstrainedBox(
-                    constraints:
-                        BoxConstraints(minHeight: constraints.maxHeight),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Top bar
-                        Row(
-                          children: [
-                            const _SunBadge(),
-                            const Spacer(),
-                            _NotifButton(
-                              onTap: () => _navigateWithoutHomeMusic(
-                                AppRoutes.kingdom,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 18),
-
-                        // Hero title
-                        Text(
-                          'Math Kingdom ✨',
-                          style: AppTypography.hero.copyWith(
-                            fontSize: 36,
-                            color: const Color(0xFF1A1060),
-                            fontWeight: FontWeight.w800,
-                            shadows: [
-                              const Shadow(
-                                color: Colors.white,
-                                blurRadius: 0,
-                                offset: Offset(0, 2),
-                              ),
-                              Shadow(
-                                color: AppColors.parentAccent
-                                    .withValues(alpha: 0.3),
-                                blurRadius: 20,
-                                offset: const Offset(0, 6),
+            child: homeContent.when(
+              data: (content) => LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(18, 16, 18, 32),
+                    child: ConstrainedBox(
+                      constraints:
+                          BoxConstraints(minHeight: constraints.maxHeight),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const _SunBadge(),
+                              const Spacer(),
+                              _NotifButton(
+                                onTap: () => _navigateWithoutHomeMusic(
+                                  AppRoutes.kingdom,
+                                ),
                               ),
                             ],
                           ),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          'Count, add, explore & grow your candy castle!',
-                          style: AppTypography.body.copyWith(
-                            color: const Color(0xFF4A5568),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            height: 1.4,
+                          const SizedBox(height: 18),
+                          Text(
+                            'Math Kingdom ✨',
+                            style: AppTypography.hero.copyWith(
+                              fontSize: 36,
+                              color: const Color(0xFF1A1060),
+                              fontWeight: FontWeight.w800,
+                              shadows: [
+                                const Shadow(
+                                  color: Colors.white,
+                                  blurRadius: 0,
+                                  offset: Offset(0, 2),
+                                ),
+                                Shadow(
+                                  color: AppColors.parentAccent
+                                      .withValues(alpha: 0.3),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Big Play button
-                        _PrimaryPlayButton(
-                          onPressed: () => _navigateWithoutHomeMusic(
-                            AppRoutes.startlearning,
+                          const SizedBox(height: 5),
+                          Text(
+                            'Count, add, explore & grow your candy castle!',
+                            style: AppTypography.body.copyWith(
+                              color: const Color(0xFF4A5568),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              height: 1.4,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 20),
-
-                        // 2x2 feature cards
-                        GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: HomeScreen._featuredActions.length,
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 14,
-                            crossAxisSpacing: 14,
-                            childAspectRatio: 1.14,
+                          const SizedBox(height: 20),
+                          _PrimaryPlayButton(
+                            onPressed: () => _navigateWithoutHomeMusic(
+                              AppRoutes.startlearning,
+                            ),
                           ),
-                          itemBuilder: (context, index) => _FeatureCard(
-                            action: HomeScreen._featuredActions[index],
+                          const SizedBox(height: 20),
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: content.featuredActions.length,
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: 14,
+                              crossAxisSpacing: 14,
+                              childAspectRatio: 1.14,
+                            ),
+                            itemBuilder: (context, index) {
+                              final action = content.featuredActions[index];
+                              return _FeatureCard(
+                                action: action,
+                                onTap: () => _navigateWithoutHomeMusic(
+                                  action.route,
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 26),
+                          Text(
+                            'Choose a Quest 🗺️',
+                            style: AppTypography.h2.copyWith(
+                              color: const Color(0xFF2D1B69),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 22,
+                              shadows: [
+                                const Shadow(
+                                  color: Colors.white,
+                                  blurRadius: 0,
+                                  offset: Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Pick a mini adventure and keep the fun going!',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: const Color(0xFF5A6B7A),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: content.quests.length,
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              mainAxisSpacing: 14,
+                              crossAxisSpacing: 14,
+                              childAspectRatio: 0.96,
+                            ),
+                            itemBuilder: (context, index) {
+                              final quest = content.quests[index];
+                              return _QuestCard(
+                                quest: quest,
+                                isComingSoon: quest.isComingSoon,
+                                onTap: () => _navigateWithoutHomeMusic(
+                                  quest.route,
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 24),
+                          _DailyChallengeBanner(
                             onTap: () => _navigateWithoutHomeMusic(
-                              HomeScreen._featuredActions[index].route,
+                              AppRoutes.startlearning,
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 26),
-
-                        // Quest section header
-                        Text(
-                          'Choose a Quest 🗺️',
-                          style: AppTypography.h2.copyWith(
-                            color: const Color(0xFF2D1B69),
-                            fontWeight: FontWeight.w800,
-                            fontSize: 22,
-                            shadows: [
-                              const Shadow(
-                                color: Colors.white,
-                                blurRadius: 0,
-                                offset: Offset(0, 1),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Pick a mini adventure and keep the fun going!',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: const Color(0xFF5A6B7A),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-
-                        // Quest cards grid
-                        GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: HomeScreen._quests.length,
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: 14,
-                            crossAxisSpacing: 14,
-                            childAspectRatio: 0.96,
-                          ),
-                          itemBuilder: (context, index) {
-                            final quest = HomeScreen._quests[index];
-                            return _QuestCard(
-                              quest: quest,
-                              isComingSoon: HomeScreen._comingSoonQuestRoutes
-                                  .contains(quest.route),
-                              onTap: () => _navigateWithoutHomeMusic(
-                                quest.route,
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Daily challenge banner
-                        _DailyChallengeBanner(
-                          onTap: () => _navigateWithoutHomeMusic(
-                            AppRoutes.startlearning,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
+              loading: _HomeLoadingView.new,
+              error: (error, stackTrace) => _HomeErrorView(
+                onRetry: () => ref.invalidate(homeContentProvider),
+              ),
             ),
           ),
         ],
@@ -589,11 +427,21 @@ class _PrimaryPlayButton extends StatelessWidget {
 
 class _FeatureCard extends StatelessWidget {
   const _FeatureCard({required this.action, required this.onTap});
-  final _HomeActionData action;
+  final HomeActionModel action;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final color = colorFromHex(action.colorHex, fallback: AppColors.primary);
+    final softColor = colorFromHex(
+      action.softColorHex,
+      fallback: AppColors.primaryLight,
+    );
+    final shadowColor = colorFromHex(
+      action.shadowColorHex,
+      fallback: AppColors.primary,
+    );
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -601,18 +449,18 @@ class _FeatureCard extends StatelessWidget {
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(26),
           border: Border.all(
-            color: action.color.withValues(alpha: 0.45),
+            color: color.withValues(alpha: 0.45),
             width: 2.5,
           ),
           boxShadow: [
             // "3D press" bottom shadow — the key kid-friendly effect
             BoxShadow(
-              color: action.shadowColor.withValues(alpha: 0.8),
+              color: shadowColor.withValues(alpha: 0.8),
               offset: const Offset(0, 5),
               blurRadius: 0,
             ),
             BoxShadow(
-              color: action.color.withValues(alpha: 0.18),
+              color: color.withValues(alpha: 0.18),
               offset: const Offset(0, 10),
               blurRadius: 20,
             ),
@@ -631,17 +479,27 @@ class _FeatureCard extends StatelessWidget {
                     width: 58,
                     height: 58,
                     decoration: BoxDecoration(
-                      color: action.softColor.withValues(alpha: 0.6),
+                      color: softColor.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(18),
                       border: Border.all(
-                        color: action.color.withValues(alpha: 0.35),
+                        color: color.withValues(alpha: 0.35),
                         width: 2,
                       ),
                     ),
-                    child: Center(
-                      child: Text(
-                        action.emoji,
-                        style: const TextStyle(fontSize: 28),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: Image.asset(
+                        action.imagePath,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Center(
+                            child: Icon(
+                              iconFromKey(action.iconKey),
+                              color: color,
+                              size: 28,
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -651,17 +509,17 @@ class _FeatureCard extends StatelessWidget {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: action.color.withValues(alpha: 0.15),
+                      color: color.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: action.color.withValues(alpha: 0.4),
+                        color: color.withValues(alpha: 0.4),
                         width: 1.5,
                       ),
                     ),
                     child: Icon(
                       Icons.chevron_right_rounded,
                       size: 18,
-                      color: action.color,
+                      color: color,
                     ),
                   ),
                 ],
@@ -702,12 +560,18 @@ class _QuestCard extends StatelessWidget {
     this.isComingSoon = false,
   });
 
-  final _QuestData quest;
+  final QuestModel quest;
   final VoidCallback onTap;
   final bool isComingSoon;
 
   @override
   Widget build(BuildContext context) {
+    final color = colorFromHex(quest.colorHex, fallback: AppColors.secondary);
+    final shadowColor = colorFromHex(
+      quest.shadowColorHex,
+      fallback: AppColors.secondary,
+    );
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -715,18 +579,18 @@ class _QuestCard extends StatelessWidget {
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: quest.color.withValues(alpha: 0.5),
+            color: color.withValues(alpha: 0.5),
             width: 2.5,
           ),
           boxShadow: [
             // "3D press" bottom shadow
             BoxShadow(
-              color: quest.shadowColor.withValues(alpha: 0.75),
+              color: shadowColor.withValues(alpha: 0.75),
               offset: const Offset(0, 5),
               blurRadius: 0,
             ),
             BoxShadow(
-              color: quest.color.withValues(alpha: 0.18),
+              color: color.withValues(alpha: 0.18),
               offset: const Offset(0, 8),
               blurRadius: 18,
             ),
@@ -745,17 +609,27 @@ class _QuestCard extends StatelessWidget {
                     width: 56,
                     height: 56,
                     decoration: BoxDecoration(
-                      color: quest.color.withValues(alpha: 0.15),
+                      color: color.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(17),
                       border: Border.all(
-                        color: quest.color.withValues(alpha: 0.35),
+                        color: color.withValues(alpha: 0.35),
                         width: 2,
                       ),
                     ),
-                    child: Center(
-                      child: Text(
-                        quest.emoji,
-                        style: const TextStyle(fontSize: 26),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(13),
+                      child: Image.asset(
+                        quest.imagePath,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Center(
+                            child: Icon(
+                              iconFromKey(quest.iconKey),
+                              color: color,
+                              size: 28,
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -765,17 +639,17 @@ class _QuestCard extends StatelessWidget {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: quest.color.withValues(alpha: 0.18),
+                      color: color.withValues(alpha: 0.18),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: quest.color.withValues(alpha: 0.45),
+                        color: color.withValues(alpha: 0.45),
                         width: 2,
                       ),
                     ),
                     child: Icon(
                       Icons.play_arrow_rounded,
                       size: 18,
-                      color: quest.color,
+                      color: color,
                     ),
                   ),
                 ],
@@ -836,12 +710,12 @@ class _QuestCard extends StatelessWidget {
                       height: 22,
                       decoration: BoxDecoration(
                         color: filled
-                            ? quest.color.withValues(alpha: 0.22)
+                            ? color.withValues(alpha: 0.22)
                             : const Color(0xFFF0EBE4),
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: filled
-                              ? quest.color.withValues(alpha: 0.65)
+                              ? color.withValues(alpha: 0.65)
                               : const Color(0xFFD8CFCA),
                           width: 1.5,
                         ),
@@ -849,7 +723,7 @@ class _QuestCard extends StatelessWidget {
                       child: Icon(
                         Icons.star_rounded,
                         size: 12,
-                        color: filled ? quest.color : const Color(0xFFB8B0A8),
+                        color: filled ? color : const Color(0xFFB8B0A8),
                       ),
                     ),
                   );
@@ -857,6 +731,61 @@ class _QuestCard extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeLoadingView extends StatelessWidget {
+  const _HomeLoadingView();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: CircularProgressIndicator(
+        color: AppColors.primary,
+      ),
+    );
+  }
+}
+
+class _HomeErrorView extends StatelessWidget {
+  const _HomeErrorView({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Home content could not load.',
+              textAlign: TextAlign.center,
+              style: AppTypography.h3.copyWith(
+                color: const Color(0xFF2D1B69),
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Tap below to try loading the cards again.',
+              textAlign: TextAlign.center,
+              style: AppTypography.bodySmall.copyWith(
+                color: const Color(0xFF5A6B7A),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: onRetry,
+              child: const Text('Retry'),
+            ),
+          ],
         ),
       ),
     );

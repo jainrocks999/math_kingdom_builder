@@ -1,0 +1,116 @@
+{
+  "object" : {
+    "artifacts" : [
+      {
+        "kind" : {
+          "xcframework" : {
+
+          }
+        },
+        "packageRef" : {
+          "identity" : "rive_native-0.1.7",
+          "kind" : "fileSystem",
+          "location" : "/Users/forebear/Desktop/Flutter/math_kingdom_builder/ios/Flutter/ephemeral/Packages/.packages/rive_native-0.1.7",
+          "name" : "rive_native"
+        },
+        "path" : "/Users/forebear/Desktop/Flutter/math_kingdom_builder/android/build/ios/SourcePackages/artifacts/rive_native-0.1.7/RiveNative/RiveNative_ios.xcframework",
+        "source" : {
+          "checksum" : "8cc41abcc0daed3ad96e011ed22a7f467489867022a77665f740a8d85a423c61",
+          "type" : "remote",
+          "url" : "https://rive-flutter-artifacts.rive.app/rive_native_versions/0.1.7%2B3/RiveNative_ios.xcframework.zip"
+        },
+        "targetName" : "RiveNative"
+      }
+    ],
+    "dependencies" : [
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "audioplayers_darwin-6.4.0",
+          "kind" : "fileSystem",
+          "location" : "/Users/forebear/Desktop/Flutter/math_kingdom_builder/ios/Flutter/ephemeral/Packages/.packages/audioplayers_darwin-6.4.0",
+          "name" : "audioplayers_darwin"
+        },
+        "state" : {
+          "name" : "fileSystem",
+          "path" : "/Users/forebear/Desktop/Flutter/math_kingdom_builder/ios/Flutter/ephemeral/Packages/.packages/audioplayers_darwin-6.4.0"
+        },
+        "subpath" : "audioplayers_darwin-6.4.0"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "flutter_tts",
+          "kind" : "fileSystem",
+          "location" : "/Users/forebear/Desktop/Flutter/math_kingdom_builder/ios/Flutter/ephemeral/Packages/.packages/flutter_tts",
+          "name" : "flutter_tts"
+        },
+        "state" : {
+          "name" : "fileSystem",
+          "path" : "/Users/forebear/Desktop/Flutter/math_kingdom_builder/ios/Flutter/ephemeral/Packages/.packages/flutter_tts"
+        },
+        "subpath" : "flutter_tts"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "flutterframework",
+          "kind" : "fileSystem",
+          "location" : "/Users/forebear/Desktop/Flutter/math_kingdom_builder/ios/Flutter/ephemeral/Packages/.packages/FlutterFramework",
+          "name" : "FlutterFramework"
+        },
+        "state" : {
+          "name" : "fileSystem",
+          "path" : "/Users/forebear/Desktop/Flutter/math_kingdom_builder/ios/Flutter/ephemeral/Packages/.packages/FlutterFramework"
+        },
+        "subpath" : "flutterframework"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "rive_native-0.1.7",
+          "kind" : "fileSystem",
+          "location" : "/Users/forebear/Desktop/Flutter/math_kingdom_builder/ios/Flutter/ephemeral/Packages/.packages/rive_native-0.1.7",
+          "name" : "rive_native"
+        },
+        "state" : {
+          "name" : "fileSystem",
+          "path" : "/Users/forebear/Desktop/Flutter/math_kingdom_builder/ios/Flutter/ephemeral/Packages/.packages/rive_native-0.1.7"
+        },
+        "subpath" : "rive_native-0.1.7"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "shared_preferences_foundation-2.5.6",
+          "kind" : "fileSystem",
+          "location" : "/Users/forebear/Desktop/Flutter/math_kingdom_builder/ios/Flutter/ephemeral/Packages/.packages/shared_preferences_foundation-2.5.6",
+          "name" : "shared_preferences_foundation"
+        },
+        "state" : {
+          "name" : "fileSystem",
+          "path" : "/Users/forebear/Desktop/Flutter/math_kingdom_builder/ios/Flutter/ephemeral/Packages/.packages/shared_preferences_foundation-2.5.6"
+        },
+        "subpath" : "shared_preferences_foundation-2.5.6"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "video_player_avfoundation-2.9.7",
+          "kind" : "fileSystem",
+          "location" : "/Users/forebear/Desktop/Flutter/math_kingdom_builder/ios/Flutter/ephemeral/Packages/.packages/video_player_avfoundation-2.9.7",
+          "name" : "video_player_avfoundation"
+        },
+        "state" : {
+          "name" : "fileSystem",
+          "path" : "/Users/forebear/Desktop/Flutter/math_kingdom_builder/ios/Flutter/ephemeral/Packages/.packages/video_player_avfoundation-2.9.7"
+        },
+        "subpath" : "video_player_avfoundation-2.9.7"
+      }
+    ],
+    "prebuilts" : [
+
+    ]
+  },
+  "version" : 7
+}

@@ -215,7 +215,9 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
     Future<void>.delayed(
       delayed ? const Duration(milliseconds: 180) : Duration.zero,
       () {
-        if (!mounted || requestToken != _musicRequestToken || _showCelebration) {
+        if (!mounted ||
+            requestToken != _musicRequestToken ||
+            _showCelebration) {
           return;
         }
         AppAudioService.instance.playStartCountingMusic();
@@ -299,7 +301,6 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
     });
     _speakPrompt();
   }
-
 
   void _showFinalCelebration() {
     if (!mounted || _showCelebration || !_roundSolved) return;
@@ -403,30 +404,82 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-              child: Column(
-                children: [
-                  _buildTopBar(progress),
-                  const SizedBox(height: 14),
-                  _buildPromptCard(),
-                  const SizedBox(height: 14),
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Expanded(child: _buildNumberCard()),
-                        const SizedBox(width: 12),
-                        Expanded(child: _buildChoicesGrid()),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildBottomBar(),
-                ],
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final isVeryCompactHeight = constraints.maxHeight < 700;
+                  final isCompactHeight = constraints.maxHeight < 760;
+                  final gap = isVeryCompactHeight
+                      ? 8.0
+                      : (isCompactHeight ? 10.0 : 14.0);
+
+                  return Column(
+                    children: [
+                      _buildTopBar(progress),
+                      SizedBox(height: gap),
+                      _buildPromptCard(
+                        compact: isCompactHeight,
+                        veryCompact: isVeryCompactHeight,
+                      ),
+                      SizedBox(height: gap),
+                      Expanded(
+                        child: _buildGameBoard(
+                          isCompactHeight: isCompactHeight,
+                          isVeryCompactHeight: isVeryCompactHeight,
+                        ),
+                      ),
+                      SizedBox(height: isVeryCompactHeight ? 8 : 12),
+                      _buildBottomBar(compact: isVeryCompactHeight),
+                    ],
+                  );
+                },
               ),
             ),
           ),
           if (_showCelebration) _buildCelebrationOverlay(),
         ],
       ),
+    );
+  }
+
+  Widget _buildGameBoard({
+    required bool isCompactHeight,
+    required bool isVeryCompactHeight,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useWideLayout = constraints.maxWidth >= 760;
+
+        if (useWideLayout) {
+          return Row(
+            children: [
+              Expanded(child: _buildNumberCard()),
+              const SizedBox(width: 14),
+              Expanded(
+                flex: 2,
+                child: _buildChoicesGrid(
+                  preferLargeCards: true,
+                ),
+              ),
+            ],
+          );
+        }
+
+        return Column(
+          children: [
+            SizedBox(
+              height: isVeryCompactHeight ? 122 : (isCompactHeight ? 142 : 176),
+              child: _buildNumberCard(compact: true),
+            ),
+            SizedBox(height: isVeryCompactHeight ? 8 : 12),
+            Expanded(
+              child: _buildChoicesGrid(
+                preferLargeCards: true,
+                compactHeight: isVeryCompactHeight,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -495,10 +548,10 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
     );
   }
 
-  Widget _buildPromptCard() {
+  Widget _buildPromptCard({bool compact = false, bool veryCompact = false}) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(veryCompact ? 12 : (compact ? 16 : 18)),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(28),
@@ -514,8 +567,8 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
       child: Row(
         children: [
           Container(
-            width: 68,
-            height: 68,
+            width: veryCompact ? 50 : (compact ? 60 : 68),
+            height: veryCompact ? 50 : (compact ? 60 : 68),
             decoration: BoxDecoration(
               color: _theme.softColor,
               borderRadius: BorderRadius.circular(20),
@@ -523,35 +576,41 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
             child: Center(
               child: Text(
                 _theme.emoji,
-                style: const TextStyle(fontSize: 34),
+                style:
+                    TextStyle(fontSize: veryCompact ? 24 : (compact ? 30 : 34)),
               ),
             ),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: veryCompact ? 10 : 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Match the number to the right group.',
+                  maxLines: veryCompact ? 1 : 2,
+                  overflow: TextOverflow.ellipsis,
                   style: AppTypography.cardTitle.copyWith(
                     color: const Color(0xFF1A1060),
-                    fontSize: 19,
+                    fontSize: veryCompact ? 15 : (compact ? 17 : 19),
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: veryCompact ? 4 : 6),
                 Text(
                   'Tap the group that has exactly $_correctCount ${_correctCount == 1 ? _theme.singular : _theme.plural}.',
+                  maxLines: veryCompact ? 2 : 3,
+                  overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodySmall.copyWith(
                     color: const Color(0xFF5F6C7B),
+                    fontSize: veryCompact ? 11 : null,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: veryCompact ? 8 : 10),
           _CircleButton(
             icon: Icons.volume_up_rounded,
             color: _theme.color,
@@ -562,7 +621,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
     );
   }
 
-  Widget _buildNumberCard() {
+  Widget _buildNumberCard({bool compact = false}) {
     return AnimatedBuilder(
       animation: _numberPulseController,
       builder: (context, child) {
@@ -571,7 +630,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
       },
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(18),
+        padding: EdgeInsets.all(compact ? 16 : 18),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.94),
           borderRadius: BorderRadius.circular(30),
@@ -584,54 +643,99 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
             ),
           ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Find this number',
-              style: AppTypography.bodyStrong.copyWith(
-                color: _theme.color,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              '$_correctCount',
-              style: AppTypography.numberDisplay.copyWith(
-                fontSize: 116,
-                color: const Color(0xFF1A1060),
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              _correctCount == 1 ? _theme.singular : _theme.plural,
-              style: AppTypography.h2.copyWith(
-                color: _theme.color,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isShortCard = constraints.maxHeight < 170;
+            final numberFontSize =
+                compact ? math.min(82.0, constraints.maxHeight * 0.48) : 116.0;
+            final labelFontSize = compact ? (isShortCard ? 20.0 : 24.0) : null;
+
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Find this number',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodyStrong.copyWith(
+                    color: _theme.color,
+                    fontSize: compact ? 14 : null,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                SizedBox(height: isShortCard ? 4 : (compact ? 8 : 18)),
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      '$_correctCount',
+                      style: AppTypography.numberDisplay.copyWith(
+                        fontSize: numberFontSize,
+                        color: const Color(0xFF1A1060),
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: isShortCard ? 2 : (compact ? 4 : 10)),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    _correctCount == 1 ? _theme.singular : _theme.plural,
+                    maxLines: 1,
+                    style: AppTypography.h2.copyWith(
+                      color: _theme.color,
+                      fontSize: labelFontSize,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildChoicesGrid() {
-    return GridView.builder(
-      itemCount: _options.length,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 0.88,
-      ),
-      itemBuilder: (context, index) => _buildChoiceCard(_options[index]),
+  Widget _buildChoicesGrid({
+    bool preferLargeCards = false,
+    bool compactHeight = false,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final spacing = compactHeight ? 10.0 : (preferLargeCards ? 14.0 : 12.0);
+        const crossAxisCount = 2;
+        final rowCount = (_options.length / crossAxisCount).ceil();
+        final viewportPadding = compactHeight ? 4.0 : 6.0;
+        final availableHeight = math.max(
+          0.0,
+          constraints.maxHeight - (viewportPadding * 2),
+        );
+        final mainAxisExtent = rowCount == 0
+            ? availableHeight
+            : (availableHeight - ((rowCount - 1) * spacing)) / rowCount;
+
+        return GridView.builder(
+          padding: EdgeInsets.symmetric(vertical: viewportPadding),
+          itemCount: _options.length,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: spacing,
+            mainAxisSpacing: spacing,
+            mainAxisExtent: mainAxisExtent,
+          ),
+          itemBuilder: (context, index) => _buildChoiceCard(
+            _options[index],
+            compactHeight: compactHeight,
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildChoiceCard(int count) {
+  Widget _buildChoiceCard(int count, {bool compactHeight = false}) {
     final isSelected = _selectedCount == count;
     final isCorrect = count == _correctCount;
 
@@ -656,83 +760,24 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
         borderRadius: BorderRadius.circular(24),
         onTap: () => _handleOptionTap(count),
         child: Container(
-          padding: const EdgeInsets.all(10),
+          padding: EdgeInsets.all(compactHeight ? 8 : 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: borderColor, width: 2),
             boxShadow: [
               BoxShadow(
                 color: borderColor.withValues(alpha: 0.16),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
+                blurRadius: compactHeight ? 8 : 12,
+                offset: Offset(0, compactHeight ? 3 : 6),
               ),
             ],
           ),
           child: Column(
             children: [
-              Align(
-                alignment: Alignment.topRight,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _theme.softColor,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    '$count',
-                    style: AppTypography.bodyStrong.copyWith(
-                      color: _theme.color,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 6),
               Expanded(
                 child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final columns = count <= 4 ? 2 : (count <= 8 ? 3 : 4);
-                    final rows = (count / columns).ceil();
-                    const spacing = 5.0;
-                    final itemSize = math.min(
-                      30.0,
-                      math.min(
-                        (constraints.maxWidth - ((columns - 1) * spacing)) /
-                            columns,
-                        (constraints.maxHeight - ((rows - 1) * spacing)) / rows,
-                      ),
-                    );
-
-                    return Center(
-                      child: Wrap(
-                        spacing: spacing,
-                        runSpacing: spacing,
-                        alignment: WrapAlignment.center,
-                        children: List.generate(
-                          count,
-                          (_) => Container(
-                            width: itemSize,
-                            height: itemSize,
-                            decoration: BoxDecoration(
-                              color: _theme.softColor.withValues(alpha: 0.5),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            padding: const EdgeInsets.all(2.5),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.asset(
-                                _theme.assetPath,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
+                  builder: (context, constraints) =>
+                      _buildObjectPreview(count, constraints),
                 ),
               ),
             ],
@@ -742,7 +787,66 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
     );
   }
 
-  Widget _buildBottomBar() {
+  Widget _buildObjectPreview(int count, BoxConstraints constraints) {
+    final columns = switch (count) {
+      <= 2 => count,
+      <= 4 => 2,
+      <= 6 => 3,
+      _ => 4,
+    };
+    final rows = (count / columns).ceil();
+    const spacing = 8.0;
+    final maxSize = switch (count) {
+      <= 2 => 54.0,
+      <= 4 => 50.0,
+      <= 6 => 44.0,
+      _ => 38.0,
+    };
+    final itemSize = math.min(
+      maxSize,
+      math.min(
+        (constraints.maxWidth - ((columns - 1) * spacing)) / columns,
+        (constraints.maxHeight - ((rows - 1) * spacing)) / rows,
+      ),
+    );
+    final previewWidth = (columns * itemSize) + ((columns - 1) * spacing);
+
+    return Center(
+      child: SizedBox(
+        width: previewWidth,
+        child: Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          alignment: WrapAlignment.center,
+          children: List.generate(
+            count,
+            (_) => Container(
+              width: itemSize,
+              height: itemSize,
+              decoration: BoxDecoration(
+                color: _theme.softColor.withValues(alpha: 0.54),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.95),
+                  width: 1.6,
+                ),
+              ),
+              padding: EdgeInsets.all(itemSize * 0.08),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.asset(
+                  _theme.assetPath,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomBar({bool compact = false}) {
     return Row(
       children: [
         Expanded(
@@ -753,22 +857,25 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
             foregroundColor: _theme.color,
             borderColor: _theme.color.withValues(alpha: 0.22),
             onTap: _speakPrompt,
+            compact: compact,
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: _ActionButton(
             label: _roundSolved
-                ? (_roundIndex == _totalRounds - 1 ? 'Finishing...' : 'Next coming...')
+                ? (_roundIndex == _totalRounds - 1
+                    ? 'Finishing...'
+                    : 'Next coming...')
                 : 'Match it',
             icon: _roundSolved
                 ? Icons.auto_awesome_rounded
                 : Icons.touch_app_rounded,
-            backgroundColor:
-                _roundSolved ? _theme.color : AppColors.disabled,
+            backgroundColor: _roundSolved ? _theme.color : AppColors.disabled,
             foregroundColor: Colors.white,
             borderColor: _roundSolved ? _theme.shadowColor : AppColors.disabled,
             onTap: () {},
+            compact: compact,
           ),
         ),
       ],
@@ -914,6 +1021,7 @@ class _ActionButton extends StatelessWidget {
     required this.foregroundColor,
     required this.borderColor,
     required this.onTap,
+    this.compact = false,
   });
 
   final String label;
@@ -922,6 +1030,7 @@ class _ActionButton extends StatelessWidget {
   final Color foregroundColor;
   final Color borderColor;
   final VoidCallback onTap;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -932,7 +1041,10 @@ class _ActionButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 10 : 12,
+            vertical: compact ? 10 : 14,
+          ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: borderColor, width: 2),
@@ -940,8 +1052,8 @@ class _ActionButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: foregroundColor, size: 18),
-              const SizedBox(width: 8),
+              Icon(icon, color: foregroundColor, size: compact ? 16 : 18),
+              SizedBox(width: compact ? 6 : 8),
               Flexible(
                 child: Text(
                   label,
@@ -949,6 +1061,7 @@ class _ActionButton extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodyStrong.copyWith(
                     color: foregroundColor,
+                    fontSize: compact ? 13 : null,
                     fontWeight: FontWeight.w800,
                   ),
                 ),

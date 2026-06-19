@@ -1,0 +1,50 @@
+[
+  {
+    "id": "start_learning",
+    "title": "Start Learning",
+    "subtitle": "Number magic & playful counting",
+    "route": "/start-learning",
+    "iconKey": "play_arrow_rounded",
+    "emoji": "🎮",
+    "imagePath": "assets/images/bear/idle.png",
+    "colorHex": "#FF6B35",
+    "softColorHex": "#FFD4C2",
+    "shadowColorHex": "#C94A18"
+  },
+  {
+    "id": "kingdom_map",
+    "title": "Kingdom Map",
+    "subtitle": "Visit the castle & unlock places",
+    "route": "/kingdom",
+    "iconKey": "castle_rounded",
+    "emoji": "🏰",
+    "imagePath": "assets/images/onboarding/third.png",
+    "colorHex": "#CDB4FF",
+    "softColorHex": "#F8F4FF",
+    "shadowColorHex": "#A888E8"
+  },
+  {
+    "id": "sticker_album",
+    "title": "Sticker Album",
+    "subtitle": "Stars, stickers & shiny rewards",
+    "route": "/stickers",
+    "iconKey": "auto_awesome_rounded",
+    "emoji": "⭐",
+    "imagePath": "assets/images/bear/clapping.png",
+    "colorHex": "#F4B942",
+    "softColorHex": "#FFE7A6",
+    "shadowColorHex": "#D4A000"
+  },
+  {
+    "id": "parent_zone",
+    "title": "Parent Zone",
+    "subtitle": "Settings, progress & tools",
+    "route": "/parent-dashboard",
+    "iconKey": "lock_outline_rounded",
+    "emoji": "🔐",
+    "imagePath": "assets/images/onboarding/second.png",
+    "colorHex": "#5C7AEA",
+    "softColorHex": "#F4F6F8",
+    "shadowColorHex": "#3A58C8"
+  }
+]

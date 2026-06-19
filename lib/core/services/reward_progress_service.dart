@@ -23,6 +23,12 @@ class RewardProgressSnapshot {
 }
 
 abstract final class RewardModuleIds {
+  static const addition = 'addition';
+  static const subtraction = 'subtraction';
+  static const multiplication = 'multiplication';
+  static const division = 'division';
+  static const sequencing = 'sequencing';
+  static const patterns = 'patterns';
   static const learnNumbers = 'learn_numbers';
   static const traceNumbers = 'trace_numbers';
   static const countObjects = 'count_objects';
@@ -39,12 +45,19 @@ class RewardProgressService {
   static const _totalStarsKey = 'reward_progress_total_stars';
   static const _completionCountsKey = 'reward_progress_completion_counts';
   static const _claimedRewardsKey = 'reward_progress_claimed_rewards';
-  static const _seenUnlockedModulesKey = 'reward_progress_seen_unlocked_modules';
+  static const _seenUnlockedModulesKey =
+      'reward_progress_seen_unlocked_modules';
   static const _todayCompletionsKey = 'reward_progress_today_completions';
   static const _lastCompletionDateKey = 'reward_progress_last_completion_date';
   static const _streakDaysKey = 'reward_progress_streak_days';
 
   static const Map<String, int> _moduleStarRewards = {
+    RewardModuleIds.addition: 4,
+    RewardModuleIds.subtraction: 4,
+    RewardModuleIds.multiplication: 4,
+    RewardModuleIds.division: 4,
+    RewardModuleIds.sequencing: 4,
+    RewardModuleIds.patterns: 4,
     RewardModuleIds.learnNumbers: 4,
     RewardModuleIds.traceNumbers: 4,
     RewardModuleIds.countObjects: 3,
@@ -55,8 +68,7 @@ class RewardProgressService {
 
   int starsForModule(String moduleId) => _moduleStarRewards[moduleId] ?? 1;
 
-  Future<SharedPreferences> get _prefs async =>
-      SharedPreferences.getInstance();
+  Future<SharedPreferences> get _prefs async => SharedPreferences.getInstance();
 
   Future<RewardProgressSnapshot> loadSnapshot() async {
     final prefs = await _prefs;
@@ -148,7 +160,8 @@ class RewardProgressService {
 
   Future<void> markUnlockedModulesSeen(Set<String> moduleRoutes) async {
     final prefs = await _prefs;
-    final existing = prefs.getStringList(_seenUnlockedModulesKey)?.toSet() ?? <String>{};
+    final existing =
+        prefs.getStringList(_seenUnlockedModulesKey)?.toSet() ?? <String>{};
     existing.addAll(moduleRoutes);
     await prefs.setStringList(
       _seenUnlockedModulesKey,
@@ -163,7 +176,8 @@ class RewardProgressService {
     if (decoded is! Map<String, dynamic>) return <String, int>{};
 
     return decoded.map(
-      (key, value) => MapEntry(key, value is int ? value : int.tryParse('$value') ?? 0),
+      (key, value) =>
+          MapEntry(key, value is int ? value : int.tryParse('$value') ?? 0),
     );
   }
 
