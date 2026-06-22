@@ -2,7 +2,7 @@
 
 **File:** `lib/features/kingdom/kingdom_screen.dart`  
 **Route:** `/kingdom`
-**Status:** Implemented with ambient audio deferred (2026-06-19)
+**Status:** Implemented with soft ambient audio (2026-06-20)
 
 ## Current purpose
 
@@ -36,7 +36,7 @@ Interactive pan/zoom map; zones unlock with progress; launch quests from zones.
 
 ### Existing functionality
 - [x] Live zone progress from completion counts
-- [ ] Optional soft ambient music (low volume)
+- [x] Optional soft ambient music (low volume)
 
 ### New (optional)
 - [ ] Rive mascot pointer to recommended zone
@@ -52,7 +52,7 @@ Interactive pan/zoom map; zones unlock with progress; launch quests from zones.
 
 - Recommended-zone focusing is now easier through a dedicated `Find Me` action.
 - Kingdom data already reflects live progress from `RewardProgressService`; loading polish was added on top.
-- Ambient audio is still deferred because it is optional and current map usability was the higher-value fix.
+- Kingdom now uses a softer low-volume loop than learning activities, with route-aware stop/resume.
 
 ## Assets
 

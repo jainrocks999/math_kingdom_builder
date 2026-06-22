@@ -9,10 +9,11 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
-import '../StartLearning/start_learning_next_action_button.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/tts_voice_helper.dart';
+import '../../shared/helpers/feedback_helper.dart';
 import '../../shared/widgets/celebration_bear.dart';
+import '../StartLearning/start_learning_next_action_button.dart';
 import 'counting_themes.dart';
 
 class _RoundConfig {
@@ -47,6 +48,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
   int _musicRequestToken = 0;
   int _roundIndex = 0;
   int? _selectedAnswer;
+  List<int> _countedObjectOrder = const [];
   bool _answerLocked = false;
   bool _roundSolved = false;
   bool _showCelebration = false;
@@ -127,6 +129,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
     _selectedAnswer = null;
     _answerLocked = false;
     _roundSolved = false;
+    _countedObjectOrder = const [];
   }
 
   List<_RoundConfig> _buildRoundPlan() {
@@ -199,8 +202,10 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
 
     final isCorrect = answer == _correctCount;
     if (isCorrect) {
-      HapticFeedback.mediumImpact();
       _cardPopController.forward(from: 0);
+      await FeedbackHelper.playCorrect(
+        speak: _roundIndex == _totalRounds - 1 ? null : _speakCorrectAnswer,
+      );
       if (_roundIndex == _totalRounds - 1) {
         if (!mounted) return;
         setState(() {
@@ -213,20 +218,55 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
         });
         return;
       }
-      await _speakCorrectAnswer();
       if (!mounted) return;
       setState(() {
         _roundSolved = true;
       });
     } else {
-      HapticFeedback.lightImpact();
-      await _speakWrongAnswer();
+      await FeedbackHelper.playWrong(speak: _speakWrongAnswer);
       if (!mounted) return;
       setState(() {
         _answerLocked = false;
         _selectedAnswer = null;
       });
     }
+  }
+
+  Future<void> _handleObjectTap(int index) async {
+    if (_showCelebration) return;
+
+    final existingIndex = _countedObjectOrder.indexOf(index);
+    final updatedOrder = List<int>.from(_countedObjectOrder);
+    if (existingIndex == -1) {
+      updatedOrder.add(index);
+      HapticFeedback.selectionClick();
+    } else {
+      HapticFeedback.selectionClick();
+    }
+
+    final spokenCount =
+        existingIndex == -1 ? updatedOrder.length : existingIndex + 1;
+    final label = spokenCount == 1 ? _theme.singular : _theme.plural;
+
+    setState(() {
+      _countedObjectOrder = updatedOrder;
+    });
+
+    await _ttsReady;
+    await _tts.stop();
+    if (spokenCount == _correctCount && existingIndex == -1) {
+      await _tts.speak('$spokenCount $label. You counted them all.');
+      return;
+    }
+    await _tts.speak('$spokenCount $label');
+  }
+
+  void _resetTappedObjects() {
+    if (_countedObjectOrder.isEmpty) return;
+    HapticFeedback.selectionClick();
+    setState(() {
+      _countedObjectOrder = const [];
+    });
   }
 
   void _goToNextRound() {
@@ -517,59 +557,159 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
             ),
           ],
         ),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final columns = constraints.maxWidth > 520 ? 4 : 3;
-            final rows = (_correctCount / columns).ceil();
-            const spacing = 14.0;
-            final itemSize = math.min(
-              110.0,
-              math.min(
-                (constraints.maxWidth - ((columns - 1) * spacing)) / columns,
-                (constraints.maxHeight - ((rows - 1) * spacing)) / rows,
-              ),
-            );
-            return Center(
-              child: Wrap(
-                spacing: spacing,
-                runSpacing: spacing,
-                alignment: WrapAlignment.center,
-                children: List.generate(
-                  _correctCount,
-                  (index) => Container(
-                    width: itemSize,
-                    height: itemSize,
-                    decoration: BoxDecoration(
-                      color: _theme.softColor.withValues(alpha: 0.42),
-                      borderRadius: BorderRadius.circular(22),
-                      border: Border.all(
-                        color: _theme.color.withValues(alpha: 0.16),
-                      ),
-                    ),
-                    padding: const EdgeInsets.all(10),
-                    child: Center(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.asset(
-                          _theme.assetPath,
-                          fit: BoxFit.contain,
-                          width: itemSize * 0.72,
-                          height: itemSize * 0.72,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Icon(
-                              Icons.auto_awesome_rounded,
-                              size: itemSize * 0.34,
-                              color: _theme.color,
-                            );
-                          },
-                        ),
-                      ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _theme.softColor.withValues(alpha: 0.72),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    _countedObjectOrder.isEmpty
+                        ? 'Tap objects to count'
+                        : '${_countedObjectOrder.length} of $_correctCount counted',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: _theme.color,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
+                const Spacer(),
+                if (_countedObjectOrder.isNotEmpty)
+                  TextButton.icon(
+                    onPressed: _resetTappedObjects,
+                    style: TextButton.styleFrom(
+                      foregroundColor: _theme.color,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
+                    ),
+                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    label: const Text('Reset'),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final columns = constraints.maxWidth > 520 ? 4 : 3;
+                  final rows = (_correctCount / columns).ceil();
+                  const spacing = 14.0;
+                  final itemSize = math.min(
+                    110.0,
+                    math.min(
+                      (constraints.maxWidth - ((columns - 1) * spacing)) /
+                          columns,
+                      (constraints.maxHeight - ((rows - 1) * spacing)) / rows,
+                    ),
+                  );
+                  return Center(
+                    child: Wrap(
+                      spacing: spacing,
+                      runSpacing: spacing,
+                      alignment: WrapAlignment.center,
+                      children: List.generate(_correctCount, (index) {
+                        final countedIndex = _countedObjectOrder.indexOf(index);
+                        final isCounted = countedIndex != -1;
+                        return Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(22),
+                            onTap: () => _handleObjectTap(index),
+                            child: Container(
+                              width: itemSize,
+                              height: itemSize,
+                              decoration: BoxDecoration(
+                                color: isCounted
+                                    ? _theme.softColor.withValues(alpha: 0.88)
+                                    : _theme.softColor.withValues(alpha: 0.42),
+                                borderRadius: BorderRadius.circular(22),
+                                border: Border.all(
+                                  color: isCounted
+                                      ? _theme.color.withValues(alpha: 0.6)
+                                      : _theme.color.withValues(alpha: 0.16),
+                                  width: isCounted ? 2.4 : 1.4,
+                                ),
+                                boxShadow: isCounted
+                                    ? [
+                                        BoxShadow(
+                                          color: _theme.color.withValues(
+                                            alpha: 0.18,
+                                          ),
+                                          blurRadius: 12,
+                                          offset: const Offset(0, 8),
+                                        ),
+                                      ]
+                                    : null,
+                              ),
+                              padding: const EdgeInsets.all(10),
+                              child: Stack(
+                                children: [
+                                  Center(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(16),
+                                      child: Image.asset(
+                                        _theme.assetPath,
+                                        fit: BoxFit.contain,
+                                        width: itemSize * 0.72,
+                                        height: itemSize * 0.72,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                          return Icon(
+                                            Icons.auto_awesome_rounded,
+                                            size: itemSize * 0.34,
+                                            color: _theme.color,
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  if (isCounted)
+                                    Align(
+                                      alignment: Alignment.topRight,
+                                      child: Container(
+                                        width: 28,
+                                        height: 28,
+                                        decoration: BoxDecoration(
+                                          color: _theme.color,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Colors.white,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            '${countedIndex + 1}',
+                                            style:
+                                                AppTypography.caption.copyWith(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.w900,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  );
+                },
               ),
-            );
-          },
+            ),
+          ],
         ),
       ),
     );

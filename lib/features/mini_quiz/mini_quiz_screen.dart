@@ -17,7 +17,7 @@ import '../../core/utils/audio_service.dart';
 import '../../core/utils/tts_voice_helper.dart';
 import '../StartLearning/start_learning_next_action_button.dart';
 import '../count_objects/counting_themes.dart';
-import '../../shared/widgets/celebration_bear.dart';
+import '../../shared/widgets/activity_completion_card.dart';
 import '../../shared/widgets/celebration_overlay.dart';
 import '../../shared/widgets/kid_loading_view.dart';
 
@@ -64,6 +64,8 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
     with TickerProviderStateMixin, RouteAware {
   static const int _totalRounds = 35;
   static const String _quizProgressKeyPrefix = 'mini_quiz_progress_v2';
+  static const _postSuccessPause = Duration(milliseconds: 250);
+  static const _speechSettleDelay = Duration(milliseconds: 80);
 
   late final FlutterTts _tts;
   late final Future<void> _ttsReady;
@@ -80,6 +82,7 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
 
   int _musicRequestToken = 0;
   int _autoAdvanceToken = 0;
+  int _speechRequestToken = 0;
   int _roundIndex = 0;
   int? _selectedTapNumber;
   int? _draggedNumber;
@@ -122,6 +125,7 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
 
   Future<void> _configureTts() async {
     await TtsVoiceHelper.configureSharedAudio(_tts);
+    await _tts.awaitSpeakCompletion(true);
     await TtsVoiceHelper.applyPreferredVoice(
       _tts,
       locale: 'en-IN',
@@ -288,6 +292,7 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
   void _stopAllAudioAndSpeech() {
     _stopScreenMusic();
     AppAudioService.instance.stopCelebrationMusic();
+    _speechRequestToken++;
     _tts.stop();
   }
 
@@ -455,8 +460,6 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
   }
 
   Future<void> _speakPrompt() async {
-    await _ttsReady;
-    await _tts.stop();
     final label = _objectLabel(_correctAnswer);
     final prompt = switch (_currentRound.mode) {
       _QuizMode.tapNumber => 'Count the $label and tap the matching number.',
@@ -469,12 +472,10 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
           ? 'Count both groups and tap the group with more $label.'
           : 'Count both groups and tap the group with fewer $label.',
     };
-    await _tts.speak(prompt);
+    await _speakText(prompt);
   }
 
   Future<void> _speakSuccess() async {
-    await _ttsReady;
-    await _tts.stop();
     final label = _objectLabel(_correctAnswer);
     final praise = switch (_currentRound.mode) {
       _QuizMode.compareGroups => _currentRound.findMore == true
@@ -482,15 +483,24 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
           : 'Amazing! You found the group with fewer $label.',
       _ => 'Amazing! You got $_correctAnswer $label right.',
     };
-    await _tts.speak(praise);
+    await _speakText(praise);
   }
 
   Future<void> _speakCompletionPraise() async {
-    await _ttsReady;
-    await _tts.stop();
-    await _tts.speak(
+    await _speakText(
       'Quiz champion. You completed all $_totalRounds quiz rounds.',
     );
+  }
+
+  Future<void> _speakText(String text) async {
+    final token = ++_speechRequestToken;
+    await _ttsReady;
+    if (!mounted || token != _speechRequestToken) return;
+    await _tts.stop();
+    if (!mounted || token != _speechRequestToken) return;
+    await Future<void>.delayed(_speechSettleDelay);
+    if (!mounted || token != _speechRequestToken) return;
+    await _tts.speak(text);
   }
 
   void _markCorrect() {
@@ -504,8 +514,7 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
     HapticFeedback.mediumImpact();
     _successPulseController.forward(from: 0);
     _feedbackAudio.playSfx('sfx/correct.mp3');
-    _speakSuccess();
-    _scheduleAutoAdvance();
+    _advanceAfterCorrectAnswer();
   }
 
   void _markWrong() {
@@ -513,16 +522,17 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
     _feedbackAudio.playWrongFeedback();
   }
 
-  void _scheduleAutoAdvance() {
+  Future<void> _advanceAfterCorrectAnswer() async {
     final requestToken = ++_autoAdvanceToken;
-    Future<void>.delayed(const Duration(milliseconds: 1500), () {
-      if (!mounted || requestToken != _autoAdvanceToken) return;
-      if (_roundIndex == _totalRounds - 1) {
-        _showFinalCelebration();
-      } else {
-        _goToNextRound();
-      }
-    });
+    await _speakSuccess();
+    if (!mounted || requestToken != _autoAdvanceToken) return;
+    await Future<void>.delayed(_postSuccessPause);
+    if (!mounted || requestToken != _autoAdvanceToken) return;
+    if (_roundIndex == _totalRounds - 1) {
+      _showFinalCelebration();
+    } else {
+      _goToNextRound();
+    }
   }
 
   void _handleTapChoice(int value) {
@@ -630,6 +640,7 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
       return;
     }
     _autoAdvanceToken++;
+    _speechRequestToken++;
     setState(() {
       _roundIndex++;
       _prepareRound();
@@ -700,6 +711,7 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
     appRouteObserver.unsubscribe(this);
     _musicRequestToken++;
     _autoAdvanceToken++;
+    _speechRequestToken++;
     _stopAllAudioAndSpeech();
     _celebrationController.dispose();
     _successPulseController.dispose();
@@ -1820,103 +1832,30 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
             child: Center(
               child: Transform.scale(
                 scale: scale,
-                child: Container(
-                  width: math.min(MediaQuery.of(context).size.width - 32, 390),
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 22),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(36),
-                    border: Border.all(
-                      color: _theme.color.withValues(alpha: 0.22),
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _theme.color.withValues(alpha: 0.24),
-                        blurRadius: 36,
-                        spreadRadius: 8,
-                        offset: const Offset(0, 18),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _theme.softColor,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          'All $_totalRounds Quiz Rounds Complete',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: _theme.color,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      const CelebrationBear(size: 132),
-                      const SizedBox(height: 14),
-                      Text(
-                        'Mini Quiz Complete!',
-                        textAlign: TextAlign.center,
-                        style: AppTypography.h1.copyWith(
-                          color: const Color(0xFF1A1060),
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'You solved tap, drag, and write challenges like a quiz champion.',
-                        textAlign: TextAlign.center,
-                        style: AppTypography.body.copyWith(
-                          color: const Color(0xFF556172),
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _theme.softColor,
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                            color: _theme.color.withValues(alpha: 0.22),
-                          ),
-                        ),
-                        child: Text(
-                          '+5 stars earned!',
-                          style: AppTypography.bodyStrong.copyWith(
-                            color: _theme.color,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 22),
-                      StartLearningNextActionButton(
-                        currentRoute: AppRoutes.miniQuiz,
-                        onPrepareNavigation: _prepareNextLearningNavigation,
-                        builder: (context, label, onTap) {
-                          return _ActionButton(
-                            label: label,
-                            icon: Icons.arrow_forward_rounded,
-                            backgroundColor: _theme.color,
-                            foregroundColor: Colors.white,
-                            borderColor: _theme.shadowColor,
-                            onTap: onTap,
-                          );
-                        },
-                      ),
-                    ],
+                child: ActivityCompletionCard(
+                  maxWidth:
+                      math.min(MediaQuery.of(context).size.width - 32, 390),
+                  badgeText: 'All $_totalRounds Quiz Rounds Complete',
+                  title: 'Mini Quiz Complete!',
+                  message:
+                      'You solved tap, drag, and write challenges like a quiz champion.',
+                  rewardText: '+5 stars earned!',
+                  accentColor: _theme.color,
+                  softColor: _theme.softColor,
+                  shadowColor: _theme.color,
+                  action: StartLearningNextActionButton(
+                    currentRoute: AppRoutes.miniQuiz,
+                    onPrepareNavigation: _prepareNextLearningNavigation,
+                    builder: (context, label, onTap) {
+                      return _ActionButton(
+                        label: label,
+                        icon: Icons.arrow_forward_rounded,
+                        backgroundColor: _theme.color,
+                        foregroundColor: Colors.white,
+                        borderColor: _theme.shadowColor,
+                        onTap: onTap,
+                      );
+                    },
                   ),
                 ),
               ),

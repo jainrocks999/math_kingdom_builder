@@ -54,6 +54,7 @@ class TraceNumbersScreen extends StatefulWidget {
 class _TraceNumbersScreenState extends State<TraceNumbersScreen>
     with SingleTickerProviderStateMixin, RouteAware {
   static const int _maxProgressJump = 6;
+  static const int _ghostHintFailureThreshold = 2;
   static const Duration _autoAdvanceDelay = Duration(milliseconds: 1400);
 
   final AudioService _audioService = AudioService();
@@ -350,9 +351,11 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
   bool _isTracing = false;
   bool _lessonComplete = false;
   bool _showFinalCelebration = false;
+  bool _showGhostHint = false;
   List<List<Offset>> _completedStrokePaths = <List<Offset>>[];
   List<Offset> _activeStrokePath = <Offset>[];
   String _statusText = 'Start at the green dot.';
+  int _strokeFailureCount = 0;
   int _celebrationToken = 0;
   int _finalCelebrationToken = 0;
   int _musicRequestToken = 0;
@@ -459,9 +462,11 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
     _currentProgressIndex = 0;
     _isTracing = false;
     _lessonComplete = false;
+    _showGhostHint = false;
     _completedStrokePaths = <List<Offset>>[];
     _activeStrokePath = <Offset>[];
     _statusText = _promptForCurrentStroke();
+    _strokeFailureCount = 0;
     if (speakPrompt) {
       _speakLessonPrompt(includeStrokeHint: true);
     }
@@ -532,14 +537,9 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
     final start = samples.first;
     final tolerance = _startTolerance(size);
     if ((position - start).distance > tolerance) {
-      setState(() {
-        _statusText = 'Start from the green dot to trace ${_lesson.word}.';
-        _isTracing = false;
-        _activeStrokePath = <Offset>[];
-        _currentProgressIndex = 0;
-      });
-      HapticFeedback.selectionClick();
-      _audioService.playWrongFeedback();
+      _registerTracingFailure(
+        'Start from the green dot to trace ${_lesson.word}.',
+      );
       return;
     }
 
@@ -594,11 +594,20 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       return;
     }
 
+    _registerTracingFailure('Nice try. Let\'s start that stroke again.');
+  }
+
+  void _registerTracingFailure(String message) {
+    final nextFailureCount = _strokeFailureCount + 1;
+    final shouldShowHint = nextFailureCount >= _ghostHintFailureThreshold;
     setState(() {
+      _statusText =
+          shouldShowHint ? '$message Ghost helper line is on now.' : message;
       _isTracing = false;
       _currentProgressIndex = 0;
       _activeStrokePath = <Offset>[];
-      _statusText = 'Nice try. Let\'s start that stroke again.';
+      _strokeFailureCount = nextFailureCount;
+      _showGhostHint = shouldShowHint;
     });
     HapticFeedback.selectionClick();
     _audioService.playWrongFeedback();
@@ -621,9 +630,13 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
         _completedLessons.add(_currentLessonIndex);
         _statusText = 'Hooray! ${_lesson.display} is complete.';
         _celebrationToken++;
+        _showGhostHint = false;
+        _strokeFailureCount = 0;
       } else {
         _currentStrokeIndex++;
         _statusText = _promptForCurrentStroke();
+        _showGhostHint = false;
+        _strokeFailureCount = 0;
       }
     });
 
@@ -1052,6 +1065,43 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
                   ],
                 ),
               ),
+              if (_showGhostHint) ...[
+                SizedBox(height: isCompact ? 8 : 10),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _lesson.softColor.withValues(alpha: 0.92),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: _lesson.color.withValues(alpha: 0.24),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.auto_fix_high_rounded,
+                        color: _lesson.color,
+                        size: isCompact ? 16 : 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Ghost hint is showing this stroke path. Trace over the glowing line.',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: _lesson.color,
+                            fontSize: isCompact ? 11 : 12,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               SizedBox(height: isCompact ? 8 : 10),
               Expanded(
                 child: Center(
@@ -1194,6 +1244,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
                 currentStrokeIndex: _currentStrokeIndex,
                 completedStrokePaths: _completedStrokePaths,
                 activeStrokePath: _activeStrokePath,
+                showGhostHint: _showGhostHint,
               ),
             ),
           ),
@@ -1423,6 +1474,7 @@ class _TracingBoardPainter extends CustomPainter {
     required this.currentStrokeIndex,
     required this.completedStrokePaths,
     required this.activeStrokePath,
+    required this.showGhostHint,
   });
 
   final _TraceLesson lesson;
@@ -1430,6 +1482,7 @@ class _TracingBoardPainter extends CustomPainter {
   final int currentStrokeIndex;
   final List<List<Offset>> completedStrokePaths;
   final List<Offset> activeStrokePath;
+  final bool showGhostHint;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1477,6 +1530,9 @@ class _TracingBoardPainter extends CustomPainter {
       final samples = strokeSamples[i];
       final isComplete = i < completedStrokePaths.length;
       final isCurrent = i == currentStrokeIndex;
+      if (isCurrent && showGhostHint && !isComplete) {
+        _drawGhostHint(canvas, samples);
+      }
       _drawGuide(canvas, samples, isCurrent: isCurrent, isComplete: isComplete);
     }
 
@@ -1525,6 +1581,32 @@ class _TracingBoardPainter extends CustomPainter {
     for (var i = 0; i < points.length; i += 3) {
       canvas.drawCircle(points[i], radius, dotPaint);
     }
+  }
+
+  void _drawGhostHint(Canvas canvas, List<Offset> points) {
+    if (points.length < 2) return;
+
+    final path = Path()..moveTo(points.first.dx, points.first.dy);
+    for (var i = 1; i < points.length; i++) {
+      path.lineTo(points[i].dx, points[i].dy);
+    }
+
+    final glow = Paint()
+      ..color = lesson.color.withValues(alpha: 0.16)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 28
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 14);
+    canvas.drawPath(path, glow);
+
+    final stroke = Paint()
+      ..color = lesson.color.withValues(alpha: 0.28)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 14
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(path, stroke);
   }
 
   void _drawUserPath(
@@ -1588,7 +1670,8 @@ class _TracingBoardPainter extends CustomPainter {
     return oldDelegate.lesson != lesson ||
         oldDelegate.currentStrokeIndex != currentStrokeIndex ||
         oldDelegate.completedStrokePaths != completedStrokePaths ||
-        oldDelegate.activeStrokePath != activeStrokePath;
+        oldDelegate.activeStrokePath != activeStrokePath ||
+        oldDelegate.showGhostHint != showGhostHint;
   }
 }
 

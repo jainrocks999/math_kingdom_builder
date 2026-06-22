@@ -97,6 +97,13 @@ class AppAudioService {
     );
   }
 
+  Future<void> playKingdomMusic() async {
+    await _playLoopingBackgroundMusic(
+      'assets/audio/bg/home_music.mp3',
+      volume: 0.18,
+    );
+  }
+
   Future<void> playStartCountingMusic() async {
     await _playLoopingBackgroundMusic(
       'assets/audio/bg/start_counting.mp3',

@@ -731,6 +731,22 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
               _updateSpeechRateMode(selection.first);
             },
           ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () async {
+                await context.push('${AppRoutes.settings}?source=parent');
+                await _loadDashboardData();
+              },
+              icon: const Icon(Icons.settings_rounded),
+              label: const Text('Open Full Settings'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.parentAccent,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+          ),
         ],
       ),
     );

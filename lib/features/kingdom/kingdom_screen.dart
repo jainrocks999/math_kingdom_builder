@@ -7,6 +7,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/router/app_router.dart';
+import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../data/models/kingdom_state.dart';
 import 'kingdom_service.dart';
@@ -31,10 +32,12 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
   bool _isLoading = true;
   String? _selectedZoneId;
   Size _mapViewportSize = Size.zero;
+  int _musicRequestToken = 0;
 
   @override
   void initState() {
     super.initState();
+    _playAmbientMusic(delayed: true);
     _refreshKingdom();
   }
 
@@ -50,14 +53,42 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
 
   @override
   void didPopNext() {
+    _playAmbientMusic(delayed: true);
     _refreshKingdom();
+  }
+
+  @override
+  void didPush() {
+    _playAmbientMusic(delayed: true);
+  }
+
+  @override
+  void didPushNext() {
+    _stopAmbientMusic();
   }
 
   @override
   void dispose() {
     appRouteObserver.unsubscribe(this);
+    _stopAmbientMusic();
     _mapController.dispose();
     super.dispose();
+  }
+
+  void _playAmbientMusic({bool delayed = false}) {
+    final requestToken = ++_musicRequestToken;
+    Future<void>.delayed(
+      delayed ? const Duration(milliseconds: 180) : Duration.zero,
+      () {
+        if (!mounted || requestToken != _musicRequestToken) return;
+        AppAudioService.instance.playKingdomMusic();
+      },
+    );
+  }
+
+  void _stopAmbientMusic() {
+    _musicRequestToken++;
+    AppAudioService.instance.stopBackgroundMusic();
   }
 
   Future<void> _refreshKingdom() async {
@@ -138,10 +169,12 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
     if (_selectedZoneId != null && _selectedZoneId != zone.id) {
       setState(() => _selectedZoneId = zone.id);
     }
+    _stopAmbientMusic();
     context.push(zone.route);
   }
 
   void _goBack() {
+    _stopAmbientMusic();
     if (Navigator.of(context).canPop()) {
       context.pop();
       return;

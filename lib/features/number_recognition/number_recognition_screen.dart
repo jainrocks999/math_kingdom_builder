@@ -23,6 +23,9 @@ class FindCorrectNumberScreen extends StatefulWidget {
 
 class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
     with TickerProviderStateMixin, RouteAware {
+  static const _postSuccessPause = Duration(milliseconds: 250);
+  static const _speechSettleDelay = Duration(milliseconds: 80);
+
   late final FlutterTts _flutterTts;
   late final Future<void> _ttsReady;
   late final AnimationController _speakerPulseController;
@@ -56,6 +59,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
 
   int _musicRequestToken = 0;
   int _autoAdvanceToken = 0;
+  int _speechRequestToken = 0;
   int _currentRoundIndex = 0;
   List<int> _currentOptions = const [];
   int? _selectedOptionIndex;
@@ -100,6 +104,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
 
   Future<void> _initTts() async {
     await TtsVoiceHelper.configureSharedAudio(_flutterTts);
+    await _flutterTts.awaitSpeakCompletion(true);
     await _flutterTts.setVolume(1.0);
     await TtsVoiceHelper.applyPreferredSpeechRate(
       _flutterTts,
@@ -112,18 +117,6 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
       locale: 'en-IN',
       fallbackLocales: const ['en-US', 'en-GB'],
     );
-    _flutterTts.setCompletionHandler(() {
-      if (!mounted) return;
-      setState(() => _isSpeaking = false);
-    });
-    _flutterTts.setErrorHandler((_) {
-      if (!mounted) return;
-      setState(() => _isSpeaking = false);
-    });
-    _flutterTts.setCancelHandler(() {
-      if (!mounted) return;
-      setState(() => _isSpeaking = false);
-    });
   }
 
   List<int> _buildRoundOrder(int totalItems) {
@@ -155,6 +148,12 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
   void _stopAllAudioAndSpeech() {
     _stopScreenMusic();
     AppAudioService.instance.stopCelebrationMusic();
+    _speechRequestToken++;
+    if (mounted && _isSpeaking) {
+      setState(() => _isSpeaking = false);
+    } else {
+      _isSpeaking = false;
+    }
     _flutterTts.stop();
   }
 
@@ -185,52 +184,71 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
   }
 
   Future<void> _speakCurrentPrompt() async {
-    await _ttsReady;
-    if (_isSpeaking) {
-      await _flutterTts.stop();
-    }
-
-    setState(() => _isSpeaking = true);
-    await TtsVoiceHelper.applyPreferredVoice(
-      _flutterTts,
+    await _speakText(
+      _currentNumber.word,
       locale: _currentSystem.locale,
       fallbackLocales: const ['en-IN', 'en-US', 'en-GB'],
-    );
-    await TtsVoiceHelper.applyPreferredSpeechRate(
-      _flutterTts,
       normalRate: 0.42,
       slowRate: 0.3,
     );
-    await _flutterTts.speak(_currentNumber.word);
   }
 
   Future<void> _speakCorrectAppreciation() async {
-    await _ttsReady;
-    await _flutterTts.stop();
-    setState(() => _isSpeaking = true);
-    await TtsVoiceHelper.applyPreferredVoice(
-      _flutterTts,
+    await _speakText(
+      'Amazing! It is ${_currentNumber.word}.',
       locale: 'en-IN',
       fallbackLocales: const ['en-US', 'en-GB'],
-    );
-    await TtsVoiceHelper.applyPreferredSpeechRate(
-      _flutterTts,
       normalRate: 0.44,
       slowRate: 0.3,
     );
-    await _flutterTts.speak('Amazing! It is ${_currentNumber.word}.');
   }
 
-  void _scheduleAutoAdvance() {
-    final requestToken = ++_autoAdvanceToken;
-    Future<void>.delayed(const Duration(milliseconds: 1500), () {
-      if (!mounted || requestToken != _autoAdvanceToken) return;
-      if (_currentRoundIndex == _currentSystem.numbers.length - 1) {
-        _showCompletionCelebration();
-      } else {
-        _nextNumber();
+  Future<void> _speakText(
+    String text, {
+    required String locale,
+    required List<String> fallbackLocales,
+    required double normalRate,
+    required double slowRate,
+  }) async {
+    final token = ++_speechRequestToken;
+    await _ttsReady;
+    if (!mounted || token != _speechRequestToken) return;
+    await _flutterTts.stop();
+    if (!mounted || token != _speechRequestToken) return;
+    await Future<void>.delayed(_speechSettleDelay);
+    if (!mounted || token != _speechRequestToken) return;
+    setState(() => _isSpeaking = true);
+    await TtsVoiceHelper.applyPreferredVoice(
+      _flutterTts,
+      locale: locale,
+      fallbackLocales: fallbackLocales,
+    );
+    await TtsVoiceHelper.applyPreferredSpeechRate(
+      _flutterTts,
+      normalRate: normalRate,
+      slowRate: slowRate,
+    );
+    if (!mounted || token != _speechRequestToken) return;
+    try {
+      await _flutterTts.speak(text);
+    } finally {
+      if (mounted && token == _speechRequestToken) {
+        setState(() => _isSpeaking = false);
       }
-    });
+    }
+  }
+
+  Future<void> _advanceAfterCorrectAnswer() async {
+    final requestToken = ++_autoAdvanceToken;
+    await _speakCorrectAppreciation();
+    if (!mounted || requestToken != _autoAdvanceToken) return;
+    await Future<void>.delayed(_postSuccessPause);
+    if (!mounted || requestToken != _autoAdvanceToken) return;
+    if (_currentRoundIndex == _currentSystem.numbers.length - 1) {
+      _showCompletionCelebration();
+    } else {
+      _nextNumber();
+    }
   }
 
   void _handleAnswerTap(int optionIndex) {
@@ -254,8 +272,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
       HapticFeedback.mediumImpact();
       _cardBounceController.forward(from: 0);
       _feedbackAudio.playSfx('sfx/correct.mp3');
-      _speakCorrectAppreciation();
-      _scheduleAutoAdvance();
+      _advanceAfterCorrectAnswer();
     } else {
       HapticFeedback.lightImpact();
       _feedbackAudio.playWrongFeedback();
@@ -273,21 +290,13 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
   }
 
   Future<void> _speakWrongAnswerHint() async {
-    await _ttsReady;
-    await _flutterTts.stop();
-    setState(() => _isSpeaking = true);
-    await TtsVoiceHelper.applyPreferredVoice(
-      _flutterTts,
+    await _speakText(
+      'Try again. Tap the speaker if you want to hear it again.',
       locale: 'en-IN',
       fallbackLocales: const ['en-US', 'en-GB'],
-    );
-    await TtsVoiceHelper.applyPreferredSpeechRate(
-      _flutterTts,
       normalRate: 0.42,
       slowRate: 0.3,
     );
-    await _flutterTts
-        .speak('Try again. Tap the speaker if you want to hear it again.');
   }
 
   void _nextNumber() {
@@ -310,7 +319,10 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
     if (_currentRoundIndex == 0) return;
 
     _autoAdvanceToken++;
+    _speechRequestToken++;
+    _flutterTts.stop();
     setState(() {
+      _isSpeaking = false;
       _currentRoundIndex--;
     });
     _prepareQuestion(autoSpeak: false);
@@ -374,6 +386,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
     appRouteObserver.unsubscribe(this);
     _musicRequestToken++;
     _autoAdvanceToken++;
+    _speechRequestToken++;
     _stopAllAudioAndSpeech();
     _speakerPulseController.dispose();
     _cardBounceController.dispose();

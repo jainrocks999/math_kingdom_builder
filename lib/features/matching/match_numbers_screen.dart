@@ -36,6 +36,8 @@ class MatchNumbersScreen extends StatefulWidget {
 class _MatchNumbersScreenState extends State<MatchNumbersScreen>
     with TickerProviderStateMixin, RouteAware {
   static const int _totalRounds = 10;
+  static const _postSuccessPause = Duration(milliseconds: 250);
+  static const _speechSettleDelay = Duration(milliseconds: 80);
 
   late final FlutterTts _tts;
   late final Future<void> _ttsReady;
@@ -48,6 +50,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
   late List<_MatchRound> _rounds;
   int _musicRequestToken = 0;
   int _autoAdvanceToken = 0;
+  int _speechRequestToken = 0;
   int _roundIndex = 0;
   int? _selectedCount;
   bool _answerLocked = false;
@@ -83,6 +86,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
 
   Future<void> _configureTts() async {
     await TtsVoiceHelper.configureSharedAudio(_tts);
+    await _tts.awaitSpeakCompletion(true);
     await TtsVoiceHelper.applyPreferredVoice(
       _tts,
       locale: 'en-IN',
@@ -171,33 +175,42 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
   void _stopAllAudioAndSpeech() {
     _stopScreenMusic();
     AppAudioService.instance.stopCelebrationMusic();
+    _speechRequestToken++;
     _tts.stop();
   }
 
   Future<void> _speakPrompt() async {
-    await _ttsReady;
-    await _tts.stop();
     final label = _correctCount == 1 ? _theme.singular : _theme.plural;
-    await _tts.speak('Tap the group with $_correctCount $label.');
+    await _speakText('Tap the group with $_correctCount $label.');
   }
 
   Future<void> _speakCorrectPraise() async {
-    await _ttsReady;
-    await _tts.stop();
     final label = _correctCount == 1 ? _theme.singular : _theme.plural;
-    await _tts.speak('Great matching! $_correctCount $label.');
+    await _speakText('Great matching! $_correctCount $label.');
   }
 
-  void _scheduleAutoAdvance() {
+  Future<void> _speakText(String text) async {
+    final token = ++_speechRequestToken;
+    await _ttsReady;
+    if (!mounted || token != _speechRequestToken) return;
+    await _tts.stop();
+    if (!mounted || token != _speechRequestToken) return;
+    await Future<void>.delayed(_speechSettleDelay);
+    if (!mounted || token != _speechRequestToken) return;
+    await _tts.speak(text);
+  }
+
+  Future<void> _advanceAfterCorrectAnswer() async {
     final requestToken = ++_autoAdvanceToken;
-    Future<void>.delayed(const Duration(milliseconds: 1400), () {
-      if (!mounted || requestToken != _autoAdvanceToken) return;
-      if (_roundIndex == _totalRounds - 1) {
-        _showFinalCelebration();
-      } else {
-        _nextRound();
-      }
-    });
+    await _speakCorrectPraise();
+    if (!mounted || requestToken != _autoAdvanceToken) return;
+    await Future<void>.delayed(_postSuccessPause);
+    if (!mounted || requestToken != _autoAdvanceToken) return;
+    if (_roundIndex == _totalRounds - 1) {
+      _showFinalCelebration();
+    } else {
+      _nextRound();
+    }
   }
 
   void _handleOptionTap(int option) {
@@ -217,8 +230,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
       HapticFeedback.mediumImpact();
       _numberPulseController.forward(from: 0);
       _feedbackAudio.playSfx('sfx/correct.mp3');
-      _speakCorrectPraise();
-      _scheduleAutoAdvance();
+      _advanceAfterCorrectAnswer();
     } else {
       HapticFeedback.heavyImpact();
       _feedbackAudio.playWrongFeedback();
@@ -239,6 +251,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
       return;
     }
     _autoAdvanceToken++;
+    _speechRequestToken++;
     setState(() {
       _roundIndex++;
       _prepareRound();
@@ -307,6 +320,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
     appRouteObserver.unsubscribe(this);
     _musicRequestToken++;
     _autoAdvanceToken++;
+    _speechRequestToken++;
     _stopAllAudioAndSpeech();
     _numberPulseController.dispose();
     _celebrationController.dispose();

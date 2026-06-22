@@ -2,7 +2,7 @@
 
 **File:** `lib/features/mini_quiz/mini_quiz_screen.dart`  
 **Route:** `/mini-quiz`
-**Status:** Implemented with deferred celebration extraction polish (2026-06-19)
+**Status:** Implemented with shared completion card (2026-06-20)
 
 ## Current purpose
 
@@ -18,7 +18,7 @@
 
 ## Current issues
 
-- Celebration modal card still local to this screen
+- Celebration modal now reuses a shared completion card
 
 ## Priority: P1 | Complexity: High
 
@@ -48,7 +48,6 @@
 
 ## Deferred
 
-- [ ] Extract final celebration modal card itself into a reusable shared widget
 
 ## Assets
 

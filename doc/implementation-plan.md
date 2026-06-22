@@ -139,3 +139,8 @@ Phased rollout with scope boundaries and testing.
 - [ ] No leak warnings after 10 screen pushes
 - [ ] Offline cold start
 - [ ] Full Start Learning path completion
+
+Automated regression baseline on `2026-06-20`:
+- `flutter analyze` passed
+- `flutter test` passed
+- Manual release checklist: [release-regression-checklist.md](./release-regression-checklist.md)

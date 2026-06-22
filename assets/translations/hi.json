@@ -1,0 +1,236 @@
+{
+  "meta": {
+    "language_name": "Hindi",
+    "native_language_name": "हिन्दी"
+  },
+  "app": {
+    "title": "मैथ किंगडम बिल्डर",
+    "name": "मैथ किंगडम"
+  },
+  "common": {
+    "skip": "स्किप",
+    "music": "म्यूजिक",
+    "sound_effects": "साउंड इफेक्ट्स",
+    "speech_rate": "बोलने की गति",
+    "normal": "नॉर्मल",
+    "slow": "धीमी",
+    "today": "आज",
+    "stars": {
+      "one": "{} स्टार",
+      "other": "{} स्टार"
+    },
+    "adventures": {
+      "one": "{} एडवेंचर",
+      "other": "{} एडवेंचर"
+    },
+    "seconds": {
+      "one": "{} सेकंड",
+      "other": "{} सेकंड"
+    }
+  },
+  "splash": {
+    "skip": "स्किप",
+    "title": "मैथ किंगडम"
+  },
+  "onboarding": {
+    "hero_title": "मैथ किंगडम ✨",
+    "hero_subtitle": "गिनो, जोड़ो, खोजो और अपना कैंडी कैसल बढ़ाओ!",
+    "sunny_badge": "मज़ेदार एडवेंचर्स!",
+    "swipe_hint": "और सरप्राइज़ देखने के लिए कार्ड स्वाइप करें!",
+    "current_step": "अभी का स्टेप",
+    "go_to_step": "इस स्टेप पर जाएँ",
+    "magic_step": "मैजिक स्टेप {step}",
+    "skip_onboarding": "ऑनबोर्डिंग स्किप करें",
+    "cta": {
+      "start_learning": "सीखना शुरू करें",
+      "next_adventure": "अगला एडवेंचर",
+      "start_subtitle": "होम कैसल में जाएँ और शुरू करें",
+      "next_subtitle": "अगला जादुई सरप्राइज़ देखें"
+    },
+    "pages": {
+      "1": {
+        "title": "अपना ड्रीम किंगडम बनाओ",
+        "description": "प्यारे मैथ मिशन सॉल्व करो, कॉइन जीतों और कैसल के हिस्से एक-एक करके अनलॉक करो।"
+      },
+      "2": {
+        "title": "मज़ेदार मैथ",
+        "description": "छोटे बच्चों के लिए बने खेल-खेल में गिनती, ट्रेसिंग और सुनकर सीखने वाले लेसन।"
+      },
+      "3": {
+        "title": "चमकदार रिवॉर्ड्स पाओ",
+        "description": "स्टार्स कमाओ, छोटी जीतों का जश्न मनाओ और सबको अपना बढ़ता हुआ मैथ किंगडम दिखाओ।"
+      }
+    }
+  },
+  "home": {
+    "hero_title": "मैथ किंगडम ✨",
+    "hero_subtitle": "गिनो, जोड़ो, खोजो और अपना कैंडी कैसल बढ़ाओ!",
+    "sunny_badge": "मज़ेदार एडवेंचर्स!",
+    "start_learning_title": "सीखना शुरू करें!",
+    "start_learning_subtitle": "सारे मैथ एडवेंचर्स एक ही जगह",
+    "choose_quest_title": "एक क्वेस्ट चुनें 🗺️",
+    "choose_quest_subtitle": "एक छोटा एडवेंचर चुनो और मज़ा जारी रखो!",
+    "coming_soon": "जल्द",
+    "featured_actions": {
+      "start_learning": {
+        "title": "सीखना शुरू करें",
+        "subtitle": "नंबर मैजिक और मज़ेदार काउंटिंग"
+      },
+      "kingdom_map": {
+        "title": "किंगडम मैप",
+        "subtitle": "कैसल घूमें और नई जगहें अनलॉक करें"
+      },
+      "sticker_album": {
+        "title": "स्टिकर एल्बम",
+        "subtitle": "स्टार्स, स्टिकर्स और चमकदार रिवॉर्ड्स"
+      },
+      "parent_zone": {
+        "title": "पैरेंट ज़ोन",
+        "subtitle": "सेटिंग्स, प्रोग्रेस और टूल्स"
+      }
+    },
+    "quests": {
+      "counting": {
+        "label": "काउंटिंग",
+        "description": "1-20 तक ऑब्जेक्ट्स और नंबर्स गिनो"
+      },
+      "tracing": {
+        "label": "ट्रेसिंग",
+        "description": "नंबर सुंदर तरीके से ट्रेस और लिखो"
+      },
+      "matching": {
+        "label": "मैचिंग",
+        "description": "नंबर को उसके सही ग्रुप से मिलाओ"
+      },
+      "math_operations": {
+        "label": "मैथ ऑपरेशन्स",
+        "description": "जोड़, घटाव, गुणा और भाग सीखो"
+      },
+      "sequencing": {
+        "label": "सीक्वेंसिंग",
+        "description": "नंबर सही क्रम में लगाओ"
+      },
+      "patterns": {
+        "label": "पैटर्न्स",
+        "description": "मैजिक पैटर्न पहचानो और पूरा करो"
+      }
+    },
+    "error": {
+      "title": "ओह! होम को फिर से लोड करना होगा।",
+      "subtitle": "नीचे टैप करें, हम आपके लर्निंग कार्ड्स फिर से लोड करेंगे।",
+      "button": "फिर कोशिश करें"
+    },
+    "daily": {
+      "reward_earned": "डेली बोनस मिल गया!",
+      "challenge_complete": "{title} पूरा हुआ!",
+      "daily_challenge_complete": "डेली चैलेंज पूरा हुआ!",
+      "daily_goal_complete": "आज का गोल पूरा हुआ!",
+      "start_today_challenge": "आज का चैलेंज शुरू करें",
+      "play_challenge": "{title} खेलें",
+      "adventures_done": {
+        "one": "{} एडवेंचर पूरा",
+        "other": "{} एडवेंचर पूरे"
+      },
+      "reward_added_today": "+{stars} स्टार्स आज के एडवेंचर में जुड़ गए हैं।",
+      "reward_added_for_challenge": "{title} के लिए +{stars} स्टार्स जुड़े।",
+      "challenge_bonus_today": "आपने आज का चैलेंज पूरा किया और बोनस अनलॉक किया।",
+      "challenge_bonus_named": "आपने {title} पूरा किया और डेली बोनस अनलॉक किया।",
+      "streak_glowing": "आपकी {days}-दिन की स्ट्रीक चमक रही है।",
+      "goal_complete_keep_going": "आज का गोल पूरा हो गया। ऐसे ही चलते रहो!",
+      "challenge_complete_keep_going": "आपने {title} पूरा किया। ऐसे ही चलते रहो!",
+      "remaining_to_crown": "आज का क्राउन पाने के लिए {count} और बाकी",
+      "remaining_to_goal": "{subtitle} आज का गोल पूरा करने के लिए {count} और बाकी।",
+      "badge_claimed": "⭐ +{stars} मिल गए",
+      "badge_daily": "{emoji} डेली चैलेंज"
+    }
+  },
+  "settings": {
+    "title": "सेटिंग्स",
+    "loading_subtitle": "आपके कंट्रोल्स तैयार किए जा रहे हैं।",
+    "hero_badge": "पैरेंट फ्रेंडली कंट्रोल्स",
+    "hero_title": "बच्चे के खेलने से पहले ऐप को अपनी पसंद से सेट करें।",
+    "hero_subtitle": "यह पहला वर्ज़न उन कंट्रोल्स पर फोकस करता है जो अभी काम करते हैं। अगला कदम यहीं भाषा जोड़ना है।",
+    "language_title": "भाषा",
+    "language_subtitle": "JSON आधारित ट्रांसलेशन्स से ऐप भाषा बदलें। नई भाषा की फ़ाइल यहाँ अपने आप दिखेगी।",
+    "active_child_title": "एक्टिव बच्चा",
+    "active_child_subtitle": "अगले लर्निंग सेशन के लिए किस बच्चे की प्रोफ़ाइल एक्टिव रहेगी, चुनें।",
+    "audio_title": "ऑडियो कंट्रोल्स",
+    "audio_subtitle": "ये स्विच पूरे ऐप में म्यूजिक, साउंड इफेक्ट्स और बोले गए प्रॉम्प्ट्स पर लागू होते हैं।",
+    "preview_title": "प्रीव्यू और रीसेट",
+    "preview_subtitle": "मौजूदा साउंड सेटिंग्स ट्राय करें या जल्दी से डिफ़ॉल्ट पर वापस जाएँ।",
+    "coming_next_title": "अगला कदम",
+    "coming_next_subtitle": "अगले चरण में भाषा और आवाज़ का चयन इसी स्क्रीन में आसानी से जोड़ा जा सकता है।",
+    "music_subtitle": "होम और लर्निंग स्क्रीन पर बैकग्राउंड ट्रैक्स",
+    "sfx_subtitle": "सही, गलत और रिवॉर्ड वाले फीडबैक साउंड्स",
+    "voice_preview": "आवाज़ प्रीव्यू सुनें",
+    "voice_preview_stop": "आवाज़ प्रीव्यू रोकें",
+    "voice_preview_message": "नमस्ते। मैथ किंगडम आज के एडवेंचर के लिए तैयार है।",
+    "success_sound_preview": "सक्सेस साउंड चलाएँ",
+    "reset_defaults": "डिफ़ॉल्ट पर रीसेट करें",
+    "resetting": "रीसेट हो रहा है...",
+    "reset_success": "सेटिंग्स डिफ़ॉल्ट मानों पर रीसेट हो गईं।",
+    "coming_next_body": "अगले चरण में भाषा चयन, वॉइस एक्सेंट और बोले गए निर्देशों के विकल्प यहाँ जोड़े जा सकते हैं।",
+    "parent_controls_title": "पैरेंट कंट्रोल्स",
+    "parent_controls_subtitle": "ये टूल्स इसलिए उपलब्ध हैं क्योंकि आपने सेटिंग्स को पैरेंट डैशबोर्ड से खोला है।",
+    "parent_pin_active": "पैरेंट पिन सक्रिय है",
+    "parent_pin_missing": "पैरेंट पिन सेट नहीं है",
+    "parent_pin_update_hint": "पैरेंट डैशबोर्ड खोलने के लिए उपयोग होने वाला 4-अंकों का पिन अपडेट करें।",
+    "parent_pin_create_hint": "केवल पैरेंट के लिए 4-अंकों का पिन बनाएँ।",
+    "new_parent_pin": "नया पैरेंट पिन",
+    "parent_pin": "पैरेंट पिन",
+    "parent_pin_invalid": "कृपया पैरेंट पिन के लिए ठीक 4 अंक दर्ज करें।",
+    "parent_pin_updated": "पैरेंट पिन सफलतापूर्वक अपडेट हो गया।",
+    "update_parent_pin": "पैरेंट पिन अपडेट करें",
+    "save_parent_pin": "पैरेंट पिन सेव करें"
+  },
+  "parent_dashboard": {
+    "title": "पैरेंट डैशबोर्ड",
+    "loading_subtitle": "फैमिली प्रोग्रेस लोड हो रही है।",
+    "set_pin_title": "पैरेंट पिन सेट करें",
+    "zone_title": "पैरेंट ज़ोन",
+    "set_pin_subtitle": "4-अंकों का पिन बनाइए ताकि यह एरिया केवल बड़े लोग खोल सकें।",
+    "zone_subtitle": "लर्निंग प्रोग्रेस देखने के लिए अपना पैरेंट पिन दर्ज करें।",
+    "pin_enter_all": "कृपया सभी 4 अंक भरें।",
+    "pin_wait_before_retry": "दोबारा कोशिश करने से पहले {seconds} इंतज़ार करें।",
+    "pin_locked": "पिन {seconds} के लिए लॉक है।",
+    "please_wait": "कृपया इंतज़ार करें...",
+    "save_pin": "पिन सेव करें",
+    "unlock_dashboard": "डैशबोर्ड खोलें",
+    "pin_too_many_tries": "बहुत ज़्यादा कोशिशें। {seconds} इंतज़ार करें।",
+    "pin_did_not_match": "यह पिन मैच नहीं हुआ। फिर से कोशिश करें।",
+    "family_progress": "फैमिली प्रोग्रेस",
+    "child_progress": "{name} की प्रोग्रेस",
+    "child_profile_title": "बच्चे की प्रोफ़ाइल",
+    "child_profile_subtitle": "अगले लर्निंग सेशन के लिए कौन सा बच्चा एक्टिव रहेगा, चुनें।",
+    "audio_title": "ऑडियो सेटिंग्स",
+    "audio_subtitle": "ये कंट्रोल्स म्यूजिक, साउंड इफेक्ट्स और बोले गए प्रॉम्प्ट्स पर लागू होते हैं।",
+    "summary_title": "फैमिली समरी",
+    "summary_subtitle": "आज और मौजूदा स्ट्रीक का एक आसान पैरेंट-फ्रेंडली स्नैपशॉट।",
+    "activity_levels_title": "एक्टिविटी लेवल्स",
+    "activity_levels_subtitle": "कोई स्कोर नहीं, सिर्फ छोटे बच्चों के लिए हल्के-फुल्के प्रोग्रेस लेबल्स।",
+    "open_start_learning": "स्टार्ट लर्निंग खोलें",
+    "sessions_and_stars": "{sessions} सेशन • {stars} स्टार्स",
+    "summary_body": "इस हफ्ते का फोकस: {streak} को जारी रखें, आज {today} एडवेंचर सेलिब्रेट करें, और अब तक मिले {stars} स्टार्स पर आगे बढ़ें।",
+    "streak_label": "{count}-दिन की स्ट्रीक",
+    "mastery": {
+      "exploring": "शुरुआत",
+      "practicing": "अभ्यास",
+      "confident": "आत्मविश्वास"
+    },
+    "modules": {
+      "addition": "जोड़",
+      "subtraction": "घटाव",
+      "multiplication": "गुणा",
+      "division": "भाग",
+      "sequencing": "क्रम",
+      "patterns": "पैटर्न्स",
+      "learn_numbers": "नंबर सीखें",
+      "trace_numbers": "नंबर ट्रेस करें",
+      "count_objects": "ऑब्जेक्ट्स गिनें",
+      "find_correct_number": "सही नंबर खोजें",
+      "match_numbers": "नंबर मिलाओ",
+      "mini_quiz": "मिनी क्विज़"
+    },
+    "open_full_settings": "पूरी सेटिंग्स खोलें"
+  }
+}

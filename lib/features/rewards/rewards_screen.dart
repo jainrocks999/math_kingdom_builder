@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
@@ -9,6 +10,7 @@ import '../../core/constants/app_typography.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
+import '../../core/utils/tts_voice_helper.dart';
 import '../../shared/widgets/celebration_bear.dart';
 import '../../shared/widgets/game_back_button.dart';
 import '../../shared/widgets/kid_loading_view.dart';
@@ -201,6 +203,8 @@ class _RewardsScreenState extends State<RewardsScreen>
   Map<String, int> _completionCounts = <String, int>{};
   int _musicRequestToken = 0;
   int _currentStars = 0;
+  late final FlutterTts _detailTts;
+  late final Future<void> _detailTtsReady;
   _RewardCategory _selectedCategory = _RewardCategory.stickers;
   int _selectedIndex = 0;
   bool _showClaimCelebration = false;
@@ -298,6 +302,54 @@ class _RewardsScreenState extends State<RewardsScreen>
     });
   }
 
+  Future<void> _configureDetailTts() async {
+    await TtsVoiceHelper.configureSharedAudio(_detailTts);
+    await TtsVoiceHelper.applyPreferredVoice(
+      _detailTts,
+      locale: 'en-IN',
+      fallbackLocales: const ['en-US', 'en-GB'],
+    );
+    await TtsVoiceHelper.applyPreferredSpeechRate(
+      _detailTts,
+      normalRate: 0.4,
+      slowRate: 0.3,
+    );
+    await _detailTts.setPitch(1.04);
+    await _detailTts.setVolume(1.0);
+  }
+
+  Future<void> _speakRewardDetail(_RewardItem reward) async {
+    await _detailTtsReady;
+    await _detailTts.stop();
+    await _detailTts.speak(
+      '${reward.title}. ${reward.subtitle}. ${reward.description}',
+    );
+  }
+
+  Future<void> _openRewardDetailSheet(_RewardItem reward) async {
+    HapticFeedback.selectionClick();
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final unlocked = _isUnlocked(reward);
+        final claimed = _isClaimed(reward);
+        return _RewardDetailSheet(
+          reward: reward,
+          unlocked: unlocked,
+          claimed: claimed,
+          onSpeakTap: () {
+            HapticFeedback.selectionClick();
+            _speakRewardDetail(reward);
+          },
+        );
+      },
+    );
+    await _detailTts.stop();
+  }
+
   void _playScreenMusic({bool delayed = false}) {
     final requestToken = ++_musicRequestToken;
     Future<void>.delayed(
@@ -359,6 +411,8 @@ class _RewardsScreenState extends State<RewardsScreen>
   @override
   void initState() {
     super.initState();
+    _detailTts = FlutterTts();
+    _detailTtsReady = _configureDetailTts();
     _collectAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
@@ -399,6 +453,7 @@ class _RewardsScreenState extends State<RewardsScreen>
     appRouteObserver.unsubscribe(this);
     AppAudioService.instance.stopCelebrationMusic();
     _stopScreenMusic();
+    _detailTts.stop();
     _collectAnimationController.dispose();
     super.dispose();
   }
@@ -987,6 +1042,20 @@ class _RewardsScreenState extends State<RewardsScreen>
             ),
           ],
         ),
+        if (reward.category == _RewardCategory.stickers) ...[
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: _ActionButton(
+              label: 'Sticker Card',
+              icon: Icons.style_rounded,
+              backgroundColor: reward.softColor,
+              foregroundColor: reward.color,
+              borderColor: reward.color.withValues(alpha: 0.35),
+              onTap: () => _openRewardDetailSheet(reward),
+            ),
+          ),
+        ],
       ],
     );
 
@@ -1259,6 +1328,160 @@ class _CollectStarBurst extends StatelessWidget {
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RewardDetailSheet extends StatelessWidget {
+  const _RewardDetailSheet({
+    required this.reward,
+    required this.unlocked,
+    required this.claimed,
+    required this.onSpeakTap,
+  });
+
+  final _RewardItem reward;
+  final bool unlocked;
+  final bool claimed;
+  final VoidCallback onSpeakTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final statusText = claimed
+        ? 'Collected and ready to admire'
+        : unlocked
+            ? 'Unlocked and ready to collect'
+            : 'Keep earning stars to unlock this sticker';
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 18),
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(
+              color: reward.color.withValues(alpha: 0.24),
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: reward.shadowColor.withValues(alpha: 0.18),
+                blurRadius: 28,
+                offset: const Offset(0, 16),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Sticker Card',
+                      style: AppTypography.h2.copyWith(
+                        color: const Color(0xFF1A1060),
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close_rounded),
+                    color: const Color(0xFF5B6676),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: reward.softColor.withValues(alpha: 0.88),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      reward.emoji,
+                      style: const TextStyle(fontSize: 64),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      reward.title,
+                      textAlign: TextAlign.center,
+                      style: AppTypography.h2.copyWith(
+                        color: const Color(0xFF1A1060),
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      reward.subtitle,
+                      textAlign: TextAlign.center,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: reward.color,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: claimed
+                      ? AppColors.correctFeedback.withValues(alpha: 0.85)
+                      : reward.softColor.withValues(alpha: 0.52),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: claimed
+                        ? AppColors.gardenGreen.withValues(alpha: 0.32)
+                        : reward.color.withValues(alpha: 0.24),
+                  ),
+                ),
+                child: Text(
+                  statusText,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: claimed ? AppColors.gardenGreen : reward.color,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                reward.description,
+                style: AppTypography.body.copyWith(
+                  color: const Color(0xFF556172),
+                  fontWeight: FontWeight.w700,
+                  height: 1.45,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _ActionButton(
+                      label: 'Hear Sticker',
+                      icon: Icons.volume_up_rounded,
+                      backgroundColor: reward.color,
+                      foregroundColor: Colors.white,
+                      borderColor: reward.shadowColor,
+                      onTap: onSpeakTap,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

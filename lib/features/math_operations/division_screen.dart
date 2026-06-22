@@ -39,6 +39,8 @@ class DivisionScreen extends StatefulWidget {
 class _DivisionScreenState extends State<DivisionScreen>
     with TickerProviderStateMixin, RouteAware {
   static const _totalRounds = 8;
+  static const _postSuccessPause = Duration(milliseconds: 250);
+  static const _speechSettleDelay = Duration(milliseconds: 80);
 
   late final FlutterTts _tts;
   late final Future<void> _ttsReady;
@@ -52,6 +54,7 @@ class _DivisionScreenState extends State<DivisionScreen>
 
   int _musicRequestToken = 0;
   int _autoAdvanceToken = 0;
+  int _speechRequestToken = 0;
   int _roundIndex = 0;
   int _failedDragCount = 0;
   bool _roundSolved = false;
@@ -81,6 +84,7 @@ class _DivisionScreenState extends State<DivisionScreen>
 
   Future<void> _configureTts() async {
     await TtsVoiceHelper.configureSharedAudio(_tts);
+    await _tts.awaitSpeakCompletion(true);
     await TtsVoiceHelper.applyPreferredVoice(
       _tts,
       locale: 'en-IN',
@@ -162,19 +166,26 @@ class _DivisionScreenState extends State<DivisionScreen>
   }
 
   Future<void> _speakPrompt() async {
-    await _ttsReady;
-    await _tts.stop();
-    await _tts.speak(
+    await _speakText(
       '${_round.total} divided by ${_round.groups} equals what? Share the objects into equal groups.',
     );
   }
 
   Future<void> _speakSuccess() async {
-    await _ttsReady;
-    await _tts.stop();
-    await _tts.speak(
+    await _speakText(
       '${_round.total} divided by ${_round.groups} equals ${_round.quotient}',
     );
+  }
+
+  Future<void> _speakText(String text) async {
+    final token = ++_speechRequestToken;
+    await _ttsReady;
+    if (!mounted || token != _speechRequestToken) return;
+    await _tts.stop();
+    if (!mounted || token != _speechRequestToken) return;
+    await Future<void>.delayed(_speechSettleDelay);
+    if (!mounted || token != _speechRequestToken) return;
+    await _tts.speak(text);
   }
 
   void _placeInBowl(String id, int bowlIndex) {
@@ -206,29 +217,28 @@ class _DivisionScreenState extends State<DivisionScreen>
     return true;
   }
 
-  void _completeRound() {
+  Future<void> _completeRound() async {
     if (_roundSolved || _showCelebration) return;
     setState(() => _roundSolved = true);
     HapticFeedback.mediumImpact();
     _successPulseController.forward(from: 0);
     _feedbackAudio.playSfx('sfx/correct.mp3');
-    _speakSuccess();
-
     final token = ++_autoAdvanceToken;
-    Future<void>.delayed(const Duration(milliseconds: 1400), () {
-      if (!mounted || token != _autoAdvanceToken) return;
-      if (_roundIndex == _totalRounds - 1) {
-        _showFinalCelebration();
-      } else {
-        setState(() {
-          _roundIndex++;
-          _roundSolved = false;
-          _failedDragCount = 0;
-          _resetPlacements();
-        });
-        _speakPrompt();
-      }
-    });
+    await _speakSuccess();
+    if (!mounted || token != _autoAdvanceToken) return;
+    await Future<void>.delayed(_postSuccessPause);
+    if (!mounted || token != _autoAdvanceToken) return;
+    if (_roundIndex == _totalRounds - 1) {
+      _showFinalCelebration();
+    } else {
+      setState(() {
+        _roundIndex++;
+        _roundSolved = false;
+        _failedDragCount = 0;
+        _resetPlacements();
+      });
+      _speakPrompt();
+    }
   }
 
   void _handleFailedDrag() {
@@ -267,6 +277,7 @@ class _DivisionScreenState extends State<DivisionScreen>
 
   void _goBack() {
     _autoAdvanceToken++;
+    _speechRequestToken++;
     AppAudioService.instance.stopCelebrationMusic();
     _stopScreenMusic();
     context.pop();
@@ -298,6 +309,7 @@ class _DivisionScreenState extends State<DivisionScreen>
     appRouteObserver.unsubscribe(this);
     _musicRequestToken++;
     _autoAdvanceToken++;
+    _speechRequestToken++;
     AppAudioService.instance.stopCelebrationMusic();
     AppAudioService.instance.stopBackgroundMusic();
     _tts.stop();

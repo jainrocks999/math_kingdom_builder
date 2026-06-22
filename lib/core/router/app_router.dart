@@ -16,6 +16,7 @@ import 'package:math_kingdom_builder/features/parent_dashboard/parent_dashboard_
 import 'package:math_kingdom_builder/features/patterns/patterns_screen.dart';
 import 'package:math_kingdom_builder/features/rewards/rewards_screen.dart';
 import 'package:math_kingdom_builder/features/sequencing/sequencing_screen.dart';
+import 'package:math_kingdom_builder/features/settings/settings_screen.dart';
 import 'package:math_kingdom_builder/onboarding_screen.dart';
 
 import '../../features/home/home_screen.dart';
@@ -46,6 +47,7 @@ class AppRoutes {
   static const kingdom = '/kingdom';
   static const stickers = '/stickers';
   static const parentDashboard = '/parent-dashboard';
+  static const settings = '/settings';
   static const startlearning = '/start-learning';
 }
 
@@ -138,6 +140,12 @@ final GoRouter _appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.parentDashboard,
       builder: (context, state) => const ParentDashboardScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.settings,
+      builder: (context, state) => SettingsScreen(
+        showParentControls: state.uri.queryParameters['source'] == 'parent',
+      ),
     ),
   ],
 );

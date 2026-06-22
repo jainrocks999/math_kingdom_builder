@@ -89,6 +89,9 @@ class AudioService {
       return;
     }
     try {
+      await _sfxPlayer.setPlayerMode(PlayerMode.lowLatency);
+      await _sfxPlayer.setVolume(1.0);
+      await _sfxPlayer.stop();
       await _sfxPlayer.play(AssetSource('audio/$fileName'));
     } catch (e) {
       debugPrint("SFX asset missing: $fileName");

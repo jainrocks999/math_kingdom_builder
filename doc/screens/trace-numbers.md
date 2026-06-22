@@ -2,7 +2,7 @@
 
 **File:** `lib/features/number_tracing/trace_numbers_screen.dart`  
 **Route:** `/tracing`
-**Status:** Implemented with deferred extraction/polish (2026-06-19)
+**Status:** Implemented with auto ghost hint support (2026-06-20)
 
 ## Current purpose
 
@@ -39,7 +39,7 @@ Trace digits 0–9+ with stroke templates, multi-stroke lessons, celebration.
 
 ### New (optional)
 - [x] Clear stroke / eraser button
-- [ ] Ghost stroke hint after 2 failures
+- [x] Ghost stroke hint after 2 failures
 
 ### Kids experience
 - [x] Celebration bear on lesson complete
@@ -63,4 +63,3 @@ All digits traceable; kid-friendly tolerance; stars recorded; fonts consistent; 
 ## Deferred
 
 - Extract `TraceCanvas` / board pieces into smaller widgets when the tracing flow is stable
-- Consider a ghost stroke hint only if real-device testing shows the friendlier tolerance still needs extra support

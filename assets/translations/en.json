@@ -1,0 +1,236 @@
+{
+  "meta": {
+    "language_name": "English",
+    "native_language_name": "English"
+  },
+  "app": {
+    "title": "Math Kingdom Builder",
+    "name": "Math Kingdom"
+  },
+  "common": {
+    "skip": "Skip",
+    "music": "Music",
+    "sound_effects": "Sound Effects",
+    "speech_rate": "Speech Rate",
+    "normal": "Normal",
+    "slow": "Slow",
+    "today": "today",
+    "stars": {
+      "one": "{} star",
+      "other": "{} stars"
+    },
+    "adventures": {
+      "one": "{} adventure",
+      "other": "{} adventures"
+    },
+    "seconds": {
+      "one": "{} second",
+      "other": "{} seconds"
+    }
+  },
+  "splash": {
+    "skip": "Skip",
+    "title": "Math Kingdom"
+  },
+  "onboarding": {
+    "hero_title": "Math Kingdom ✨",
+    "hero_subtitle": "Count, add, explore & grow your candy castle!",
+    "sunny_badge": "Sunny adventures!",
+    "swipe_hint": "Swipe the card to see more surprises!",
+    "current_step": "Current step",
+    "go_to_step": "Go to step",
+    "magic_step": "Magic Step {step}",
+    "skip_onboarding": "Skip onboarding",
+    "cta": {
+      "start_learning": "Start Learning",
+      "next_adventure": "Next Adventure",
+      "start_subtitle": "Enter the home castle and begin",
+      "next_subtitle": "See the next magical surprise"
+    },
+    "pages": {
+      "1": {
+        "title": "Build Your Dream Kingdom",
+        "description": "Solve cute math missions, win coins, and unlock castle parts one by one."
+      },
+      "2": {
+        "title": "Math Made Fun",
+        "description": "Count, trace, and listen through playful lessons made for little learners."
+      },
+      "3": {
+        "title": "Collect Bright Rewards",
+        "description": "Earn stars, celebrate small wins, and show everyone your growing math kingdom."
+      }
+    }
+  },
+  "home": {
+    "hero_title": "Math Kingdom ✨",
+    "hero_subtitle": "Count, add, explore & grow your candy castle!",
+    "sunny_badge": "Sunny adventures!",
+    "start_learning_title": "Start Learning!",
+    "start_learning_subtitle": "All math adventures in one place",
+    "choose_quest_title": "Choose a Quest 🗺️",
+    "choose_quest_subtitle": "Pick a mini adventure and keep the fun going!",
+    "coming_soon": "Soon",
+    "featured_actions": {
+      "start_learning": {
+        "title": "Start Learning",
+        "subtitle": "Number magic & playful counting"
+      },
+      "kingdom_map": {
+        "title": "Kingdom Map",
+        "subtitle": "Visit the castle & unlock places"
+      },
+      "sticker_album": {
+        "title": "Sticker Album",
+        "subtitle": "Stars, stickers & shiny rewards"
+      },
+      "parent_zone": {
+        "title": "Parent Zone",
+        "subtitle": "Settings, progress & tools"
+      }
+    },
+    "quests": {
+      "counting": {
+        "label": "Counting",
+        "description": "Count objects and numbers 1-20"
+      },
+      "tracing": {
+        "label": "Tracing",
+        "description": "Trace and write numbers beautifully"
+      },
+      "matching": {
+        "label": "Matching",
+        "description": "Match numbers to their groups"
+      },
+      "math_operations": {
+        "label": "Math Operations",
+        "description": "Add, subtract, multiply, and divide"
+      },
+      "sequencing": {
+        "label": "Sequencing",
+        "description": "Put numbers in the right order"
+      },
+      "patterns": {
+        "label": "Patterns",
+        "description": "Spot and complete magical patterns"
+      }
+    },
+    "error": {
+      "title": "Oops! Home needs a quick retry.",
+      "subtitle": "Tap below and we will load your learning cards again.",
+      "button": "Try Again"
+    },
+    "daily": {
+      "reward_earned": "Daily bonus earned!",
+      "challenge_complete": "{title} complete!",
+      "daily_challenge_complete": "Daily challenge complete!",
+      "daily_goal_complete": "Daily goal complete!",
+      "start_today_challenge": "Start today's challenge",
+      "play_challenge": "Play {title}",
+      "adventures_done": {
+        "one": "{} adventure done",
+        "other": "{} adventures done"
+      },
+      "reward_added_today": "+{stars} stars have been added to today's adventure.",
+      "reward_added_for_challenge": "+{stars} stars added for {title}.",
+      "challenge_bonus_today": "You cleared today's challenge and unlocked the bonus.",
+      "challenge_bonus_named": "You cleared {title} and unlocked the daily bonus.",
+      "streak_glowing": "Your {days}-day streak is glowing bright.",
+      "goal_complete_keep_going": "You reached today's goal. Keep the magic going!",
+      "challenge_complete_keep_going": "You cleared {title}. Keep the magic going!",
+      "remaining_to_crown": "{count} more to earn today's crown",
+      "remaining_to_goal": "{subtitle} {count} more to finish today's goal.",
+      "badge_claimed": "⭐ +{stars} claimed",
+      "badge_daily": "{emoji} Daily Challenge"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "loading_subtitle": "Preparing your controls.",
+    "hero_badge": "Parent Friendly Controls",
+    "hero_title": "Tune the app before your child starts playing.",
+    "hero_subtitle": "This first version focuses on working controls you can use right now. We can add language next in the same place.",
+    "language_title": "Language",
+    "language_subtitle": "Switch app language using JSON-based translations. New language files appear here automatically.",
+    "active_child_title": "Active Child",
+    "active_child_subtitle": "Choose which child profile should continue the next learning session.",
+    "audio_title": "Audio Controls",
+    "audio_subtitle": "These switches work across the app for music, sound effects, and spoken prompts.",
+    "preview_title": "Preview & Reset",
+    "preview_subtitle": "Try the current sound settings or quickly return to defaults.",
+    "coming_next_title": "Coming Next",
+    "coming_next_subtitle": "Language and voice selection can plug into this screen next without changing the layout.",
+    "music_subtitle": "Background tracks on home and learning screens",
+    "sfx_subtitle": "Correct, wrong, and reward feedback sounds",
+    "voice_preview": "Hear Voice Preview",
+    "voice_preview_stop": "Stop Voice Preview",
+    "voice_preview_message": "Hello grown ups. Math Kingdom is ready for today's adventure.",
+    "success_sound_preview": "Play Success Sound",
+    "reset_defaults": "Reset To Defaults",
+    "resetting": "Resetting...",
+    "reset_success": "Settings reset to default values.",
+    "coming_next_body": "Language selector, voice accent choices, and spoken instruction options can be added here next.",
+    "parent_controls_title": "Parent Controls",
+    "parent_controls_subtitle": "These tools are available because you opened settings from the parent dashboard.",
+    "parent_pin_active": "Parent PIN is active",
+    "parent_pin_missing": "Parent PIN is not set",
+    "parent_pin_update_hint": "Update the 4-digit PIN used to open the parent dashboard.",
+    "parent_pin_create_hint": "Create a 4-digit PIN for parent-only controls.",
+    "new_parent_pin": "New Parent PIN",
+    "parent_pin": "Parent PIN",
+    "parent_pin_invalid": "Please enter exactly 4 digits for the parent PIN.",
+    "parent_pin_updated": "Parent PIN updated successfully.",
+    "update_parent_pin": "Update Parent PIN",
+    "save_parent_pin": "Save Parent PIN"
+  },
+  "parent_dashboard": {
+    "title": "Parent Dashboard",
+    "loading_subtitle": "Loading family progress.",
+    "set_pin_title": "Set Parent PIN",
+    "zone_title": "Parent Zone",
+    "set_pin_subtitle": "Create a 4-digit PIN so only grown-ups can open this area.",
+    "zone_subtitle": "Enter your parent PIN to view learning progress.",
+    "pin_enter_all": "Please enter all 4 digits.",
+    "pin_wait_before_retry": "Please wait {seconds} before trying again.",
+    "pin_locked": "PIN locked for {seconds}.",
+    "please_wait": "Please wait...",
+    "save_pin": "Save PIN",
+    "unlock_dashboard": "Unlock Dashboard",
+    "pin_too_many_tries": "Too many tries. Wait {seconds}.",
+    "pin_did_not_match": "That PIN did not match. Try again.",
+    "family_progress": "Family Progress",
+    "child_progress": "{name}'s Progress",
+    "child_profile_title": "Child Profile",
+    "child_profile_subtitle": "Choose which child is active for the next learning session.",
+    "audio_title": "Audio Settings",
+    "audio_subtitle": "These controls apply to music, sound effects, and spoken prompts.",
+    "summary_title": "Family Summary",
+    "summary_subtitle": "A quick adult-friendly snapshot of today and the current streak.",
+    "activity_levels_title": "Activity Levels",
+    "activity_levels_subtitle": "No scores, only gentle progress labels for young learners.",
+    "open_start_learning": "Open Start Learning",
+    "sessions_and_stars": "{sessions} sessions • {stars} stars",
+    "summary_body": "This week's focus: keep the {streak} alive, celebrate {today} adventures today, and build on {stars} stars earned so far.",
+    "streak_label": "{count}-day streak",
+    "mastery": {
+      "exploring": "Exploring",
+      "practicing": "Practicing",
+      "confident": "Confident"
+    },
+    "modules": {
+      "addition": "Addition",
+      "subtraction": "Subtraction",
+      "multiplication": "Multiplication",
+      "division": "Division",
+      "sequencing": "Sequencing",
+      "patterns": "Patterns",
+      "learn_numbers": "Learn Numbers",
+      "trace_numbers": "Trace Numbers",
+      "count_objects": "Count Objects",
+      "find_correct_number": "Find Number",
+      "match_numbers": "Match Numbers",
+      "mini_quiz": "Mini Quiz"
+    },
+    "open_full_settings": "Open Full Settings"
+  }
+}
