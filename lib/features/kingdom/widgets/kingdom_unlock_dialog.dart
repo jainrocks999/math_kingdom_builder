@@ -1,7 +1,9 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/localization/app_localization.dart';
 import '../../../shared/widgets/celebration_bear.dart';
 import '../kingdom_zone_data.dart';
 
@@ -43,7 +45,7 @@ Future<void> showKingdomUnlockDialog(
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  'New Kingdom Place Unlocked',
+                  context.tr('kingdom.new_place_unlocked'),
                   style: AppTypography.bodySmall.copyWith(
                     color: zone.color,
                     fontWeight: FontWeight.w800,
@@ -56,7 +58,7 @@ Future<void> showKingdomUnlockDialog(
               Text(zone.emoji, style: const TextStyle(fontSize: 38)),
               const SizedBox(height: 8),
               Text(
-                zone.title,
+                AppLocalization.kingdomZone(context, zone.id, 'title'),
                 textAlign: TextAlign.center,
                 style: AppTypography.h2.copyWith(
                   color: const Color(0xFF1E1060),
@@ -65,7 +67,7 @@ Future<void> showKingdomUnlockDialog(
               ),
               const SizedBox(height: 8),
               Text(
-                'Your learning adventures opened a magical new place on the map.',
+                context.tr('kingdom.new_place_message'),
                 textAlign: TextAlign.center,
                 style: AppTypography.body.copyWith(
                   color: const Color(0xFF5A6B7A),
@@ -84,7 +86,7 @@ Future<void> showKingdomUnlockDialog(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     textStyle: AppTypography.button,
                   ),
-                  child: const Text('Explore the Map'),
+                  child: Text(context.tr('kingdom.explore_map')),
                 ),
               ),
             ],

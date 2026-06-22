@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,6 +10,7 @@ import 'core/services/audio_service.dart';
 
 class OnboardingPageData {
   const OnboardingPageData({
+    required this.translationKey,
     required this.title,
     required this.description,
     required this.imageUrl,
@@ -18,6 +20,7 @@ class OnboardingPageData {
     required this.shadowColor,
   });
 
+  final String translationKey;
   final String title;
   final String description;
   final String imageUrl;
@@ -40,6 +43,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<OnboardingPageData> _pages = const [
     OnboardingPageData(
+      translationKey: '1',
       title: 'Build Your Dream Kingdom',
       description:
           'Solve cute math missions, win coins, and unlock castle parts one by one.',
@@ -50,6 +54,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       shadowColor: Color(0xFFC94A18),
     ),
     OnboardingPageData(
+      translationKey: '2',
       title: 'Math Made Fun',
       description:
           'Count, trace, and listen through playful lessons made for little learners.',
@@ -60,6 +65,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       shadowColor: Color(0xFF2AADA4),
     ),
     OnboardingPageData(
+      translationKey: '3',
       title: 'Collect Bright Rewards',
       description:
           'Earn stars, celebrate small wins, and show everyone your growing math kingdom.',
@@ -168,7 +174,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       const SizedBox(height: 18),
                       Text(
-                        'Math Kingdom ✨',
+                        context.tr('onboarding.hero_title'),
                         style: AppTypography.hero.copyWith(
                           fontSize: _heroTitleSize(constraints.maxWidth),
                           color: const Color(0xFF1A1060),
@@ -190,7 +196,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        'Count, add, explore & grow your candy castle!',
+                        context.tr('onboarding.hero_subtitle'),
                         style: AppTypography.body.copyWith(
                           color: const Color(0xFF4A5568),
                           fontSize: 14,
@@ -224,11 +230,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       const SizedBox(height: 18),
                       _OnboardingCtaButton(
                         label: _currentPage == _pages.length - 1
-                            ? 'Start Learning'
-                            : 'Next Adventure',
+                            ? context.tr('onboarding.cta.start_learning')
+                            : context.tr('onboarding.cta.next_adventure'),
                         subtitle: _currentPage == _pages.length - 1
-                            ? 'Enter the home castle and begin'
-                            : 'See the next magical surprise',
+                            ? context.tr('onboarding.cta.start_subtitle')
+                            : context.tr('onboarding.cta.next_subtitle'),
                         color: currentPage.color,
                         shadowColor: currentPage.shadowColor,
                         emoji: currentPage.emoji,
@@ -284,7 +290,7 @@ class _SwipeHintBanner extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Swipe the card to see more surprises!',
+              context.tr('onboarding.swipe_hint'),
               style: AppTypography.bodySmall.copyWith(
                 color: const Color(0xFF4A5568),
                 fontWeight: FontWeight.w700,
@@ -313,7 +319,9 @@ class _PageIndicatorDot extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: isActive ? 'Current step' : 'Go to step',
+      label: isActive
+          ? context.tr('onboarding.current_step')
+          : context.tr('onboarding.go_to_step'),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -433,7 +441,10 @@ class _OnboardingCard extends StatelessWidget {
                   Text(page.emoji, style: const TextStyle(fontSize: 18)),
                   const SizedBox(width: 8),
                   Text(
-                    'Magic Step $step',
+                    context.tr(
+                      'onboarding.magic_step',
+                      namedArgs: {'step': '$step'},
+                    ),
                     style: AppTypography.bodyStrong.copyWith(
                       color: page.color,
                       fontSize: 13,
@@ -473,7 +484,7 @@ class _OnboardingCard extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Text(
-            page.title,
+            context.tr('onboarding.pages.${page.translationKey}.title'),
             style: AppTypography.h1.copyWith(
               fontSize: _titleSize,
               color: const Color(0xFF1A1060),
@@ -485,7 +496,7 @@ class _OnboardingCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            page.description,
+            context.tr('onboarding.pages.${page.translationKey}.description'),
             style: AppTypography.body.copyWith(
               fontSize: _descriptionSize,
               color: const Color(0xFF5A6B7A),
@@ -640,7 +651,7 @@ class _SunnyBadge extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            'Sunny adventures!',
+            context.tr('onboarding.sunny_badge'),
             style: AppTypography.bodyStrong.copyWith(
               color: const Color(0xFFC17A00),
               fontSize: 12,
@@ -662,7 +673,7 @@ class _SkipButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: 'Skip onboarding',
+      label: context.tr('onboarding.skip_onboarding'),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -681,7 +692,7 @@ class _SkipButton extends StatelessWidget {
             ),
             alignment: Alignment.center,
             child: Text(
-              'Skip',
+              context.tr('common.skip'),
               style: AppTypography.bodyStrong.copyWith(
                 color: const Color(0xFF5A6B7A),
                 fontWeight: FontWeight.w800,

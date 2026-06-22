@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -6,22 +7,22 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../StartLearning/start_learning_next_action_button.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/audio_service.dart';
-import '../../core/utils/tts_voice_helper.dart';
 import '../../shared/widgets/celebration_bear.dart';
 
 class _TraceStrokeTemplate {
   const _TraceStrokeTemplate({
     required this.points,
-    required this.prompt,
+    required this.promptKey,
   });
 
   final List<Offset> points;
-  final String prompt;
+  final String promptKey;
 }
 
 class _TraceLesson {
@@ -55,7 +56,8 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
     with SingleTickerProviderStateMixin, RouteAware {
   static const int _maxProgressJump = 6;
   static const int _ghostHintFailureThreshold = 2;
-  static const Duration _autoAdvanceDelay = Duration(milliseconds: 1400);
+  static const Duration _postSuccessPause = Duration(milliseconds: 250);
+  static const Duration _speechSettleDelay = Duration(milliseconds: 80);
 
   final AudioService _audioService = AudioService();
 
@@ -69,7 +71,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       shadowColor: Color(0xFFC94A18),
       strokes: [
         _TraceStrokeTemplate(
-          prompt: 'Make one round loop.',
+          promptKey: 'round_loop',
           points: [
             Offset(0.50, 0.10),
             Offset(0.72, 0.16),
@@ -95,7 +97,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       shadowColor: Color(0xFF2AADA4),
       strokes: [
         _TraceStrokeTemplate(
-          prompt: 'Start at the top and slide down.',
+          promptKey: 'slide_down',
           points: [
             Offset(0.36, 0.28),
             Offset(0.50, 0.12),
@@ -113,7 +115,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       shadowColor: Color(0xFFD4A000),
       strokes: [
         _TraceStrokeTemplate(
-          prompt: 'Curve across the top, then swoop down and slide right.',
+          promptKey: 'curve_top_swoop',
           points: [
             Offset(0.20, 0.25),
             Offset(0.36, 0.12),
@@ -137,7 +139,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       shadowColor: Color(0xFFA888E8),
       strokes: [
         _TraceStrokeTemplate(
-          prompt: 'Make two soft belly curves.',
+          promptKey: 'two_belly_curves',
           points: [
             Offset(0.24, 0.18),
             Offset(0.48, 0.12),
@@ -161,7 +163,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       shadowColor: Color(0xFF2890D0),
       strokes: [
         _TraceStrokeTemplate(
-          prompt: 'Draw the roof line across the middle.',
+          promptKey: 'roof_line',
           points: [
             Offset(0.72, 0.12),
             Offset(0.28, 0.56),
@@ -169,7 +171,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
           ],
         ),
         _TraceStrokeTemplate(
-          prompt: 'Now trace the tall standing line.',
+          promptKey: 'standing_line',
           points: [
             Offset(0.72, 0.12),
             Offset(0.72, 0.90),
@@ -186,7 +188,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       shadowColor: Color(0xFFD97A4D),
       strokes: [
         _TraceStrokeTemplate(
-          prompt: 'Go across, down, and around the tummy.',
+          promptKey: 'across_tummy',
           points: [
             Offset(0.80, 0.14),
             Offset(0.32, 0.14),
@@ -209,7 +211,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       shadowColor: Color(0xFF3A9040),
       strokes: [
         _TraceStrokeTemplate(
-          prompt: 'Loop around and tuck into the middle.',
+          promptKey: 'loop_tuck',
           points: [
             Offset(0.76, 0.18),
             Offset(0.50, 0.14),
@@ -234,7 +236,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       shadowColor: Color(0xFF3A58C8),
       strokes: [
         _TraceStrokeTemplate(
-          prompt: 'Slide across the top, then slant down.',
+          promptKey: 'slide_slant',
           points: [
             Offset(0.18, 0.16),
             Offset(0.82, 0.16),
@@ -252,7 +254,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       shadowColor: Color(0xFFD4A000),
       strokes: [
         _TraceStrokeTemplate(
-          prompt: 'Trace the top loop.',
+          promptKey: 'top_loop',
           points: [
             Offset(0.50, 0.12),
             Offset(0.68, 0.18),
@@ -264,7 +266,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
           ],
         ),
         _TraceStrokeTemplate(
-          prompt: 'Trace the bottom loop.',
+          promptKey: 'bottom_loop',
           points: [
             Offset(0.50, 0.46),
             Offset(0.76, 0.58),
@@ -286,7 +288,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       shadowColor: Color(0xFFC94A18),
       strokes: [
         _TraceStrokeTemplate(
-          prompt: 'Make the round head.',
+          promptKey: 'round_head',
           points: [
             Offset(0.42, 0.14),
             Offset(0.68, 0.20),
@@ -298,7 +300,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
           ],
         ),
         _TraceStrokeTemplate(
-          prompt: 'Finish with the tall tail.',
+          promptKey: 'tall_tail',
           points: [
             Offset(0.72, 0.22),
             Offset(0.76, 0.88),
@@ -315,7 +317,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       shadowColor: Color(0xFF2AADA4),
       strokes: [
         _TraceStrokeTemplate(
-          prompt: 'Trace the one first.',
+          promptKey: 'trace_one_first',
           points: [
             Offset(0.25, 0.22),
             Offset(0.36, 0.12),
@@ -323,7 +325,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
           ],
         ),
         _TraceStrokeTemplate(
-          prompt: 'Now make the zero loop.',
+          promptKey: 'zero_loop',
           points: [
             Offset(0.72, 0.14),
             Offset(0.84, 0.22),
@@ -342,7 +344,9 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
 
   final Set<int> _completedLessons = <int>{};
   late final FlutterTts _tts;
-  late final Future<void> _ttsReady;
+  late Future<void> _ttsReady;
+  bool _ttsConfigured = false;
+  bool _localizedStateInitialized = false;
   late final AnimationController _celebrationController;
 
   int _currentLessonIndex = 0;
@@ -354,11 +358,13 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
   bool _showGhostHint = false;
   List<List<Offset>> _completedStrokePaths = <List<Offset>>[];
   List<Offset> _activeStrokePath = <Offset>[];
-  String _statusText = 'Start at the green dot.';
+  String _statusText = '';
   int _strokeFailureCount = 0;
   int _celebrationToken = 0;
   int _finalCelebrationToken = 0;
   int _musicRequestToken = 0;
+  int _speechRequestToken = 0;
+  int _autoAdvanceToken = 0;
 
   _TraceLesson get _lesson => _lessons[_currentLessonIndex];
 
@@ -366,16 +372,12 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
   void initState() {
     super.initState();
     _tts = FlutterTts();
-    _ttsReady = _configureTts();
+    _ttsReady = Future<void>.value();
     _celebrationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    _resetLessonState(speakPrompt: false);
     _playScreenMusic(delayed: true);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _speakLessonPrompt(includeStrokeHint: true);
-    });
   }
 
   @override
@@ -385,6 +387,18 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
     if (route is PageRoute<dynamic>) {
       appRouteObserver.unsubscribe(this);
       appRouteObserver.subscribe(this, route);
+    }
+    if (!_ttsConfigured) {
+      _ttsConfigured = true;
+      _ttsReady = _configureTts();
+    }
+    if (!_localizedStateInitialized) {
+      _localizedStateInitialized = true;
+      _resetLessonState(speakPrompt: false);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _speakLessonPrompt(includeStrokeHint: true);
+      });
     }
   }
 
@@ -404,34 +418,41 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
   }
 
   Future<void> _configureTts() async {
-    await TtsVoiceHelper.configureSharedAudio(_tts);
-    await TtsVoiceHelper.applyPreferredVoice(
+    await AppLocalization.configureTts(
       _tts,
-      locale: 'en-IN',
-      fallbackLocales: const ['en-US', 'hi-IN'],
-    );
-    await _tts.setPitch(1.05);
-    await TtsVoiceHelper.applyPreferredSpeechRate(
-      _tts,
+      context,
       normalRate: 0.36,
       slowRate: 0.28,
     );
+    await _tts.awaitSpeakCompletion(true);
+    await _tts.setPitch(1.05);
     await _tts.setVolume(1.0);
   }
 
-  Future<void> _speakLessonPrompt({bool includeStrokeHint = false}) async {
+  Future<void> _speakText(String text) async {
+    final token = ++_speechRequestToken;
     await _ttsReady;
-    final strokeHint = includeStrokeHint
-        ? ' ${_lesson.strokes[_currentStrokeIndex].prompt}'
-        : '';
+    if (!mounted || token != _speechRequestToken) return;
     await _tts.stop();
-    await _tts.speak('Trace number ${_lesson.word}.$strokeHint');
+    if (!mounted || token != _speechRequestToken) return;
+    await Future<void>.delayed(_speechSettleDelay);
+    if (!mounted || token != _speechRequestToken) return;
+    await _tts.speak(text);
+  }
+
+  Future<void> _speakLessonPrompt({bool includeStrokeHint = false}) async {
+    final word = AppLocalization.numberWord(context, _lesson.value);
+    final strokeHint = includeStrokeHint
+        ? ' ${context.tr('trace_strokes.${_lesson.strokes[_currentStrokeIndex].promptKey}')}'
+        : '';
+    await _speakText('${context.tr('learning.trace_prompt')} $word.$strokeHint');
   }
 
   Future<void> _speakSuccess() async {
-    await _ttsReady;
-    await _tts.stop();
-    await _tts.speak('Amazing! You traced ${_lesson.word}.');
+    final word = AppLocalization.numberWord(context, _lesson.value);
+    await _speakText(
+      context.tr('learning.amazing_number', namedArgs: {'word': word}),
+    );
   }
 
   void _playScreenMusic({bool delayed = false}) {
@@ -454,6 +475,8 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
   void _stopAllAudioAndSpeech() {
     _stopScreenMusic();
     AppAudioService.instance.stopCelebrationMusic();
+    _speechRequestToken++;
+    _autoAdvanceToken++;
     _tts.stop();
   }
 
@@ -474,7 +497,17 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
 
   String _promptForCurrentStroke() {
     final strokeNumber = _currentStrokeIndex + 1;
-    return 'Stroke $strokeNumber: ${_lesson.strokes[_currentStrokeIndex].prompt} Tap 🔊 to hear again.';
+    final prompt = context.tr(
+      'trace_strokes.${_lesson.strokes[_currentStrokeIndex].promptKey}',
+    );
+    return context.tr(
+      'learning.trace_stroke_line',
+      namedArgs: {
+        'stroke': '$strokeNumber',
+        'prompt': prompt,
+        'hear_again': context.tr('learning.tap_to_hear'),
+      },
+    );
   }
 
   void _goToLesson(int index) {
@@ -498,6 +531,16 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       return;
     }
     _goToLesson(_currentLessonIndex + 1);
+  }
+
+  Future<void> _advanceAfterSuccessSpeech() async {
+    final requestToken = ++_autoAdvanceToken;
+    await _speakSuccess();
+    if (!mounted || requestToken != _autoAdvanceToken) return;
+    await Future<void>.delayed(_postSuccessPause);
+    if (!mounted || requestToken != _autoAdvanceToken) return;
+    if (!_lessonComplete || _currentLessonIndex >= _lessons.length - 1) return;
+    _goNextLesson();
   }
 
   void _showTracingCourseCelebration() {
@@ -538,7 +581,12 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
     final tolerance = _startTolerance(size);
     if ((position - start).distance > tolerance) {
       _registerTracingFailure(
-        'Start from the green dot to trace ${_lesson.word}.',
+        context.tr(
+          'learning.trace_start_from_dot',
+          namedArgs: {
+            'word': AppLocalization.numberWord(context, _lesson.value),
+          },
+        ),
       );
       return;
     }
@@ -547,7 +595,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       _isTracing = true;
       _currentProgressIndex = 0;
       _activeStrokePath = <Offset>[start, position];
-      _statusText = 'Lovely! Keep following the dotted path.';
+      _statusText = context.tr('learning.trace_follow_path');
     });
     HapticFeedback.lightImpact();
   }
@@ -578,7 +626,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       _activeStrokePath = <Offset>[..._activeStrokePath, position];
       _currentProgressIndex = furthestIndex;
       if (_progressForCurrentStroke(size) > 0.72 && !_lessonComplete) {
-        _statusText = 'Almost there, finish the stroke!';
+        _statusText = context.tr('learning.trace_almost_there');
       }
     });
 
@@ -594,15 +642,16 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       return;
     }
 
-    _registerTracingFailure('Nice try. Let\'s start that stroke again.');
+    _registerTracingFailure(context.tr('learning.trace_try_again_stroke'));
   }
 
   void _registerTracingFailure(String message) {
     final nextFailureCount = _strokeFailureCount + 1;
     final shouldShowHint = nextFailureCount >= _ghostHintFailureThreshold;
     setState(() {
-      _statusText =
-          shouldShowHint ? '$message Ghost helper line is on now.' : message;
+      _statusText = shouldShowHint
+          ? '$message ${context.tr('learning.trace_ghost_helper_on')}'
+          : message;
       _isTracing = false;
       _currentProgressIndex = 0;
       _activeStrokePath = <Offset>[];
@@ -628,7 +677,10 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       if (isLastStroke) {
         _lessonComplete = true;
         _completedLessons.add(_currentLessonIndex);
-        _statusText = 'Hooray! ${_lesson.display} is complete.';
+        _statusText = context.tr(
+          'learning.trace_number_complete',
+          namedArgs: {'display': _lesson.display},
+        );
         _celebrationToken++;
         _showGhostHint = false;
         _strokeFailureCount = 0;
@@ -645,7 +697,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       HapticFeedback.heavyImpact();
       if (_currentLessonIndex != _lessons.length - 1) {
         AppAudioService.instance.playCelebrationMusic();
-        _speakSuccess();
+        _advanceAfterSuccessSpeech();
       }
       if (_currentLessonIndex == _lessons.length - 1) {
         final celebrationToken = ++_finalCelebrationToken;
@@ -657,13 +709,6 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
           _showTracingCourseCelebration();
         });
       }
-      final token = _celebrationToken;
-      Future<void>.delayed(_autoAdvanceDelay, () {
-        if (!mounted) return;
-        if (!_lessonComplete || token != _celebrationToken) return;
-        if (_currentLessonIndex >= _lessons.length - 1) return;
-        _goNextLesson();
-      });
     } else {
       HapticFeedback.mediumImpact();
       _speakLessonPrompt(includeStrokeHint: true);
@@ -849,7 +894,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Trace Numbers',
+                    AppLocalization.moduleTitle(context, AppRoutes.tracing),
                     style: AppTypography.h1.copyWith(
                       fontSize: isCompact ? 22 : 24,
                       fontWeight: FontWeight.w800,
@@ -857,7 +902,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
                     ),
                   ),
                   Text(
-                    'Single-card tracing layout.',
+                    AppLocalization.moduleSubtitle(context, AppRoutes.tracing),
                     style: AppTypography.bodySmall.copyWith(
                       fontSize: isCompact ? 10 : 11,
                       fontWeight: FontWeight.w700,
@@ -865,7 +910,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
                     ),
                   ),
                   Text(
-                    'Trace the dotted path or tap 🔊 for help.',
+                    '${context.tr('learning.trace_prompt')} ${context.tr('learning.tap_to_hear')}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.bodySmall.copyWith(
@@ -911,7 +956,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
             ),
             _HeaderActionChip(
               icon: Icons.arrow_back_rounded,
-              label: 'Previous',
+              label: context.tr('learning.next'),
               foreground: _currentLessonIndex > 0
                   ? const Color(0xFF4E5868)
                   : AppColors.disabled,
@@ -928,9 +973,9 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
                   : Icons.refresh_rounded,
               label: _lessonComplete
                   ? (_currentLessonIndex == _lessons.length - 1
-                      ? 'Play Again'
-                      : 'Next Number')
-                  : 'Clear',
+                      ? context.tr('learning.finish')
+                      : context.tr('learning.next'))
+                  : context.tr('learning.reset'),
               foreground: Colors.white,
               background: _lesson.color,
               onTap: () {
@@ -1090,7 +1135,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Ghost hint is showing this stroke path. Trace over the glowing line.',
+                          context.tr('learning.trace_ghost_hint'),
                           style: AppTypography.bodySmall.copyWith(
                             color: _lesson.color,
                             fontSize: isCompact ? 11 : 12,
@@ -1307,7 +1352,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
                 const CelebrationBear(size: 118),
                 const SizedBox(height: 10),
                 Text(
-                  'Tracing Complete!',
+                  context.tr('learning.activity_complete'),
                   style: AppTypography.h2.copyWith(
                     color: const Color(0xFF1A1060),
                     fontWeight: FontWeight.w800,
@@ -1315,7 +1360,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'You finished all trace numbers and Bear is celebrating with you!',
+                  context.tr('learning.finish_every_challenge'),
                   textAlign: TextAlign.center,
                   style: AppTypography.body.copyWith(
                     color: const Color(0xFF556172),
@@ -1790,7 +1835,7 @@ class _BoardCelebration extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Brilliant tracing!',
+                    context.tr('learning.stroke_complete'),
                     style: AppTypography.h3.copyWith(
                       color: const Color(0xFF1A1060),
                       fontWeight: FontWeight.w800,
@@ -1798,7 +1843,7 @@ class _BoardCelebration extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Bear is cheering with you!',
+                    context.tr('learning.great_job'),
                     style: AppTypography.bodySmall.copyWith(
                       color: const Color(0xFF5E6878),
                       fontWeight: FontWeight.w700,

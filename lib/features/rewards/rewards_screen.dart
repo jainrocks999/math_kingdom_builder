@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -7,10 +8,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
-import '../../core/utils/tts_voice_helper.dart';
 import '../../shared/widgets/celebration_bear.dart';
 import '../../shared/widgets/game_back_button.dart';
 import '../../shared/widgets/kid_loading_view.dart';
@@ -21,9 +22,6 @@ class _RewardItem {
   const _RewardItem({
     required this.id,
     required this.category,
-    required this.title,
-    required this.subtitle,
-    required this.description,
     required this.emoji,
     required this.color,
     required this.softColor,
@@ -33,9 +31,6 @@ class _RewardItem {
 
   final String id;
   final _RewardCategory category;
-  final String title;
-  final String subtitle;
-  final String description;
   final String emoji;
   final Color color;
   final Color softColor;
@@ -56,9 +51,6 @@ class _RewardsScreenState extends State<RewardsScreen>
     _RewardItem(
       id: 'sticker-sun',
       category: _RewardCategory.stickers,
-      title: 'Sunny Star',
-      subtitle: 'Happy morning sticker',
-      description: 'A bright golden sticker for cheerful learning days.',
       emoji: '🌞',
       color: AppColors.warning,
       softColor: AppColors.premiumGoldLight,
@@ -68,9 +60,6 @@ class _RewardsScreenState extends State<RewardsScreen>
     _RewardItem(
       id: 'sticker-rainbow',
       category: _RewardCategory.stickers,
-      title: 'Rainbow Pop',
-      subtitle: 'Color splash sticker',
-      description: 'Unlocked after a few wins to decorate your collection.',
       emoji: '🌈',
       color: AppColors.primary,
       softColor: AppColors.primaryLight,
@@ -80,9 +69,6 @@ class _RewardsScreenState extends State<RewardsScreen>
     _RewardItem(
       id: 'sticker-balloon',
       category: _RewardCategory.stickers,
-      title: 'Balloon Buddy',
-      subtitle: 'Floating fun sticker',
-      description: 'A party balloon sticker for steady practice.',
       emoji: '🎈',
       color: AppColors.secondary,
       softColor: AppColors.secondaryLight,
@@ -92,9 +78,6 @@ class _RewardsScreenState extends State<RewardsScreen>
     _RewardItem(
       id: 'sticker-crown',
       category: _RewardCategory.stickers,
-      title: 'Mini Crown',
-      subtitle: 'Royal sticker reward',
-      description: 'A royal crown for children who keep showing up.',
       emoji: '👑',
       color: AppColors.stairsLavender,
       softColor: AppColors.restBackground,
@@ -104,9 +87,6 @@ class _RewardsScreenState extends State<RewardsScreen>
     _RewardItem(
       id: 'badge-counter',
       category: _RewardCategory.badges,
-      title: 'Counting Champ',
-      subtitle: 'Badge for number confidence',
-      description: 'Celebrate strong counting progress with this mint badge.',
       emoji: '🔢',
       color: AppColors.secondary,
       softColor: AppColors.secondaryLight,
@@ -116,9 +96,6 @@ class _RewardsScreenState extends State<RewardsScreen>
     _RewardItem(
       id: 'badge-tracer',
       category: _RewardCategory.badges,
-      title: 'Tracing Pro',
-      subtitle: 'Badge for careful writing',
-      description: 'Awarded to learners who trace with patience.',
       emoji: '✏️',
       color: AppColors.pathwayPeach,
       softColor: AppColors.primaryLight,
@@ -128,9 +105,6 @@ class _RewardsScreenState extends State<RewardsScreen>
     _RewardItem(
       id: 'badge-matcher',
       category: _RewardCategory.badges,
-      title: 'Matching Master',
-      subtitle: 'Badge for quick thinking',
-      description: 'A smart badge for strong visual matching.',
       emoji: '🃏',
       color: AppColors.bridgeBlue,
       softColor: AppColors.secondaryLight,
@@ -140,9 +114,6 @@ class _RewardsScreenState extends State<RewardsScreen>
     _RewardItem(
       id: 'badge-quiz',
       category: _RewardCategory.badges,
-      title: 'Quiz Wizard',
-      subtitle: 'Badge for mixed challenges',
-      description: 'A shiny badge for handling tap, drag, and write tasks.',
       emoji: '🧠',
       color: AppColors.warning,
       softColor: AppColors.premiumGoldLight,
@@ -152,9 +123,6 @@ class _RewardsScreenState extends State<RewardsScreen>
     _RewardItem(
       id: 'trophy-bronze',
       category: _RewardCategory.trophies,
-      title: 'Bronze Castle Cup',
-      subtitle: 'First kingdom trophy',
-      description: 'A small but proud trophy for early milestones.',
       emoji: '🏆',
       color: AppColors.pathwayPeach,
       softColor: AppColors.primaryLight,
@@ -164,9 +132,6 @@ class _RewardsScreenState extends State<RewardsScreen>
     _RewardItem(
       id: 'trophy-silver',
       category: _RewardCategory.trophies,
-      title: 'Silver Moon Cup',
-      subtitle: 'Middle milestone trophy',
-      description: 'A silver reward for consistent learning sessions.',
       emoji: '🥈',
       color: AppColors.bridgeBlue,
       softColor: AppColors.secondaryLight,
@@ -176,9 +141,6 @@ class _RewardsScreenState extends State<RewardsScreen>
     _RewardItem(
       id: 'trophy-gold',
       category: _RewardCategory.trophies,
-      title: 'Golden Kingdom Cup',
-      subtitle: 'Big celebration trophy',
-      description: 'A golden cup for building a strong math kingdom.',
       emoji: '🥇',
       color: AppColors.premiumGold,
       softColor: AppColors.premiumGoldLight,
@@ -188,9 +150,6 @@ class _RewardsScreenState extends State<RewardsScreen>
     _RewardItem(
       id: 'trophy-royal',
       category: _RewardCategory.trophies,
-      title: 'Royal Hero Crown',
-      subtitle: 'Top collection reward',
-      description: 'The grand reward for children who finish many adventures.',
       emoji: '👑',
       color: AppColors.parentAccent,
       softColor: AppColors.restBackground,
@@ -204,7 +163,8 @@ class _RewardsScreenState extends State<RewardsScreen>
   int _musicRequestToken = 0;
   int _currentStars = 0;
   late final FlutterTts _detailTts;
-  late final Future<void> _detailTtsReady;
+  late Future<void> _detailTtsReady;
+  bool _detailTtsConfigured = false;
   _RewardCategory _selectedCategory = _RewardCategory.stickers;
   int _selectedIndex = 0;
   bool _showClaimCelebration = false;
@@ -303,17 +263,7 @@ class _RewardsScreenState extends State<RewardsScreen>
   }
 
   Future<void> _configureDetailTts() async {
-    await TtsVoiceHelper.configureSharedAudio(_detailTts);
-    await TtsVoiceHelper.applyPreferredVoice(
-      _detailTts,
-      locale: 'en-IN',
-      fallbackLocales: const ['en-US', 'en-GB'],
-    );
-    await TtsVoiceHelper.applyPreferredSpeechRate(
-      _detailTts,
-      normalRate: 0.4,
-      slowRate: 0.3,
-    );
+    await AppLocalization.configureTts(_detailTts, context);
     await _detailTts.setPitch(1.04);
     await _detailTts.setVolume(1.0);
   }
@@ -321,8 +271,11 @@ class _RewardsScreenState extends State<RewardsScreen>
   Future<void> _speakRewardDetail(_RewardItem reward) async {
     await _detailTtsReady;
     await _detailTts.stop();
+    if (!mounted) return;
     await _detailTts.speak(
-      '${reward.title}. ${reward.subtitle}. ${reward.description}',
+      '${AppLocalization.rewardItem(context, reward.id, 'title')}. '
+      '${AppLocalization.rewardItem(context, reward.id, 'subtitle')}. '
+      '${AppLocalization.rewardItem(context, reward.id, 'description')}',
     );
   }
 
@@ -412,7 +365,7 @@ class _RewardsScreenState extends State<RewardsScreen>
   void initState() {
     super.initState();
     _detailTts = FlutterTts();
-    _detailTtsReady = _configureDetailTts();
+    _detailTtsReady = Future<void>.value();
     _collectAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
@@ -428,6 +381,10 @@ class _RewardsScreenState extends State<RewardsScreen>
     if (route is PageRoute<dynamic>) {
       appRouteObserver.unsubscribe(this);
       appRouteObserver.subscribe(this, route);
+    }
+    if (!_detailTtsConfigured) {
+      _detailTtsConfigured = true;
+      _detailTtsReady = _configureDetailTts();
     }
   }
 
@@ -463,9 +420,9 @@ class _RewardsScreenState extends State<RewardsScreen>
     if (_isLoadingProgress) {
       return Scaffold(
         backgroundColor: AppColors.background,
-        body: const KidLoadingView(
-          title: 'Rewards',
-          subtitle: 'Opening your treasure room.',
+        body: KidLoadingView(
+          title: context.tr('rewards.title'),
+          subtitle: context.tr('rewards.loading'),
         ),
       );
     }
@@ -590,7 +547,7 @@ class _RewardsScreenState extends State<RewardsScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Rewards',
+                context.tr('rewards.title'),
                 style: AppTypography.hero.copyWith(
                   fontSize: AppTypography.responsiveSize(
                     MediaQuery.sizeOf(context).width,
@@ -603,8 +560,11 @@ class _RewardsScreenState extends State<RewardsScreen>
               ),
               Text(
                 nextReward == null
-                    ? 'Every reward is unlocked. Time to collect them all!'
-                    : 'Next unlock: ${nextReward.title} in $starsLeft star${starsLeft == 1 ? '' : 's'}',
+                    ? context.tr('rewards.all_claimed')
+                    : context.tr(
+                        'rewards.next_reward',
+                        namedArgs: {'count': '$starsLeft'},
+                      ),
                 style: AppTypography.bodySmall.copyWith(
                   color: const Color(0xFF586374),
                   fontSize: 14,
@@ -621,14 +581,14 @@ class _RewardsScreenState extends State<RewardsScreen>
   Widget _buildSummaryRow() {
     final cards = [
       _SummaryCard(
-        title: 'Star Bank',
+        title: context.tr('math_operations.math_stars'),
         value: '$_currentStars',
         emoji: '⭐',
         color: AppColors.warning,
         softColor: AppColors.premiumGoldLight,
       ),
       _SummaryCard(
-        title: 'Unlocked',
+        title: context.tr('rewards.unlocked'),
         value: '$_unlockedCount',
         emoji: '🎁',
         color: AppColors.secondary,
@@ -638,7 +598,7 @@ class _RewardsScreenState extends State<RewardsScreen>
         animation: _collectAnimationController,
         builder: (context, _) {
           return _SummaryCard(
-            title: 'Claimed',
+            title: context.tr('rewards.claimed'),
             value: '$_claimedCount',
             emoji: '🏆',
             color: AppColors.parentAccent,
@@ -648,7 +608,7 @@ class _RewardsScreenState extends State<RewardsScreen>
         },
       ),
       _SummaryCard(
-        title: 'Wins',
+        title: context.tr('learning.learning_adventures'),
         value: '$_completedActivityCount',
         emoji: '🎮',
         color: AppColors.primary,
@@ -677,21 +637,21 @@ class _RewardsScreenState extends State<RewardsScreen>
   Widget _buildCategoryTabs() {
     final tabs = [
       _CategoryTab(
-        label: 'Stickers',
+        label: context.tr('rewards.categories.stickers'),
         emoji: '✨',
         selected: _selectedCategory == _RewardCategory.stickers,
         color: AppColors.primary,
         onTap: () => _selectCategory(_RewardCategory.stickers),
       ),
       _CategoryTab(
-        label: 'Badges',
+        label: context.tr('rewards.categories.badges'),
         emoji: '🎖️',
         selected: _selectedCategory == _RewardCategory.badges,
         color: AppColors.bridgeBlue,
         onTap: () => _selectCategory(_RewardCategory.badges),
       ),
       _CategoryTab(
-        label: 'Trophies',
+        label: context.tr('rewards.categories.trophies'),
         emoji: '🏆',
         selected: _selectedCategory == _RewardCategory.trophies,
         color: AppColors.premiumGold,
@@ -876,7 +836,11 @@ class _RewardsScreenState extends State<RewardsScreen>
                                 ),
                                 SizedBox(height: compactTile ? 10 : 12),
                                 Text(
-                                  reward.title,
+                                  AppLocalization.rewardItem(
+                                    context,
+                                    reward.id,
+                                    'title',
+                                  ),
                                   maxLines: compactTile ? 1 : 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: AppTypography.bodyStrong.copyWith(
@@ -893,10 +857,16 @@ class _RewardsScreenState extends State<RewardsScreen>
                                       padding: const EdgeInsets.only(bottom: 2),
                                       child: Text(
                                         claimed
-                                            ? 'Collected'
+                                            ? context.tr('rewards.claimed')
                                             : unlocked
-                                                ? 'Ready to collect'
-                                                : 'Unlock at ${reward.unlockStars} stars',
+                                                ? context.tr('rewards.unlocked')
+                                                : context.tr(
+                                                    'rewards.need_stars',
+                                                    namedArgs: {
+                                                      'count':
+                                                          '${reward.unlockStars}',
+                                                    },
+                                                  ),
                                         maxLines: compactTile ? 2 : 3,
                                         overflow: TextOverflow.ellipsis,
                                         style: AppTypography.bodySmall.copyWith(
@@ -946,7 +916,7 @@ class _RewardsScreenState extends State<RewardsScreen>
         ),
         const SizedBox(height: 16),
         Text(
-          reward.description,
+          AppLocalization.rewardItem(context, reward.id, 'description'),
           style: AppTypography.body.copyWith(
             color: AppColors.textSecondary,
             fontWeight: FontWeight.w700,
@@ -955,7 +925,7 @@ class _RewardsScreenState extends State<RewardsScreen>
         ),
         const SizedBox(height: 16),
         Text(
-          'Progress to next reward',
+          context.tr('rewards.next_reward', namedArgs: {'count': '$starsNeeded'}),
           style: AppTypography.bodyStrong.copyWith(
             color: const Color(0xFF1A1060),
             fontWeight: FontWeight.w800,
@@ -974,8 +944,11 @@ class _RewardsScreenState extends State<RewardsScreen>
         const SizedBox(height: 8),
         Text(
           unlocked
-              ? 'Unlocked now'
-              : '$starsNeeded more stars needed to unlock this reward',
+              ? context.tr('rewards.unlocked')
+              : context.tr(
+                  'rewards.need_stars',
+                  namedArgs: {'count': '$starsNeeded'},
+                ),
           style: AppTypography.bodySmall.copyWith(
             color: unlocked ? AppColors.gardenGreen : AppColors.textSecondary,
             fontWeight: FontWeight.w700,
@@ -999,7 +972,7 @@ class _RewardsScreenState extends State<RewardsScreen>
                 const CelebrationBear(size: 82),
                 const SizedBox(height: 8),
                 Text(
-                  'Reward Claimed!',
+                  context.tr('learning.activity_complete'),
                   style: AppTypography.bodyStrong.copyWith(
                     color: AppColors.gardenGreen,
                     fontWeight: FontWeight.w800,
@@ -1015,10 +988,12 @@ class _RewardsScreenState extends State<RewardsScreen>
             Expanded(
               child: _ActionButton(
                 label: claimed
-                    ? 'Already Collected'
+                    ? context.tr('rewards.claimed')
                     : unlocked
-                        ? (_isClaimingReward ? 'Collecting...' : 'Collect!')
-                        : 'Locked',
+                        ? (_isClaimingReward
+                            ? context.tr('learning.loading_title')
+                            : context.tr('rewards.claim'))
+                        : context.tr('rewards.locked'),
                 icon: claimed
                     ? Icons.check_rounded
                     : unlocked
@@ -1047,7 +1022,7 @@ class _RewardsScreenState extends State<RewardsScreen>
           SizedBox(
             width: double.infinity,
             child: _ActionButton(
-              label: 'Sticker Card',
+              label: context.tr('rewards.categories.stickers'),
               icon: Icons.style_rounded,
               backgroundColor: reward.softColor,
               foregroundColor: reward.color,
@@ -1173,7 +1148,7 @@ class _RewardsScreenState extends State<RewardsScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              reward.title,
+              AppLocalization.rewardItem(context, reward.id, 'title'),
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -1184,7 +1159,7 @@ class _RewardsScreenState extends State<RewardsScreen>
             ),
             const SizedBox(height: 4),
             Text(
-              reward.subtitle,
+              AppLocalization.rewardItem(context, reward.id, 'subtitle'),
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -1350,10 +1325,15 @@ class _RewardDetailSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusText = claimed
-        ? 'Collected and ready to admire'
+        ? context.tr('rewards.claimed')
         : unlocked
-            ? 'Unlocked and ready to collect'
-            : 'Keep earning stars to unlock this sticker';
+            ? context.tr('rewards.unlocked')
+            : context.tr(
+                'rewards.need_stars',
+                namedArgs: {
+                  'count': '${reward.unlockStars}',
+                },
+              );
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 18),
@@ -1384,7 +1364,7 @@ class _RewardDetailSheet extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      'Sticker Card',
+                      context.tr('rewards.categories.stickers'),
                       style: AppTypography.h2.copyWith(
                         color: const Color(0xFF1A1060),
                         fontWeight: FontWeight.w900,
@@ -1414,7 +1394,7 @@ class _RewardDetailSheet extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      reward.title,
+                      AppLocalization.rewardItem(context, reward.id, 'title'),
                       textAlign: TextAlign.center,
                       style: AppTypography.h2.copyWith(
                         color: const Color(0xFF1A1060),
@@ -1423,7 +1403,7 @@ class _RewardDetailSheet extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      reward.subtitle,
+                      AppLocalization.rewardItem(context, reward.id, 'subtitle'),
                       textAlign: TextAlign.center,
                       style: AppTypography.bodySmall.copyWith(
                         color: reward.color,
@@ -1458,7 +1438,7 @@ class _RewardDetailSheet extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               Text(
-                reward.description,
+                AppLocalization.rewardItem(context, reward.id, 'description'),
                 style: AppTypography.body.copyWith(
                   color: const Color(0xFF556172),
                   fontWeight: FontWeight.w700,
@@ -1470,7 +1450,7 @@ class _RewardDetailSheet extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _ActionButton(
-                      label: 'Hear Sticker',
+                      label: context.tr('learning.speaker'),
                       icon: Icons.volume_up_rounded,
                       backgroundColor: reward.color,
                       foregroundColor: Colors.white,

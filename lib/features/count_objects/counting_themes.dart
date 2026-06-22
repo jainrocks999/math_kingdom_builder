@@ -4,6 +4,7 @@ import '../../core/constants/app_colors.dart';
 
 class CountingTheme {
   const CountingTheme({
+    required this.id,
     required this.assetPath,
     required this.singular,
     required this.plural,
@@ -13,6 +14,7 @@ class CountingTheme {
     required this.shadowColor,
   });
 
+  final String id;
   final String assetPath;
   final String singular;
   final String plural;
@@ -24,6 +26,7 @@ class CountingTheme {
 
 const List<CountingTheme> countingThemes = [
   CountingTheme(
+    id: 'apple',
     assetPath: 'assets/images/contingobjects/apple.jpeg',
     singular: 'apple',
     plural: 'apples',
@@ -33,6 +36,7 @@ const List<CountingTheme> countingThemes = [
     shadowColor: Color(0xFFC94A18),
   ),
   CountingTheme(
+    id: 'candy',
     assetPath: 'assets/images/contingobjects/candy.jpeg',
     singular: 'candy',
     plural: 'candies',
@@ -42,6 +46,7 @@ const List<CountingTheme> countingThemes = [
     shadowColor: Color(0xFFD4A000),
   ),
   CountingTheme(
+    id: 'car',
     assetPath: 'assets/images/contingobjects/car.jpeg',
     singular: 'car',
     plural: 'cars',
@@ -51,6 +56,7 @@ const List<CountingTheme> countingThemes = [
     shadowColor: Color(0xFF2890D0),
   ),
   CountingTheme(
+    id: 'balloon',
     assetPath: 'assets/images/contingobjects/ballun.jpeg',
     singular: 'balloon',
     plural: 'balloons',
@@ -60,6 +66,7 @@ const List<CountingTheme> countingThemes = [
     shadowColor: Color(0xFFA888E8),
   ),
   CountingTheme(
+    id: 'star',
     assetPath: 'assets/images/contingobjects/start.jpeg',
     singular: 'star',
     plural: 'stars',

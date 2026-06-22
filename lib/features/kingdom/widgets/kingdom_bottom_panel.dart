@@ -1,7 +1,9 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/localization/app_localization.dart';
 import '../kingdom_zone_data.dart';
 import 'kingdom_shared_widgets.dart';
 
@@ -71,16 +73,33 @@ class KingdomBottomPanel extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(activeZone.title, style: AppTypography.h3),
+                    Text(
+                      AppLocalization.kingdomZone(
+                        context,
+                        activeZone.id,
+                        'title',
+                      ),
+                      style: AppTypography.h3,
+                    ),
                     const SizedBox(height: 4),
-                    Text(activeZone.hint, style: AppTypography.bodySmall),
+                    Text(
+                      AppLocalization.kingdomZone(
+                        context,
+                        activeZone.id,
+                        'hint',
+                      ),
+                      style: AppTypography.bodySmall,
+                    ),
                   ],
                 ),
               ),
               const SizedBox(width: 12),
               KingdomInfoPill(
                 icon: Icons.star_rounded,
-                label: '$totalStars total',
+                label: context.tr(
+                  'rewards.stars_header',
+                  namedArgs: {'count': '$totalStars'},
+                ),
                 color: AppColors.premiumGold,
               ),
             ],
@@ -100,8 +119,8 @@ class KingdomBottomPanel extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             activeZone.unlocked
-                ? '${activeZone.progress}/${activeZone.goal} rewards placed here'
-                : 'This area is still hidden behind kingdom clouds.',
+                ? '${activeZone.progress}/${activeZone.goal}'
+                : context.tr('kingdom.zone_locked_clouds'),
             style: AppTypography.caption,
           ),
           if (showActiveCta) ...[
@@ -111,7 +130,13 @@ class KingdomBottomPanel extends StatelessWidget {
               child: FilledButton.icon(
                 onPressed: onPlayActiveZone,
                 icon: const Icon(Icons.play_arrow_rounded),
-                label: Text(activeZone.ctaLabel),
+                label: Text(
+                  AppLocalization.kingdomZone(
+                    context,
+                    activeZone.id,
+                    'cta',
+                  ),
+                ),
                 style: FilledButton.styleFrom(
                   backgroundColor: activeZone.color,
                   foregroundColor: AppColors.surface,
@@ -128,7 +153,9 @@ class KingdomBottomPanel extends StatelessWidget {
             children: zones
                 .map(
                   (zone) => ChoiceChip(
-                    label: Text(zone.title),
+                    label: Text(
+                      AppLocalization.kingdomZone(context, zone.id, 'title'),
+                    ),
                     selected: zone.id == activeZone.id,
                     onSelected: (_) => onSelectZone(zone.id),
                     selectedColor: zone.softColor,
@@ -168,15 +195,26 @@ class KingdomBottomPanel extends StatelessWidget {
                 final textColumn = Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Next best quest', style: AppTypography.bodyStrong),
+                    Text(
+                      context.tr('kingdom.next_best_quest'),
+                      style: AppTypography.bodyStrong,
+                    ),
                     const SizedBox(height: 4),
                     Text(
-                      '${recommendedZone.title} is the fastest way to grow the kingdom now.',
+                      AppLocalization.kingdomZone(
+                        context,
+                        recommendedZone.id,
+                        'subtitle',
+                      ),
                       style: AppTypography.bodySmall,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Today completed: $todayCompletions quest${todayCompletions == 1 ? '' : 's'}',
+                      context.plural(
+                        'kingdom.today_completed',
+                        todayCompletions,
+                        namedArgs: {'count': '$todayCompletions'},
+                      ),
                       style: AppTypography.caption,
                     ),
                   ],
@@ -193,7 +231,13 @@ class KingdomBottomPanel extends StatelessWidget {
                     ),
                     textStyle: AppTypography.button,
                   ),
-                  child: Text(recommendedZone.ctaLabel),
+                  child: Text(
+                    AppLocalization.kingdomZone(
+                      context,
+                      recommendedZone.id,
+                      'cta',
+                    ),
+                  ),
                 );
 
                 if (stacked) {

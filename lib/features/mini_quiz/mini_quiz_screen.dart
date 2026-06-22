@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math' as math;
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -9,12 +10,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/child_profile_service.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/audio_service.dart';
-import '../../core/utils/tts_voice_helper.dart';
 import '../StartLearning/start_learning_next_action_button.dart';
 import '../count_objects/counting_themes.dart';
 import '../../shared/widgets/activity_completion_card.dart';
@@ -68,7 +69,8 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
   static const _speechSettleDelay = Duration(milliseconds: 80);
 
   late final FlutterTts _tts;
-  late final Future<void> _ttsReady;
+  late Future<void> _ttsReady;
+  bool _ttsConfigured = false;
   late final AnimationController _celebrationController;
   late final AnimationController _successPulseController;
 
@@ -119,24 +121,14 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
       duration: const Duration(milliseconds: 440),
       value: 1,
     );
-    _ttsReady = _configureTts();
+    _ttsReady = Future<void>.value();
     _restoreOrCreateQuiz();
   }
 
   Future<void> _configureTts() async {
-    await TtsVoiceHelper.configureSharedAudio(_tts);
+    await AppLocalization.configureTts(_tts, context);
     await _tts.awaitSpeakCompletion(true);
-    await TtsVoiceHelper.applyPreferredVoice(
-      _tts,
-      locale: 'en-IN',
-      fallbackLocales: const ['en-US', 'en-GB'],
-    );
     await _tts.setPitch(1.04);
-    await TtsVoiceHelper.applyPreferredSpeechRate(
-      _tts,
-      normalRate: 0.4,
-      slowRate: 0.3,
-    );
     await _tts.setVolume(1.0);
   }
 
@@ -408,22 +400,21 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
     }).toList(growable: false);
   }
 
-  String _objectLabel(int count) {
-    return count == 1 ? _theme.singular : _theme.plural;
-  }
+  String _objectLabel(BuildContext context, int count) =>
+      AppLocalization.objectLabel(context, _theme.id, count);
 
-  String _modeLabel(_QuizMode mode) {
+  String _modeLabel(BuildContext context, _QuizMode mode) {
     switch (mode) {
       case _QuizMode.tapNumber:
-        return 'Tap Quiz';
+        return context.tr('learning.quiz_mode_tap');
       case _QuizMode.dragMatch:
-        return 'Drag Quiz';
+        return context.tr('learning.quiz_mode_drag');
       case _QuizMode.writeNumber:
-        return 'Write Quiz';
+        return context.tr('learning.quiz_mode_write');
       case _QuizMode.missingNumber:
-        return 'Missing Quiz';
+        return context.tr('learning.sequencing_prompt');
       case _QuizMode.compareGroups:
-        return 'Compare Quiz';
+        return context.tr('learning.match_prompt');
     }
   }
 
@@ -442,54 +433,55 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
     }
   }
 
-  String _modeInstruction(_QuizMode mode) {
+  String _modeInstruction(BuildContext context, _QuizMode mode) {
     switch (mode) {
       case _QuizMode.tapNumber:
-        return 'Count the objects and tap the matching number.';
+        return context.tr('learning.quiz_mode_tap');
       case _QuizMode.dragMatch:
-        return 'Count the objects and drag the matching number to the box.';
+        return context.tr('learning.quiz_mode_drag');
       case _QuizMode.writeNumber:
-        return 'Count the objects and write the answer using the keypad.';
+        return context.tr('learning.quiz_write_prompt');
       case _QuizMode.missingNumber:
-        return 'Count the objects and fill the missing number.';
+        return context.tr('learning.sequencing_prompt');
       case _QuizMode.compareGroups:
-        return _currentRound.findMore == true
-            ? 'Count both groups and tap the one with more objects.'
-            : 'Count both groups and tap the one with fewer objects.';
+        return _compareInstruction(context);
     }
   }
 
+  String _compareInstruction(BuildContext context) {
+    final leftCount = _currentRound.leftCount ?? 0;
+    final rightCount = _currentRound.rightCount ?? 0;
+    final label = _objectLabel(context, math.max(leftCount, rightCount));
+    final key = _currentRound.findMore == true
+        ? 'learning.compare_more_prompt'
+        : 'learning.compare_less_prompt';
+    return context.tr(key, namedArgs: {'label': label});
+  }
+
   Future<void> _speakPrompt() async {
-    final label = _objectLabel(_correctAnswer);
+    if (!mounted) return;
+    final label = _objectLabel(context, _correctAnswer);
     final prompt = switch (_currentRound.mode) {
-      _QuizMode.tapNumber => 'Count the $label and tap the matching number.',
-      _QuizMode.dragMatch =>
-        'Count the $label and drag the matching number into the box.',
-      _QuizMode.writeNumber => 'Count the $label and write the answer.',
-      _QuizMode.missingNumber =>
-        'Count the $label and fill the missing number in the sequence.',
-      _QuizMode.compareGroups => _currentRound.findMore == true
-          ? 'Count both groups and tap the group with more $label.'
-          : 'Count both groups and tap the group with fewer $label.',
+      _QuizMode.tapNumber => context.tr(
+          'learning.how_many',
+          namedArgs: {'label': label},
+        ),
+      _QuizMode.dragMatch => context.tr('learning.quiz_mode_drag'),
+      _QuizMode.writeNumber => context.tr('learning.quiz_write_prompt'),
+      _QuizMode.missingNumber => context.tr('learning.sequencing_prompt'),
+      _QuizMode.compareGroups => _compareInstruction(context),
     };
     await _speakText(prompt);
   }
 
   Future<void> _speakSuccess() async {
-    final label = _objectLabel(_correctAnswer);
-    final praise = switch (_currentRound.mode) {
-      _QuizMode.compareGroups => _currentRound.findMore == true
-          ? 'Amazing! You found the group with more $label.'
-          : 'Amazing! You found the group with fewer $label.',
-      _ => 'Amazing! You got $_correctAnswer $label right.',
-    };
-    await _speakText(praise);
+    if (!mounted) return;
+    await _speakText(context.tr('learning.great_job'));
   }
 
   Future<void> _speakCompletionPraise() async {
-    await _speakText(
-      'Quiz champion. You completed all $_totalRounds quiz rounds.',
-    );
+    if (!mounted) return;
+    await _speakText(context.tr('learning.activity_complete'));
   }
 
   Future<void> _speakText(String text) async {
@@ -687,6 +679,10 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
       appRouteObserver.unsubscribe(this);
       appRouteObserver.subscribe(this, route);
     }
+    if (!_ttsConfigured) {
+      _ttsConfigured = true;
+      _ttsReady = _configureTts();
+    }
   }
 
   @override
@@ -745,9 +741,9 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
                 ),
               ),
             ),
-            const KidLoadingView(
-              title: 'Mini Quiz',
-              subtitle: 'Building your next quiz adventure.',
+            KidLoadingView(
+              title: context.tr('modules.mini_quiz.title'),
+              subtitle: context.tr('learning.loading_subtitle'),
               compact: true,
             ),
           ],
@@ -851,7 +847,7 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Mini Quiz',
+                AppLocalization.moduleTitle(context, AppRoutes.miniQuiz),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.h1.copyWith(
@@ -901,7 +897,13 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
                 children: [
                   Expanded(
                     child: Text(
-                      'Round ${_roundIndex + 1} of $_totalRounds',
+                      context.tr(
+                        'learning.round',
+                        namedArgs: {
+                          'current': '${_roundIndex + 1}',
+                          'total': '$_totalRounds',
+                        },
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.bodyStrong.copyWith(
@@ -944,7 +946,7 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
         border: Border.all(color: _theme.color.withValues(alpha: 0.22)),
       ),
       child: Text(
-        '${_modeEmoji(_currentRound.mode)} ${_modeLabel(_currentRound.mode)}',
+        '${_modeEmoji(_currentRound.mode)} ${_modeLabel(context, _currentRound.mode)}',
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: AppTypography.bodySmall.copyWith(
@@ -1000,7 +1002,7 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
     return Column(
       children: [
         Text(
-          _modeInstruction(_QuizMode.tapNumber),
+          _modeInstruction(context, _QuizMode.tapNumber),
           textAlign: TextAlign.center,
           style: AppTypography.bodyStrong.copyWith(
             color: _theme.color,
@@ -1035,7 +1037,7 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
     return Column(
       children: [
         Text(
-          _modeInstruction(_QuizMode.missingNumber),
+          _modeInstruction(context, _QuizMode.missingNumber),
           textAlign: TextAlign.center,
           style: AppTypography.bodyStrong.copyWith(
             color: _theme.color,
@@ -1122,7 +1124,7 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
                       Border.all(color: _theme.color.withValues(alpha: 0.18)),
                 ),
                 child: Text(
-                  'Hold a number card and drag it into the glowing box.',
+                  context.tr('learning.quiz_drag_card_hint'),
                   textAlign: TextAlign.center,
                   style: AppTypography.bodySmall.copyWith(
                     color: _theme.color,
@@ -1242,7 +1244,7 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
     return Column(
       children: [
         Text(
-          _modeInstruction(_QuizMode.compareGroups),
+          _modeInstruction(context, _QuizMode.compareGroups),
           textAlign: TextAlign.center,
           style: AppTypography.bodyStrong.copyWith(
             color: _theme.color,
@@ -1290,7 +1292,9 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Text(
-                _droppedNumber == null ? 'Drop number here' : '$_droppedNumber',
+                _droppedNumber == null
+                    ? context.tr('learning.drop_here')
+                    : '$_droppedNumber',
                 textAlign: TextAlign.center,
                 style: AppTypography.h1.copyWith(
                   color: const Color(0xFF1A1060),
@@ -1456,7 +1460,7 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
           child: Column(
             children: [
               Text(
-                'Write the answer',
+                context.tr('learning.write_the_answer'),
                 style: AppTypography.bodyStrong.copyWith(
                   color: _theme.color,
                   fontWeight: FontWeight.w800,
@@ -1559,7 +1563,9 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
             ),
             const SizedBox(height: 12),
             _BottomButton(
-              label: canCheck ? 'Check Answer' : 'Write Answer',
+              label: canCheck
+                  ? context.tr('learning.check_answer')
+                  : context.tr('learning.write_answer'),
               color: canCheck ? _theme.color : AppColors.disabled,
               shadowColor: canCheck ? _theme.shadowColor : AppColors.disabled,
               onTap: canCheck ? _checkWrittenAnswer : null,
@@ -1647,7 +1653,10 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
       child: Column(
         children: [
           Text(
-            'Count the ${_objectLabel(count)}',
+            context.tr(
+              'learning.count_the',
+              namedArgs: {'label': _objectLabel(context, count)},
+            ),
             style: AppTypography.bodyStrong.copyWith(
               color: _theme.color,
               fontWeight: FontWeight.w800,
@@ -1699,7 +1708,9 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
           child: Column(
             children: [
               Text(
-                isLeft ? 'Group A' : 'Group B',
+                isLeft
+                    ? context.tr('learning.left_group')
+                    : context.tr('learning.right_group'),
                 style: AppTypography.bodyStrong.copyWith(
                   color: _theme.color,
                   fontWeight: FontWeight.w800,
@@ -1769,14 +1780,14 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
 
   Widget _buildBottomBar({bool compact = false}) {
     final statusText = _roundSolved
-        ? 'Great job! Next quiz is coming...'
-        : 'Solve this round to keep your streak going.';
+        ? context.tr('learning.great_job')
+        : context.tr('learning.match_prompt');
 
     return Row(
       children: [
         Expanded(
           child: _ActionButton(
-            label: 'Hear Again',
+            label: context.tr('learning.speaker'),
             icon: Icons.volume_up_rounded,
             backgroundColor: Colors.white.withValues(alpha: 0.95),
             foregroundColor: _theme.color,
@@ -1835,11 +1846,16 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
                 child: ActivityCompletionCard(
                   maxWidth:
                       math.min(MediaQuery.of(context).size.width - 32, 390),
-                  badgeText: 'All $_totalRounds Quiz Rounds Complete',
-                  title: 'Mini Quiz Complete!',
-                  message:
-                      'You solved tap, drag, and write challenges like a quiz champion.',
-                  rewardText: '+5 stars earned!',
+                  badgeText: context.tr(
+                    'learning.all_rounds_complete',
+                    namedArgs: {'total': '$_totalRounds'},
+                  ),
+                  title: context.tr('learning.activity_complete'),
+                  message: context.tr('learning.finish_every_challenge'),
+                  rewardText: context.tr(
+                    'learning.stars_earned',
+                    namedArgs: {'stars': '5'},
+                  ),
                   accentColor: _theme.color,
                   softColor: _theme.softColor,
                   shadowColor: _theme.color,

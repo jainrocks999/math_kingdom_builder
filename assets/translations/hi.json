@@ -14,6 +14,8 @@
     "speech_rate": "बोलने की गति",
     "normal": "नॉर्मल",
     "slow": "धीमी",
+    "star_word_one": "स्टार",
+    "star_word_other": "स्टार",
     "today": "आज",
     "stars": {
       "one": "{} स्टार",
@@ -103,8 +105,8 @@
         "description": "नंबर को उसके सही ग्रुप से मिलाओ"
       },
       "math_operations": {
-        "label": "मैथ ऑपरेशन्स",
-        "description": "जोड़, घटाव, गुणा और भाग सीखो"
+        "label": "गणित क्रियाएँ",
+        "description": "जोड़, घटाव, गुणा और भाग का अभ्यास करो"
       },
       "sequencing": {
         "label": "सीक्वेंसिंग",
@@ -113,6 +115,40 @@
       "patterns": {
         "label": "पैटर्न्स",
         "description": "मैजिक पैटर्न पहचानो और पूरा करो"
+      }
+    },
+    "daily_challenges": {
+      "learn_numbers": {
+        "title": "नंबर सीखें",
+        "subtitle": "नंबर बेयर को जगाओ और आज के गिनती वाले शब्द सुनो।"
+      },
+      "count_objects": {
+        "title": "ऑब्जेक्ट्स गिनें",
+        "subtitle": "तस्वीर वाले दोस्तों को गिनो और सही जवाब चुनो।"
+      },
+      "find_number": {
+        "title": "सही नंबर खोजें",
+        "subtitle": "ध्यान से सुनो और वही जादुई नंबर चुनो जो सुनाई दे।"
+      },
+      "match_numbers": {
+        "title": "नंबर मिलाओ",
+        "subtitle": "नंबर को सही ऑब्जेक्ट ग्रुप से मिलाओ।"
+      },
+      "mini_quiz": {
+        "title": "मिनी क्विज़",
+        "subtitle": "मिक्स ब्रेन चैलेंज खेलो और अपनी स्ट्रीक चमकती रखो।"
+      },
+      "addition": {
+        "title": "जोड़",
+        "subtitle": "दो समूह मिलाकर सही उत्तर बनाओ।"
+      },
+      "sequencing": {
+        "title": "क्रम",
+        "subtitle": "आज की मिसिंग नंबर ट्रेल को सही क्रम में पूरा करो।"
+      },
+      "patterns": {
+        "title": "पैटर्न्स",
+        "subtitle": "दोहराए जाने वाले शेप पैटर्न पहचानो और पूरा करो।"
       }
     },
     "error": {
@@ -232,5 +268,449 @@
       "mini_quiz": "मिनी क्विज़"
     },
     "open_full_settings": "पूरी सेटिंग्स खोलें"
+  },
+  "learning": {
+    "loading_title": "लोड हो रहा है...",
+    "loading_subtitle": "आपकी अगली एक्टिविटी तैयार हो रही है।",
+    "round": "राउंड {current} / {total}",
+    "tap_to_hear": "फिर सुनने के लिए 🔊 दबाएँ",
+    "tap_objects_to_count": "गिनने के लिए तस्वीरें दबाएँ",
+    "try_again": "फिर से कोशिश करें!",
+    "try_again_count": "फिर से कोशिश करें। ध्यान से गिनें।",
+    "great_job": "बहुत बढ़िया!",
+    "finish": "खत्म",
+    "next": "आगे",
+    "previous": "पीछे",
+    "reset": "रीसेट",
+    "back_to_menu": "सीखने वाले मेनू पर वापस",
+    "next_module": "अगला: {title}",
+    "next_learning": "अगली सीख",
+    "collect": "इकट्ठा करें!",
+    "mastered": "माहिर",
+    "start_adventure": "एडवेंचर शुरू करें",
+    "start_practice": "प्रैक्टिस शुरू करें",
+    "wins": "{count} जीत",
+    "win_one": "1 जीत",
+    "unlock_at_stars": "{stars} स्टार पर अनलॉक",
+    "open_rewards": "रिवॉर्ड्स खोलें",
+    "claimed_rewards": "{count} रिवॉर्ड्स इकट्ठे",
+    "all_rounds_complete": "सभी {total} राउंड पूरे",
+    "activity_complete": "एक्टिविटी पूरी!",
+    "counting_complete": "काउंटिंग पूरी!",
+    "finish_every_challenge": "आप हर चैलेंज पूरा कर गए। अगले एडवेंचर पर चलें!",
+    "stars_earned": "+{stars} स्टार मिले",
+    "speaker": "फिर सुनें",
+    "listen": "सुनो!",
+    "wow": "वाह!",
+    "yay": "ये!",
+    "tap": "दबाएँ",
+    "drag_here": "यहाँ खींचें",
+    "drop_zone": "यहाँ छोड़ें",
+    "how_many": "कितने {label}?",
+    "count_prompt": "हर तस्वीर गिनें और सही नंबर दबाएँ।",
+    "count_the": "{label} गिनें। कितने दिखते हैं?",
+    "great_count": "बहुत बढ़िया! {count} {label}.",
+    "match_prompt": "नंबर को सही तस्वीर ग्रुप से मिलाएँ।",
+    "find_prompt": "सुनें और सही नंबर दबाएँ।",
+    "quiz_mode_tap": "नंबर दबाएँ",
+    "quiz_mode_drag": "मिलाने के लिए खींचें",
+    "quiz_mode_write": "नंबर लिखें",
+    "sequencing_prompt": "गायब नंबर सही जगह पर रखें।",
+    "compare_more_prompt": "जिस ग्रुप में ज़्यादा {label} हैं, उसे दबाएँ।",
+    "compare_less_prompt": "जिस ग्रुप में कम {label} हैं, उसे दबाएँ।",
+    "patterns_prompt": "पैटर्न पूरा करें।",
+    "addition_speak_prompt": "{a} और {b} मिलाकर कितना होता है?",
+    "addition_speak_success": "{a} और {b} मिलाकर {total} होते हैं।",
+    "subtraction_speak_prompt": "{total} में से {remove} हटाओ। कितने बचेंगे?",
+    "subtraction_speak_success": "{total} में से {remove} हटाने पर {remaining} बचते हैं।",
+    "multiplication_speak_prompt": "{groups} समूह हैं और हर समूह में {perGroup} चीज़ें हैं। कुल कितनी हुईं?",
+    "multiplication_speak_success": "{groups} समूहों में {perGroup} चीज़ें हैं। कुल {product} हुईं।",
+    "division_speak_prompt": "{total} चीज़ों को {groups} बराबर समूहों में बाँटो। हर समूह में कितनी आएँगी?",
+    "division_speak_success": "{total} चीज़ों को {groups} समूहों में बाँटने पर हर समूह में {quotient} आती हैं।",
+    "addition_complete": "जोड़ एडवेंचर पूरा!",
+    "subtraction_complete": "घटाव एडवेंचर पूरा!",
+    "multiplication_complete": "गुणा एडवेंचर पूरा!",
+    "division_complete": "भाग एडवेंचर पूरा!",
+    "sequencing_complete": "सीक्वेंसिंग पूरी!",
+    "patterns_complete": "पैटर्न पूरी!",
+    "new_adventure_unlocked": "नया एडवेंचर अनलॉक",
+    "unlocked_message": "आपने नया सीखने का एडवेंचर अनलॉक करने के लिए काफी स्टार्स कमाए।",
+    "later": "बाद में",
+    "open_now": "अभी खोलें",
+    "module_locked": "{title} लॉक है",
+    "stars_needed": "इस एडवेंचर को अनलॉक करने के लिए {count} और स्टार्स चाहिए।",
+    "keep_learning": "सीखना जारी रखें",
+    "choose_learner": "बच्चा चुनें",
+    "choose_learner_subtitle": "अभी कौन खेल रहा है, चुनें।",
+    "welcome_back": "वापसी पर स्वागत, {name}!",
+    "welcome_back_message": "आओ और आज और स्टार्स कमाएँ और नए एडवेंचर्स अनलॉक करें।",
+    "playing_as": "{name} के रूप में खेल रहे हैं",
+    "choose_activity": "एक मज़ेदार एक्टिविटी चुनें और मैथ हीरो बनें!",
+    "today_mission": "आज का मिशन",
+    "stars_collected": "{count} स्टार्स इकट्ठे!",
+    "all_unlocked": "{count} एडवेंचर्स पूरे • सब अनलॉक",
+    "unlock_next": "{count} एडवेंचर्स पूरे • {title} {stars} स्टार पर अनलॉक",
+    "daily_goal_progress": "दैनिक लक्ष्य प्रोग्रेस",
+    "daily_goal_done": "दैनिक लक्ष्य पूरा! शानदार काम!",
+    "daily_goal_remaining": "दैनिक लक्ष्य पूरा करने के लिए {count} और एडवेंचर",
+    "daily_goal_remaining_other": "दैनिक लक्ष्य पूरा करने के लिए {count} और एडवेंचर्स",
+    "learning_adventures": "सीखने के एडवेंचर्स",
+    "tap_activity_hint": "कोई भी एक्टिविटी दबाएँ और जादुई सीख शुरू करें!",
+    "more_adventures": "और मैथ एडवेंचर्स",
+    "more_adventures_subtitle": "पैटर्न, सीक्वेंसिंग और ऑपरेशन क्वेस्ट्स।",
+    "streak_start": "अभी शुरू करें",
+    "streak_days": "{count} दिन",
+    "today_adventures": "{count}/3 एडवेंचर्स",
+    "rewards_banner_stars": "{count} स्टार्स मिले!",
+    "rewards_banner_claimed": "अब तक {count} रिवॉर्ड्स इकट्ठे",
+    "try_again_hear": "फिर से कोशिश करें। दोबारा सुनने के लिए स्पीकर दबाएँ।",
+    "amazing_number": "कमाल! यह {word} है।",
+    "trace_prompt": "अपनी उंगली से नंबर ट्रेस करें।",
+    "stroke_complete": "बहुत अच्छा ट्रेसिंग!",
+    "learn_swipe_hint": "नंबर देखने के लिए स्वाइप या टैप करें।",
+    "quiz_write_prompt": "जवाब देने के लिए नंबर दबाएँ।",
+    "sequencing_drag_hint": "गायब नंबर को जगह पर खींचें।",
+    "patterns_drag_hint": "पैटर्न पूरा करने के लिए आकृति खींचें।",
+    "addition_drag_hint": "दोनों समूहों की चीज़ों को कटोरे में मिलाएँ।",
+    "subtraction_drag_hint": "जितनी चीज़ें हटानी हैं, उतनी बाहर खींचें।",
+    "multiplication_drag_hint": "हर समूह में बराबर चीज़ें रखें।",
+    "division_drag_hint": "चीज़ों को बराबर-बराबर कटोरियों में बाँटें।",
+    "need_help_move_all": "मदद चाहिए? सब अपने-आप रख दें",
+    "group_a": "ग्रुप A",
+    "group_b": "ग्रुप B",
+    "math_group_label": "समूह {index}",
+    "math_each_label": "हर समूह में {count}",
+    "division_left_to_share": "अभी {count} बाँटना बाकी है",
+    "division_summary": "कुल {total} • {groups} कटोरियाँ • हर एक में {each}",
+    "left_group": "बायाँ ग्रुप",
+    "right_group": "दायाँ ग्रुप",
+    "drop_here": "यहाँ छोड़ें",
+    "take_away_count": "{count} हटाएँ",
+    "left_here": "यहाँ {count} बचे",
+    "quiz_drag_card_hint": "नंबर कार्ड पकड़ें और चमकते बॉक्स में खींचें।",
+    "write_the_answer": "जवाब लिखें",
+    "check_answer": "जवाब जाँचें",
+    "write_answer": "जवाब लिखें",
+    "count_forward": "आगे गिनें",
+    "count_backward": "पीछे गिनें",
+    "fill_missing_number": "गायब नंबर भरें।",
+    "fill_missing_in_order": "क्रम में गायब नंबर भरें।",
+    "count_backward_fill_gap": "पीछे गिनें और जगह भरें।",
+    "sequence_blank": "खाली",
+    "sequencing_forward": "आगे का क्रम",
+    "sequencing_backward": "पीछे का क्रम",
+    "patterns_ab": "AB पैटर्न",
+    "patterns_abb": "ABB पैटर्न",
+    "trace_start_green_dot": "हरे बिंदु से शुरू करें।",
+    "trace_follow_path": "बहुत अच्छा! बिंदीदार रास्ते पर चलते रहें।",
+    "trace_almost_there": "लगभग हो गया, स्ट्रोक पूरा करें!",
+    "trace_try_again_stroke": "अच्छी कोशिश। चलो वही स्ट्रोक फिर से शुरू करें।",
+    "trace_start_from_dot": "हरे बिंदु से {word} ट्रेस करें।",
+    "trace_ghost_hint": "भूत संकेत इस स्ट्रोक रास्ते दिखा रहा है। चमकती लाइन पर ट्रेस करें।",
+    "trace_number_complete": "वाह! {display} पूरा हो गया।",
+    "trace_stroke_line": "स्ट्रोक {stroke}: {prompt} {hear_again}",
+    "trace_ghost_helper_on": "भूत सहायक लाइन अब चालू है।"
+  },
+  "modules": {
+    "learn_numbers": {
+      "title": "नंबर सीखें",
+      "subtitle": "0 से 30 तक बड़े नंबर देखें और सुनें"
+    },
+    "trace_numbers": {
+      "title": "नंबर ट्रेस करें",
+      "subtitle": "नंबर सुंदर तरीके से लिखें"
+    },
+    "count_objects": {
+      "title": "चीज़ें गिनें",
+      "subtitle": "फल, स्टार और खेलने की चीज़ें गिनें"
+    },
+    "find_correct_number": {
+      "title": "सही नंबर ढूँढें",
+      "subtitle": "सही जादुई नंबर चुनें"
+    },
+    "match_numbers": {
+      "title": "नंबर मैच करें",
+      "subtitle": "नंबर को सही चीज़ों से मिलाएँ"
+    },
+    "mini_quiz": {
+      "title": "मिनी क्विज़",
+      "subtitle": "मज़ेदार सवालों से दिमाग टेस्ट करें"
+    },
+    "rewards": {
+      "title": "रिवॉर्ड्स",
+      "subtitle": "स्टार्स इकट्ठे करें और ट्रॉफी अनलॉक करें"
+    },
+    "math_operations": {
+      "title": "गणित क्रियाएँ",
+      "subtitle": "जोड़, घटाव, गुणा और भाग का अभ्यास"
+    },
+    "addition": {
+      "title": "जोड़",
+      "subtitle": "दो समूह मिलाओ"
+    },
+    "subtraction": {
+      "title": "घटाव",
+      "subtitle": "चीज़ें हटाकर बची हुई गिनो"
+    },
+    "multiplication": {
+      "title": "गुणा",
+      "subtitle": "बराबर-बराबर समूह बनाओ"
+    },
+    "division": {
+      "title": "भाग",
+      "subtitle": "चीज़ों को बराबर-बराबर बाँटो"
+    },
+    "sequencing": {
+      "title": "सीक्वेंसिंग",
+      "subtitle": "नंबर सही क्रम में रखें"
+    },
+    "patterns": {
+      "title": "पैटर्न",
+      "subtitle": "जादुई पैटर्न पूरे करें"
+    },
+    "kingdom_map": {
+      "title": "किंगडम मैप",
+      "subtitle": "कैसल घूमें और जगहें अनलॉक करें"
+    },
+    "start_learning": {
+      "title": "सीखना शुरू करें",
+      "subtitle": "नंबर मैजिक और मज़ेदार काउंटिंग"
+    }
+  },
+  "objects": {
+    "apple": {
+      "singular": "सेब",
+      "plural": "सेब"
+    },
+    "candy": {
+      "singular": "कैंडी",
+      "plural": "कैंडी"
+    },
+    "car": {
+      "singular": "कार",
+      "plural": "कार"
+    },
+    "balloon": {
+      "singular": "गुब्बारा",
+      "plural": "गुब्बारे"
+    },
+    "star": {
+      "singular": "स्टार",
+      "plural": "स्टार"
+    }
+  },
+  "math_operations": {
+    "title": "गणित क्रियाएँ",
+    "hero_title": "गणित क्रियाओं का अभ्यास",
+    "hero_subtitle": "जोड़, घटाव, गुणा और भाग का मज़ेदार अभ्यास करो और स्टार कमाओ।",
+    "math_stars": "गणित सितारे",
+    "played": "खेले गए",
+    "all_progress": "चारों क्रियाओं में आपकी अच्छी प्रगति है।",
+    "next_milestone": "अगला लक्ष्य: {total} में से {current} गणित क्रियाएँ पूरी करें।",
+    "intro": "एक ही जगह जोड़, घटाव, गुणा और भाग का अभ्यास करें।"
+  },
+  "start_learning": {
+    "title": "सीखना शुरू करें",
+    "title_with_name": "{name} का क्वेस्ट",
+    "quest_emoji": "🎮"
+  },
+  "kingdom": {
+    "title": "मेरा किंगडम",
+    "subtitle": "हर क्वेस्ट इस मैप पर कुछ जादुई जोड़ती है।",
+    "reset_map": "मैप रीसेट",
+    "find_me": "मुझे ढूँढें",
+    "loading": "आपका किंगडम लोड हो रहा है...",
+    "new_place_unlocked": "नई किंगडम जगह अनलॉक",
+    "new_place_message": "आपकी सीख ने मैप पर एक नई जादुई जगह खोली।",
+    "explore_map": "मैप एक्सप्लोर करें",
+    "zone_locked_clouds": "यह जगह अभी किंगडम बादलों के पीछे छिपी है।",
+    "next_best_quest": "अगली बेस्ट क्वेस्ट",
+    "today_completed": "आज पूरा: {count} क्वेस्ट",
+    "today_completed_other": "आज पूरा: {count} क्वेस्ट्स",
+    "unlock_grow_zones": "पहले ज़ोन बढ़ाएँ तो यह जगह अनलॉक होगी।",
+    "unlock_grow_zones_short": "पहले ज़ोन बढ़ाएँ तो अनलॉक होगा।",
+    "zones": {
+      "garden": {
+        "title": "नंबर गार्डन",
+        "subtitle": "नंबर लेसन पूरे होने पर फूल खिलते हैं।",
+        "hint": "नंबर पहचान प्रैक्टिस करें और फूल उगाएँ।",
+        "cta": "नंबर क्वेस्ट खेलें"
+      },
+      "meadow": {
+        "title": "काउंटिंग मैदान",
+        "subtitle": "काउंटिंग के बाद यहाँ जानवर इकट्ठे होते हैं।",
+        "hint": "चीज़ें गिनें और मैदान के दोस्त बुलाएँ।",
+        "cta": "काउंटिंग क्वेस्ट खेलें"
+      },
+      "castle": {
+        "title": "शेप कैसल",
+        "subtitle": "ध्यान से ट्रेस करें और कैसल ऊँचा होता है।",
+        "hint": "नंबर ट्रेस करने से मजबूत दीवारें बनती हैं।",
+        "cta": "ट्रेसिंग क्वेस्ट खेलें"
+      },
+      "path": {
+        "title": "पैटर्न पथ",
+        "subtitle": "पैटर्न क्वेस्ट्स रास्ते पर टाइल्स जोड़ते हैं।",
+        "hint": "पैटर्न एडवेंचर्स पूरे करें और रास्ता सजाएँ।",
+        "cta": "पैटर्न खेलें"
+      },
+      "bridge": {
+        "title": "मैथ ब्रिज",
+        "subtitle": "जोड़ और घटाव से पुल की पत्थर बढ़ती हैं।",
+        "hint": "यहाँ जोड़ और घटाव खेलें।",
+        "cta": "मैथ ऑप्स खेलें"
+      },
+      "stairs": {
+        "title": "सीक्वेंस सीढ़ियाँ",
+        "subtitle": "सीक्वेंसिंग एडवेंचर्स चमकदार सीढ़ियाँ बढ़ाते हैं।",
+        "hint": "नंबर सही क्रम में रखें और ऊपर चढ़ें।",
+        "cta": "सीक्वेंसिंग खोलें"
+      }
+    },
+    "rewards_progress": "{progress}/{goal} kingdom पुरस्कार"
+  },
+  "rewards": {
+    "title": "स्टिकर एल्बम",
+    "loading": "आपके रिवॉर्ड्स लोड हो रहे हैं...",
+    "categories": {
+      "stickers": "स्टिकर्स",
+      "badges": "बैज",
+      "trophies": "ट्रॉफी"
+    },
+    "stars_header": "{count} स्टार्स",
+    "next_reward": "अगले रिवॉर्ड के लिए {count} स्टार्स",
+    "all_claimed": "सभी रिवॉर्ड्स इकट्ठे!",
+    "locked": "लॉक",
+    "unlocked": "अनलॉक",
+    "claim": "इकट्ठा करें!",
+    "claimed": "इकट्ठा हो गया",
+    "need_stars": "{count} स्टार्स चाहिए",
+    "items": {
+      "sticker-sun": {
+        "title": "सनी स्टार",
+        "subtitle": "खुशहाल सुबह का स्टिकर",
+        "description": "मज़ेदार सीखने के दिनों के लिए चमकदार स्टिकर।"
+      },
+      "sticker-rainbow": {
+        "title": "रेनबो पॉप",
+        "subtitle": "रंगों का स्टिकर",
+        "description": "कुछ जीत के बाद कलेक्शन सजाने के लिए।"
+      },
+      "sticker-balloon": {
+        "title": "बलून बडी",
+        "subtitle": "उड़ता हुआ मज़ा स्टिकर",
+        "description": "नियमित प्रैक्टिस के लिए पार्टी बलून स्टिकर।"
+      },
+      "sticker-crown": {
+        "title": "मिनी क्राउन",
+        "subtitle": "रॉयल स्टिकर रिवॉर्ड",
+        "description": "जो बच्चे रोज़ आते हैं उनके लिए छोटा ताज।"
+      },
+      "badge-counter": {
+        "title": "काउंटिंग चैंप",
+        "subtitle": "नंबर आत्मविश्वास बैज",
+        "description": "मजबूत काउंटिंग प्रोग्रेस का जश्न।"
+      },
+      "badge-tracer": {
+        "title": "ट्रेसिंग प्रो",
+        "subtitle": "ध्यान से लिखने का बैज",
+        "description": "धैर्य से ट्रेस करने वालों के लिए।"
+      },
+      "badge-matcher": {
+        "title": "मैचिंग मास्टर",
+        "subtitle": "तेज़ सोच का बैज",
+        "description": "मजबूत विज़ुअल मैचिंग के लिए स्मार्ट बैज।"
+      },
+      "badge-quiz": {
+        "title": "क्विज़ विज़ार्ड",
+        "subtitle": "मिक्स चैलेंज बैज",
+        "description": "टैप, ड्रैग और लिखने वाले टास्क्स के लिए।"
+      },
+      "trophy-bronze": {
+        "title": "ब्रॉन्ज़ कैसल कप",
+        "subtitle": "पहली किंगडम ट्रॉफी",
+        "description": "शुरुआती माइलस्टोन के लिए छोटी लेकिन गर्व की ट्रॉफी।"
+      },
+      "trophy-silver": {
+        "title": "सिल्वर मून कप",
+        "subtitle": "मध्य माइलस्टोन ट्रॉफी",
+        "description": "नियमित सीखने के सत्रों के लिए सिल्वर रिवॉर्ड।"
+      },
+      "trophy-gold": {
+        "title": "गोल्डन किंगडम कप",
+        "subtitle": "बड़ा जश्न ट्रॉफी",
+        "description": "मजबूत मैथ किंगडम के लिए गोल्डन कप।"
+      },
+      "trophy-royal": {
+        "title": "रॉयल हीरो क्राउन",
+        "subtitle": "बड़ा कलेक्शन रिवॉर्ड",
+        "description": "जो कई एडवेंचर्स पूरे करते हैं उनके लिए भव्य रिवॉर्ड।"
+      }
+    }
+  },
+  "placeholder": {
+    "coming_soon": "जल्द मैथ किंगडम में",
+    "try_start_learning": "सीखना शुरू करें ट्राई करें",
+    "back_to_home": "होम पर वापस"
+  },
+  "numbers": {
+    "0": "शून्य",
+    "1": "एक",
+    "2": "दो",
+    "3": "तीन",
+    "4": "चार",
+    "5": "पाँच",
+    "6": "छह",
+    "7": "सात",
+    "8": "आठ",
+    "9": "नौ",
+    "10": "दस",
+    "11": "ग्यारह",
+    "12": "बारह",
+    "13": "तेरह",
+    "14": "चौदह",
+    "15": "पंद्रह",
+    "16": "सोलह",
+    "17": "सत्रह",
+    "18": "अठारह",
+    "19": "उन्नीस",
+    "20": "बीस",
+    "21": "इक्कीस",
+    "22": "बाईस",
+    "23": "तेईस",
+    "24": "चौबीस",
+    "25": "पच्चीस",
+    "26": "छब्बीस",
+    "27": "सत्ताईस",
+    "28": "अट्ठाईस",
+    "29": "उनतीस",
+    "30": "तीस"
+  },
+  "trace_strokes": {
+    "round_loop": "एक गोल लूप बनाएँ।",
+    "slide_down": "ऊपर से शुरू करें और नीचे खिसकाएँ।",
+    "curve_top_swoop": "ऊपर से मोड़ें, फिर नीचे और दाईं खिसकाएँ।",
+    "two_belly_curves": "दो नरम पेट वाली मोड़ बनाएँ।",
+    "roof_line": "बीच में छत की लाइन बनाएँ।",
+    "standing_line": "अब लंबी सीधी लाइन ट्रेस करें।",
+    "across_tummy": "आगे, नीचे और पेट के आसपास जाएँ।",
+    "loop_tuck": "लूप बनाएँ और बीच में लाएँ।",
+    "slide_slant": "ऊपर खिसकाएँ, फिर तिरछा नीचे।",
+    "top_loop": "ऊपरी लूप ट्रेस करें।",
+    "bottom_loop": "नीचे का लूप ट्रेस करें।",
+    "round_head": "गोल सिर बनाएँ।",
+    "tall_tail": "लंबी पूँछ से खत्म करें।",
+    "trace_one_first": "पहले एक ट्रेस करें।",
+    "zero_loop": "अब शून्य का लूप बनाएँ।"
+  },
+  "pattern_prompts": {
+    "ab_next": "आगे क्या आएगा, ढूँढें।",
+    "ab_turns": "टुकड़े बारी-बारी आते हैं। अगला कौन है?",
+    "ab_repeating": "दोहराने वाला पैटर्न ढूँढें।",
+    "ab_repeating_piece": "अगला दोहराने वाला टुकड़ा ढूँढें।",
+    "abb_two_same": "एक टुकड़ा, फिर दो एक जैसे। आगे क्या?",
+    "abb_group_three": "तीन के ग्रुप को देखें और पूरा करें।",
+    "abb_repeat_three": "तीन-टुकड़े का पैटर्न दोहराएँ।",
+    "abb_complete_group": "आखिरी ग्रुप पूरा करें।"
   }
 }

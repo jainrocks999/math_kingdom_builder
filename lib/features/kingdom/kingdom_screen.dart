@@ -1,11 +1,13 @@
 import 'dart:math' as math;
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
@@ -334,7 +336,7 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
                                                           vertical: 8,
                                                         ),
                                                         child: Text(
-                                                          'Tap a place to focus • Find Me jumps to the best next quest',
+                                                          '${context.tr('kingdom.find_me')} • ${context.tr('kingdom.next_best_quest')}',
                                                           style: AppTypography
                                                               .caption,
                                                         ),
@@ -488,8 +490,16 @@ class _KingdomMascotHint extends StatelessWidget {
           Expanded(
             child: Text(
               recommendedZone.isComplete
-                  ? 'Amazing! Try another zone or replay a favorite quest.'
-                  : 'Let us grow ${recommendedZone.title} today!',
+                  ? AppLocalization.kingdomZone(
+                      context,
+                      recommendedZone.id,
+                      'subtitle',
+                    )
+                  : AppLocalization.kingdomZone(
+                      context,
+                      recommendedZone.id,
+                      'hint',
+                    ),
               style: AppTypography.bodySmall.copyWith(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.w700,

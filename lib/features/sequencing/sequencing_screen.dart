@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -7,11 +8,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/audio_service.dart';
-import '../../core/utils/tts_voice_helper.dart';
 import '../math_operations/math_operation_theme.dart';
 import '../math_operations/math_operation_widgets.dart';
 
@@ -22,8 +23,8 @@ class _SequencingRound {
     required this.correctAnswer,
     required this.options,
     required this.themeIndex,
-    required this.stageLabel,
-    required this.prompt,
+    required this.stageLabelKey,
+    required this.promptKey,
   });
 
   final List<int> sequence;
@@ -31,8 +32,8 @@ class _SequencingRound {
   final int correctAnswer;
   final List<int> options;
   final int themeIndex;
-  final String stageLabel;
-  final String prompt;
+  final String stageLabelKey;
+  final String promptKey;
 }
 
 class _SequenceConfig {
@@ -41,14 +42,14 @@ class _SequenceConfig {
     required this.length,
     required this.step,
     required this.allowEdgeGap,
-    required this.stageLabel,
+    required this.stageLabelKey,
   });
 
   final int start;
   final int length;
   final int step;
   final bool allowEdgeGap;
-  final String stageLabel;
+  final String stageLabelKey;
 }
 
 class SequencingScreen extends StatefulWidget {
@@ -63,7 +64,8 @@ class _SequencingScreenState extends State<SequencingScreen>
   static const _totalRounds = 8;
 
   late final FlutterTts _tts;
-  late final Future<void> _ttsReady;
+  late Future<void> _ttsReady;
+  bool _ttsConfigured = false;
   late final AnimationController _successPulseController;
   late final List<_SequencingRound> _rounds;
   final AudioService _feedbackAudio = AudioService();
@@ -82,19 +84,21 @@ class _SequencingScreenState extends State<SequencingScreen>
   MathOperationTheme get _theme => mathOperationThemes[_round.themeIndex];
   bool get _showHint => _wrongAttempts >= 2;
 
-  String get _spokenSequencePrompt {
+  String _spokenSequencePrompt(BuildContext context) {
     final spokenSequence = <String>[];
     for (var i = 0; i < _round.sequence.length; i++) {
       if (i == _round.missingIndex) {
-        spokenSequence.add('blank');
+        spokenSequence.add(context.tr('learning.sequence_blank'));
       } else {
         spokenSequence.add('${_round.sequence[i]}');
       }
     }
-    final direction = _round.stageLabel == 'Backward Order'
-        ? 'Count backward'
-        : 'Count forward';
-    return '$direction. ${spokenSequence.join(', ')}. Fill the missing number.';
+    final isBackward = _round.stageLabelKey == 'sequencing_backward';
+    final direction = isBackward
+        ? context.tr('learning.count_backward')
+        : context.tr('learning.count_forward');
+    return '$direction. ${spokenSequence.join(', ')}. '
+        '${context.tr('learning.fill_missing_number')}';
   }
 
   @override
@@ -106,25 +110,15 @@ class _SequencingScreenState extends State<SequencingScreen>
       duration: const Duration(milliseconds: 420),
       value: 1,
     );
-    _ttsReady = _configureTts();
+    _ttsReady = Future<void>.value();
     _rounds = _buildRoundPlan();
     _playScreenMusic(delayed: true);
     WidgetsBinding.instance.addPostFrameCallback((_) => _speakPrompt());
   }
 
   Future<void> _configureTts() async {
-    await TtsVoiceHelper.configureSharedAudio(_tts);
-    await TtsVoiceHelper.applyPreferredVoice(
-      _tts,
-      locale: 'en-IN',
-      fallbackLocales: const ['en-US', 'en-GB'],
-    );
+    await AppLocalization.configureTts(_tts, context);
     await _tts.setPitch(1.05);
-    await TtsVoiceHelper.applyPreferredSpeechRate(
-      _tts,
-      normalRate: 0.42,
-      slowRate: 0.3,
-    );
     await _tts.setVolume(1.0);
   }
 
@@ -135,56 +129,56 @@ class _SequencingScreenState extends State<SequencingScreen>
         length: 4,
         step: 1,
         allowEdgeGap: false,
-        stageLabel: 'Forward Order',
+        stageLabelKey: 'sequencing_forward',
       ),
       _SequenceConfig(
         start: 2,
         length: 5,
         step: 1,
         allowEdgeGap: false,
-        stageLabel: 'Forward Order',
+        stageLabelKey: 'sequencing_forward',
       ),
       _SequenceConfig(
         start: 4,
         length: 5,
         step: 1,
         allowEdgeGap: true,
-        stageLabel: 'Forward Order',
+        stageLabelKey: 'sequencing_forward',
       ),
       _SequenceConfig(
         start: 6,
         length: 5,
         step: 1,
         allowEdgeGap: true,
-        stageLabel: 'Forward Order',
+        stageLabelKey: 'sequencing_forward',
       ),
       _SequenceConfig(
         start: 5,
         length: 4,
         step: -1,
         allowEdgeGap: false,
-        stageLabel: 'Backward Order',
+        stageLabelKey: 'sequencing_backward',
       ),
       _SequenceConfig(
         start: 7,
         length: 5,
         step: -1,
         allowEdgeGap: false,
-        stageLabel: 'Backward Order',
+        stageLabelKey: 'sequencing_backward',
       ),
       _SequenceConfig(
         start: 10,
         length: 5,
         step: -1,
         allowEdgeGap: true,
-        stageLabel: 'Backward Order',
+        stageLabelKey: 'sequencing_backward',
       ),
       _SequenceConfig(
         start: 9,
         length: 6,
         step: -1,
         allowEdgeGap: true,
-        stageLabel: 'Backward Order',
+        stageLabelKey: 'sequencing_backward',
       ),
     ];
 
@@ -206,10 +200,10 @@ class _SequencingScreenState extends State<SequencingScreen>
         correctAnswer: correctAnswer,
         options: _buildOptions(correctAnswer),
         themeIndex: index % mathOperationThemes.length,
-        stageLabel: config.stageLabel,
-        prompt: config.step > 0
-            ? 'Fill the missing number in order.'
-            : 'Count backward and fill the gap.',
+        stageLabelKey: config.stageLabelKey,
+        promptKey: config.step > 0
+            ? 'fill_missing_in_order'
+            : 'count_backward_fill_gap',
       );
     });
   }
@@ -270,7 +264,7 @@ class _SequencingScreenState extends State<SequencingScreen>
   Future<void> _speakPrompt() async {
     await _ttsReady;
     await _tts.stop();
-    await _tts.speak(_spokenSequencePrompt);
+    await _tts.speak(_spokenSequencePrompt(context));
   }
 
   Future<void> _speakSuccess() async {
@@ -355,6 +349,10 @@ class _SequencingScreenState extends State<SequencingScreen>
     if (route is PageRoute<dynamic>) {
       appRouteObserver.unsubscribe(this);
       appRouteObserver.subscribe(this, route);
+    }
+    if (!_ttsConfigured) {
+      _ttsConfigured = true;
+      _ttsReady = _configureTts();
     }
   }
 
@@ -460,11 +458,12 @@ class _SequencingScreenState extends State<SequencingScreen>
           ),
           if (_showCelebration)
             MathOpCelebrationOverlay(
-              title: 'Great!',
+              title: context.tr('learning.sequencing_complete'),
               emoji: '🪜',
               color: _theme.color,
               softColor: _theme.softColor,
-              buttonLabel: 'Patterns',
+              buttonLabel:
+                  AppLocalization.moduleTitle(context, AppRoutes.patterns),
               onButtonTap: () {
                 AppAudioService.instance.stopCelebrationMusic();
                 context.pushReplacement(AppRoutes.patterns);
@@ -516,7 +515,7 @@ class _SequencingScreenState extends State<SequencingScreen>
   }
 
   Widget _buildSequenceStep(int index) {
-    final isBackward = _round.stageLabel == 'Backward Order';
+    final isBackward = _round.stageLabelKey == 'sequencing_backward';
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -586,7 +585,7 @@ class _SequencingScreenState extends State<SequencingScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _round.stageLabel,
+                            context.tr('learning.${_round.stageLabelKey}'),
                             style: AppTypography.bodyStrong.copyWith(
                               color: _theme.color,
                               fontWeight: FontWeight.w800,
@@ -594,7 +593,7 @@ class _SequencingScreenState extends State<SequencingScreen>
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            _round.prompt,
+                            context.tr('learning.${_round.promptKey}'),
                             style: AppTypography.h3.copyWith(
                               color: const Color(0xFF1A1060),
                               fontWeight: FontWeight.w800,
@@ -617,7 +616,13 @@ class _SequencingScreenState extends State<SequencingScreen>
                     ),
                   ),
                   child: Text(
-                    'Round ${_roundIndex + 1} of $_totalRounds',
+                    context.tr(
+                      'learning.round',
+                      namedArgs: {
+                        'current': '${_roundIndex + 1}',
+                        'total': '$_totalRounds',
+                      },
+                    ),
                     style: AppTypography.caption.copyWith(
                       color: _theme.color,
                       fontWeight: FontWeight.w800,
@@ -658,7 +663,7 @@ class _SequencingScreenState extends State<SequencingScreen>
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Say the numbers in order and look at the ones beside the gap.',
+              context.tr('learning.sequencing_prompt'),
               style: AppTypography.body.copyWith(
                 color: const Color(0xFF6E5600),
                 fontWeight: FontWeight.w600,
@@ -786,7 +791,7 @@ class _SequencingScreenState extends State<SequencingScreen>
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Tap the missing number or hold to drag',
+            context.tr('learning.sequencing_drag_hint'),
             style: AppTypography.bodyStrong.copyWith(
               color: _theme.color,
               fontWeight: FontWeight.w800,

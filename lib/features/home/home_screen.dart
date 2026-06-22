@@ -595,7 +595,9 @@ class _StarCountChip extends StatelessWidget {
           ),
           const SizedBox(width: 3),
           Text(
-            totalStars == 1 ? 'star' : 'stars',
+            totalStars == 1
+                ? context.tr('common.star_word_one')
+                : context.tr('common.star_word_other'),
             style: AppTypography.caption.copyWith(
               color: const Color(0xFF8A6000),
               fontSize: 10,
@@ -1016,7 +1018,7 @@ class _QuestCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        quest.label,
+                        label,
                         style: AppTypography.cardTitle.copyWith(
                           color: const Color(0xFF1E1060),
                           fontSize: 18,
@@ -1038,7 +1040,7 @@ class _QuestCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
-                          'Soon',
+                          context.tr('home.coming_soon'),
                           style: AppTypography.caption.copyWith(
                             color: AppColors.textSecondary,
                             fontWeight: FontWeight.w800,
@@ -1049,7 +1051,7 @@ class _QuestCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  quest.description,
+                  description,
                   style: AppTypography.bodySmall.copyWith(
                     color: const Color(0xFF7A849A),
                     fontSize: 12,
@@ -1119,9 +1121,9 @@ class _HomeErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return KidOopsView(
-      title: 'Oops! Home needs a quick retry.',
-      subtitle: 'Tap below and we will load your learning cards again.',
-      buttonLabel: 'Try Again',
+      title: context.tr('home.error.title'),
+      subtitle: context.tr('home.error.subtitle'),
+      buttonLabel: context.tr('home.error.button'),
       onButtonTap: onRetry,
     );
   }
@@ -1148,55 +1150,110 @@ class _DailyChallengeBanner extends StatelessWidget {
 
   bool get _isChallengeCompleted => challengeSnapshot?.isCompleted ?? false;
 
-  String get _headline {
-    final challengeTitle = challengeSnapshot?.challenge.title;
-    if (_isRewardClaimed) {
-      return 'Daily bonus earned!';
-    }
-    if (_isChallengeCompleted) {
-      return challengeTitle == null
-          ? 'Daily challenge complete!'
-          : '$challengeTitle complete!';
-    }
-    if (todayCompletions >= dailyGoal) {
-      return challengeTitle == null
-          ? 'Daily goal complete!'
-          : '$challengeTitle complete!';
-    }
-    if (todayCompletions == 0) {
-      return challengeTitle == null
-          ? 'Start today\'s challenge'
-          : 'Play $challengeTitle';
-    }
-    return '$todayCompletions adventure${todayCompletions == 1 ? '' : 's'} done';
+  String _challengeTitle(BuildContext context) {
+    final challenge = challengeSnapshot?.challenge;
+    if (challenge == null) return '';
+    final key = 'home.daily_challenges.${challenge.id}.title';
+    final translated = context.tr(key);
+    return translated == key ? challenge.title : translated;
   }
 
-  String get _subtitle {
+  String _challengeSubtitle(BuildContext context) {
     final challenge = challengeSnapshot?.challenge;
+    if (challenge == null) return '';
+    final key = 'home.daily_challenges.${challenge.id}.subtitle';
+    final translated = context.tr(key);
+    return translated == key ? challenge.subtitle : translated;
+  }
+
+  String _headline(BuildContext context) {
+    final challengeTitle = _challengeTitle(context);
+    if (_isRewardClaimed) {
+      return context.tr('home.daily.reward_earned');
+    }
+    if (_isChallengeCompleted) {
+      return challengeTitle.isEmpty
+          ? context.tr('home.daily.daily_challenge_complete')
+          : context.tr(
+              'home.daily.challenge_complete',
+              namedArgs: {'title': challengeTitle},
+            );
+    }
+    if (todayCompletions >= dailyGoal) {
+      return challengeTitle.isEmpty
+          ? context.tr('home.daily.daily_goal_complete')
+          : context.tr(
+              'home.daily.challenge_complete',
+              namedArgs: {'title': challengeTitle},
+            );
+    }
+    if (todayCompletions == 0) {
+      return challengeTitle.isEmpty
+          ? context.tr('home.daily.start_today_challenge')
+          : context.tr(
+              'home.daily.play_challenge',
+              namedArgs: {'title': challengeTitle},
+            );
+    }
+    return context.plural('home.daily.adventures_done', todayCompletions);
+  }
+
+  String _subtitle(BuildContext context) {
+    final challenge = challengeSnapshot?.challenge;
+    final localizedTitle = _challengeTitle(context);
+    final localizedSubtitle = _challengeSubtitle(context);
     if (_isRewardClaimed) {
       final bonusStars = challengeSnapshot?.bonusStars ?? 0;
       return challenge == null
-          ? '+$bonusStars stars have been added to today\'s adventure.'
-          : '+$bonusStars stars added for ${challenge.title}.';
+          ? context.tr(
+              'home.daily.reward_added_today',
+              namedArgs: {'stars': '$bonusStars'},
+            )
+          : context.tr(
+              'home.daily.reward_added_for_challenge',
+              namedArgs: {'stars': '$bonusStars', 'title': localizedTitle},
+            );
     }
     if (_isChallengeCompleted) {
       return challenge == null
-          ? 'You cleared today\'s challenge and unlocked the bonus.'
-          : 'You cleared ${challenge.title} and unlocked the daily bonus.';
+          ? context.tr('home.daily.challenge_bonus_today')
+          : context.tr(
+              'home.daily.challenge_bonus_named',
+              namedArgs: {'title': localizedTitle},
+            );
     }
     if (todayCompletions >= dailyGoal) {
       return streakDays > 1
-          ? 'Your $streakDays-day streak is glowing bright.'
+          ? context.tr(
+              'home.daily.streak_glowing',
+              namedArgs: {'days': '$streakDays'},
+            )
           : challenge == null
-              ? 'You reached today\'s goal. Keep the magic going!'
-              : 'You cleared ${challenge.title}. Keep the magic going!';
+              ? context.tr('home.daily.goal_complete_keep_going')
+              : context.tr(
+                  'home.daily.challenge_complete_keep_going',
+                  namedArgs: {'title': localizedTitle},
+                );
     }
 
     final remaining = dailyGoal - todayCompletions;
+    final remainingLabel = context.plural(
+      'common.adventures',
+      remaining,
+    );
     if (challenge == null) {
-      return '$remaining more adventure${remaining == 1 ? '' : 's'} to earn today\'s crown';
+      return context.tr(
+        'home.daily.remaining_to_crown',
+        namedArgs: {'count': remainingLabel},
+      );
     }
-    return '${challenge.subtitle} $remaining more adventure${remaining == 1 ? '' : 's'} to finish today\'s goal.';
+    return context.tr(
+      'home.daily.remaining_to_goal',
+      namedArgs: {
+        'subtitle': localizedSubtitle,
+        'count': remainingLabel,
+      },
+    );
   }
 
   @override
@@ -1271,8 +1328,20 @@ class _DailyChallengeBanner extends StatelessWidget {
                       ),
                       child: Text(
                         _isRewardClaimed
-                            ? '⭐ +${challengeSnapshot?.bonusStars ?? 0} claimed'
-                            : '${challengeSnapshot?.challenge.emoji ?? '✦'} Daily Challenge',
+                            ? context.tr(
+                                'home.daily.badge_claimed',
+                                namedArgs: {
+                                  'stars':
+                                      '${challengeSnapshot?.bonusStars ?? 0}',
+                                },
+                              )
+                            : context.tr(
+                                'home.daily.badge_daily',
+                                namedArgs: {
+                                  'emoji':
+                                      challengeSnapshot?.challenge.emoji ?? '✦',
+                                },
+                              ),
                         style: AppTypography.bodySmall.copyWith(
                           color: const Color(0xFF8A6000),
                           fontSize: 10,
@@ -1283,7 +1352,7 @@ class _DailyChallengeBanner extends StatelessWidget {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      _headline,
+                      _headline(context),
                       style: AppTypography.cardTitle.copyWith(
                         color: AppColors.surface,
                         fontSize: 18,
@@ -1294,7 +1363,7 @@ class _DailyChallengeBanner extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      _subtitle,
+                      _subtitle(context),
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.surface.withValues(alpha: 0.85),
                         fontSize: 12,

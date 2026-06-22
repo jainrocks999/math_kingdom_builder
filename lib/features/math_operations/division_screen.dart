@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -7,11 +8,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/audio_service.dart';
-import '../../core/utils/tts_voice_helper.dart';
 import 'math_operation_theme.dart';
 import 'math_operation_widgets.dart';
 
@@ -43,7 +44,8 @@ class _DivisionScreenState extends State<DivisionScreen>
   static const _speechSettleDelay = Duration(milliseconds: 80);
 
   late final FlutterTts _tts;
-  late final Future<void> _ttsReady;
+  late Future<void> _ttsReady;
+  bool _ttsConfigured = false;
   late final AnimationController _successPulseController;
   late final List<_DivisionRound> _rounds;
   final AudioService _feedbackAudio = AudioService();
@@ -75,7 +77,7 @@ class _DivisionScreenState extends State<DivisionScreen>
       duration: const Duration(milliseconds: 420),
       value: 1,
     );
-    _ttsReady = _configureTts();
+    _ttsReady = Future<void>.value();
     _rounds = _buildRoundPlan();
     _resetPlacements();
     _playScreenMusic(delayed: true);
@@ -83,19 +85,9 @@ class _DivisionScreenState extends State<DivisionScreen>
   }
 
   Future<void> _configureTts() async {
-    await TtsVoiceHelper.configureSharedAudio(_tts);
+    await AppLocalization.configureTts(_tts, context);
     await _tts.awaitSpeakCompletion(true);
-    await TtsVoiceHelper.applyPreferredVoice(
-      _tts,
-      locale: 'en-IN',
-      fallbackLocales: const ['en-US', 'en-GB'],
-    );
     await _tts.setPitch(1.05);
-    await TtsVoiceHelper.applyPreferredSpeechRate(
-      _tts,
-      normalRate: 0.42,
-      slowRate: 0.3,
-    );
     await _tts.setVolume(1.0);
   }
 
@@ -167,13 +159,26 @@ class _DivisionScreenState extends State<DivisionScreen>
 
   Future<void> _speakPrompt() async {
     await _speakText(
-      '${_round.total} divided by ${_round.groups} equals what? Share the objects into equal groups.',
+      context.tr(
+        'learning.division_speak_prompt',
+        namedArgs: {
+          'total': '${_round.total}',
+          'groups': '${_round.groups}',
+        },
+      ),
     );
   }
 
   Future<void> _speakSuccess() async {
     await _speakText(
-      '${_round.total} divided by ${_round.groups} equals ${_round.quotient}',
+      context.tr(
+        'learning.division_speak_success',
+        namedArgs: {
+          'total': '${_round.total}',
+          'groups': '${_round.groups}',
+          'quotient': '${_round.quotient}',
+        },
+      ),
     );
   }
 
@@ -291,6 +296,10 @@ class _DivisionScreenState extends State<DivisionScreen>
       appRouteObserver.unsubscribe(this);
       appRouteObserver.subscribe(this, route);
     }
+    if (!_ttsConfigured) {
+      _ttsConfigured = true;
+      _ttsReady = _configureTts();
+    }
   }
 
   @override
@@ -406,11 +415,11 @@ class _DivisionScreenState extends State<DivisionScreen>
           ),
           if (_showCelebration)
             MathOpCelebrationOverlay(
-              title: 'Super!',
+              title: context.tr('learning.division_complete'),
               emoji: '🌟',
               color: _theme.color,
               softColor: _theme.softColor,
-              buttonLabel: 'Done',
+              buttonLabel: context.tr('learning.finish'),
               onButtonTap: () {
                 AppAudioService.instance.stopCelebrationMusic();
                 context.pushReplacement(AppRoutes.mathOperations);
@@ -454,7 +463,7 @@ class _DivisionScreenState extends State<DivisionScreen>
           child: Column(
             children: [
               Text(
-                'Share the top objects equally into the bowls.',
+                context.tr('learning.division_drag_hint'),
                 textAlign: TextAlign.center,
                 style: AppTypography.bodyStrong.copyWith(
                   color: const Color(0xFF5A6B7A),
@@ -468,7 +477,7 @@ class _DivisionScreenState extends State<DivisionScreen>
                   child: OutlinedButton.icon(
                     onPressed: _shareAllRemaining,
                     icon: const Icon(Icons.touch_app_rounded),
-                    label: const Text('Need help? Share all for me'),
+                    label: Text(context.tr('learning.need_help_move_all')),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: _theme.color,
                       side: BorderSide(
@@ -542,8 +551,11 @@ class _DivisionScreenState extends State<DivisionScreen>
         children: [
           Text(
             remainingCount == 0
-                ? 'All objects shared'
-                : '$remainingCount left to share',
+                ? context.tr('learning.great_job')
+                : context.tr(
+                    'learning.division_left_to_share',
+                    namedArgs: {'count': '$remainingCount'},
+                  ),
             style: AppTypography.bodyStrong.copyWith(
               color: _theme.color,
               fontWeight: FontWeight.w800,
@@ -551,7 +563,14 @@ class _DivisionScreenState extends State<DivisionScreen>
           ),
           const SizedBox(height: 4),
           Text(
-            '${_round.total} total • ${_round.groups} bowls • ${_round.quotient} each',
+            context.tr(
+              'learning.division_summary',
+              namedArgs: {
+                'total': '${_round.total}',
+                'groups': '${_round.groups}',
+                'each': '${_round.quotient}',
+              },
+            ),
             style: AppTypography.caption.copyWith(
               color: const Color(0xFF64748B),
               fontWeight: FontWeight.w700,
@@ -597,7 +616,7 @@ class _DivisionScreenState extends State<DivisionScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Bowl ${bowlIndex + 1}',
+                    '${context.tr('learning.drop_zone')} ${bowlIndex + 1}',
                     textAlign: TextAlign.center,
                     style: AppTypography.bodyStrong.copyWith(
                       color: _theme.secondaryColor.withValues(alpha: 0.7),
@@ -606,7 +625,10 @@ class _DivisionScreenState extends State<DivisionScreen>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${_round.quotient} each',
+                    context.tr(
+                      'learning.math_each_label',
+                      namedArgs: {'count': '${_round.quotient}'},
+                    ),
                     style: AppTypography.caption.copyWith(
                       color: const Color(0xFF64748B),
                       fontWeight: FontWeight.w700,
@@ -619,7 +641,7 @@ class _DivisionScreenState extends State<DivisionScreen>
           return Column(
             children: [
               Text(
-                'Bowl ${bowlIndex + 1}',
+                '${context.tr('learning.drop_zone')} ${bowlIndex + 1}',
                 style: AppTypography.caption.copyWith(
                   color: _theme.secondaryColor,
                   fontWeight: FontWeight.w800,

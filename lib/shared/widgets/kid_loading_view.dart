@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
@@ -7,19 +8,23 @@ import 'celebration_bear.dart';
 class KidLoadingView extends StatelessWidget {
   const KidLoadingView({
     super.key,
-    this.title = 'Loading...',
-    this.subtitle = 'Getting your next activity ready.',
+    this.title,
+    this.subtitle,
     this.color = AppColors.primary,
     this.compact = false,
   });
 
-  final String title;
-  final String subtitle;
+  final String? title;
+  final String? subtitle;
   final Color color;
   final bool compact;
 
   @override
   Widget build(BuildContext context) {
+    final resolvedTitle =
+        title ?? context.tr('learning.loading_title');
+    final resolvedSubtitle =
+        subtitle ?? context.tr('learning.loading_subtitle');
     final bearSize = compact ? 72.0 : 92.0;
     final spinnerSize = compact ? 18.0 : 22.0;
 
@@ -52,7 +57,7 @@ class KidLoadingView extends StatelessWidget {
                 CelebrationBear(size: bearSize),
                 SizedBox(height: compact ? 10 : 12),
                 Text(
-                  title,
+                  resolvedTitle,
                   textAlign: TextAlign.center,
                   style: AppTypography.h3.copyWith(
                     color: const Color(0xFF1E1060),
@@ -61,7 +66,7 @@ class KidLoadingView extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  subtitle,
+                  resolvedSubtitle,
                   textAlign: TextAlign.center,
                   style: AppTypography.bodySmall.copyWith(
                     color: const Color(0xFF5A6B7A),

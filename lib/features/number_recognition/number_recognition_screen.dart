@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -5,11 +6,11 @@ import 'package:flutter_tts/flutter_tts.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/localization/app_localization.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/router/app_router.dart';
 import '../../core/utils/audio_service.dart';
-import '../../core/utils/tts_voice_helper.dart';
 import '../StartLearning/start_learning_next_action_button.dart';
 import '../../shared/widgets/celebration_bear.dart';
 
@@ -27,33 +28,33 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
   static const _speechSettleDelay = Duration(milliseconds: 80);
 
   late final FlutterTts _flutterTts;
-  late final Future<void> _ttsReady;
+  late Future<void> _ttsReady;
+  bool _ttsConfigured = false;
+  bool _localizedStateInitialized = false;
   late final AnimationController _speakerPulseController;
   late final AnimationController _cardBounceController;
   late final AnimationController _celebrationController;
   late List<int> _roundOrder;
 
-  final NumberSystem _numberSystem = const NumberSystem(
-    name: 'English',
-    locale: 'en-US',
+  static const _numberSystem = NumberSystem(
     color: AppColors.primary,
     softColor: AppColors.primaryLight,
     shadowColor: Color(0xFFC94A18),
-    emoji: '🇬🇧',
-    numbers: [
-      NumberData(digit: '0', word: 'Zero', symbol: '0'),
-      NumberData(digit: '1', word: 'One', symbol: '1'),
-      NumberData(digit: '2', word: 'Two', symbol: '2'),
-      NumberData(digit: '3', word: 'Three', symbol: '3'),
-      NumberData(digit: '4', word: 'Four', symbol: '4'),
-      NumberData(digit: '5', word: 'Five', symbol: '5'),
-      NumberData(digit: '6', word: 'Six', symbol: '6'),
-      NumberData(digit: '7', word: 'Seven', symbol: '7'),
-      NumberData(digit: '8', word: 'Eight', symbol: '8'),
-      NumberData(digit: '9', word: 'Nine', symbol: '9'),
-      NumberData(digit: '10', word: 'Ten', symbol: '10'),
-    ],
+    emoji: '🔢',
   );
+
+  static const int _numberCount = 11;
+
+  List<NumberData> _numbersFor(BuildContext context) {
+    return List.generate(_numberCount, (index) {
+      final digit = '$index';
+      return NumberData(
+        digit: digit,
+        word: AppLocalization.numberWord(context, index),
+        symbol: digit,
+      );
+    });
+  }
 
   final AudioService _feedbackAudio = AudioService();
 
@@ -71,9 +72,10 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
   int _wrongAttemptsThisRound = 0;
 
   NumberSystem get _currentSystem => _numberSystem;
+  List<NumberData> get _numbers => _numbersFor(context);
   List<int> get _currentRoundOrder => _roundOrder;
   int get _currentNumberIndex => _currentRoundOrder[_currentRoundIndex];
-  NumberData get _currentNumber => _currentSystem.numbers[_currentNumberIndex];
+  NumberData get _currentNumber => _numbers[_currentNumberIndex];
 
   @override
   void initState() {
@@ -91,32 +93,16 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    _roundOrder = _buildRoundOrder(_currentSystem.numbers.length);
-    _ttsReady = _initTts();
-    _prepareQuestion(autoSpeak: false);
+    _roundOrder = _buildRoundOrder(_numberCount);
+    _ttsReady = Future<void>.value();
     _playScreenMusic(delayed: true);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _speakCurrentPrompt();
-      }
-    });
   }
 
   Future<void> _initTts() async {
-    await TtsVoiceHelper.configureSharedAudio(_flutterTts);
+    await AppLocalization.configureTts(_flutterTts, context);
     await _flutterTts.awaitSpeakCompletion(true);
     await _flutterTts.setVolume(1.0);
-    await TtsVoiceHelper.applyPreferredSpeechRate(
-      _flutterTts,
-      normalRate: 0.42,
-      slowRate: 0.3,
-    );
     await _flutterTts.setPitch(1.05);
-    await TtsVoiceHelper.applyPreferredVoice(
-      _flutterTts,
-      locale: 'en-IN',
-      fallbackLocales: const ['en-US', 'en-GB'],
-    );
   }
 
   List<int> _buildRoundOrder(int totalItems) {
@@ -159,7 +145,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
 
   void _prepareQuestion({required bool autoSpeak}) {
     final allIndices =
-        List<int>.generate(_currentSystem.numbers.length, (i) => i)
+        List<int>.generate(_numbers.length, (i) => i)
           ..remove(_currentNumberIndex)
           ..shuffle();
 
@@ -184,32 +170,20 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
   }
 
   Future<void> _speakCurrentPrompt() async {
-    await _speakText(
-      _currentNumber.word,
-      locale: _currentSystem.locale,
-      fallbackLocales: const ['en-IN', 'en-US', 'en-GB'],
-      normalRate: 0.42,
-      slowRate: 0.3,
-    );
+    await _speakText(_currentNumber.word);
   }
 
   Future<void> _speakCorrectAppreciation() async {
+    if (!mounted) return;
     await _speakText(
-      'Amazing! It is ${_currentNumber.word}.',
-      locale: 'en-IN',
-      fallbackLocales: const ['en-US', 'en-GB'],
-      normalRate: 0.44,
-      slowRate: 0.3,
+      context.tr(
+        'learning.amazing_number',
+        namedArgs: {'word': _currentNumber.word},
+      ),
     );
   }
 
-  Future<void> _speakText(
-    String text, {
-    required String locale,
-    required List<String> fallbackLocales,
-    required double normalRate,
-    required double slowRate,
-  }) async {
+  Future<void> _speakText(String text) async {
     final token = ++_speechRequestToken;
     await _ttsReady;
     if (!mounted || token != _speechRequestToken) return;
@@ -218,16 +192,6 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
     await Future<void>.delayed(_speechSettleDelay);
     if (!mounted || token != _speechRequestToken) return;
     setState(() => _isSpeaking = true);
-    await TtsVoiceHelper.applyPreferredVoice(
-      _flutterTts,
-      locale: locale,
-      fallbackLocales: fallbackLocales,
-    );
-    await TtsVoiceHelper.applyPreferredSpeechRate(
-      _flutterTts,
-      normalRate: normalRate,
-      slowRate: slowRate,
-    );
     if (!mounted || token != _speechRequestToken) return;
     try {
       await _flutterTts.speak(text);
@@ -244,7 +208,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
     if (!mounted || requestToken != _autoAdvanceToken) return;
     await Future<void>.delayed(_postSuccessPause);
     if (!mounted || requestToken != _autoAdvanceToken) return;
-    if (_currentRoundIndex == _currentSystem.numbers.length - 1) {
+    if (_currentRoundIndex == _numbers.length - 1) {
       _showCompletionCelebration();
     } else {
       _nextNumber();
@@ -290,19 +254,14 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
   }
 
   Future<void> _speakWrongAnswerHint() async {
-    await _speakText(
-      'Try again. Tap the speaker if you want to hear it again.',
-      locale: 'en-IN',
-      fallbackLocales: const ['en-US', 'en-GB'],
-      normalRate: 0.42,
-      slowRate: 0.3,
-    );
+    if (!mounted) return;
+    await _speakText(context.tr('learning.try_again_hear'));
   }
 
   void _nextNumber() {
     if (!_hasAnsweredCorrectly) return;
 
-    if (_currentRoundIndex >= _currentSystem.numbers.length - 1) {
+    if (_currentRoundIndex >= _numbers.length - 1) {
       _showCompletionCelebration();
       return;
     }
@@ -361,6 +320,19 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
     if (route is PageRoute<dynamic>) {
       appRouteObserver.unsubscribe(this);
       appRouteObserver.subscribe(this, route);
+    }
+    if (!_ttsConfigured) {
+      _ttsConfigured = true;
+      _ttsReady = _initTts();
+    }
+    if (!_localizedStateInitialized) {
+      _localizedStateInitialized = true;
+      _prepareQuestion(autoSpeak: false);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _speakCurrentPrompt();
+        }
+      });
     }
   }
 
@@ -512,7 +484,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
           child: Column(
             children: [
               Text(
-                'Find Correct Number',
+                AppLocalization.moduleTitle(context, AppRoutes.findNumber),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -523,7 +495,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
                 ),
               ),
               Text(
-                'English',
+                context.tr('learning.find_prompt'),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.bodySmall.copyWith(
@@ -572,7 +544,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
   }
 
   Widget _buildProgressCard() {
-    final total = _currentSystem.numbers.length;
+    final total = _numbers.length;
     final progress =
         (_currentRoundIndex + (_hasAnsweredCorrectly ? 1 : 0)) / total;
 
@@ -596,7 +568,13 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
             children: [
               Expanded(
                 child: Text(
-                  'Round ${_currentRoundIndex + 1} of $total',
+                  context.tr(
+                    'learning.round',
+                    namedArgs: {
+                      'current': '${_currentRoundIndex + 1}',
+                      'total': '$total',
+                    },
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodyStrong.copyWith(
@@ -607,7 +585,9 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
               ),
               const SizedBox(width: 12),
               Text(
-                _hasAnsweredCorrectly ? 'Amazing!' : 'Listen carefully',
+                _hasAnsweredCorrectly
+                    ? context.tr('learning.great_job')
+                    : context.tr('learning.find_prompt'),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.bodySmall.copyWith(
@@ -809,7 +789,10 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
                           SizedBox(width: veryTightLayout ? 8 : 10),
                           Expanded(
                             child: Text(
-                              'Amazing! You found ${_currentNumber.word}. Next one is coming...',
+                              context.tr(
+                                'learning.amazing_number',
+                                namedArgs: {'word': _currentNumber.word},
+                              ),
                               textAlign: TextAlign.center,
                               style: AppTypography.bodyStrong.copyWith(
                                 color: AppColors.gardenGreen,
@@ -822,8 +805,8 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
                     )
                   : Text(
                       _wrongAttemptsThisRound >= 2
-                          ? 'Look for the softly glowing correct card, or tap the speaker again.'
-                          : 'Tap the speaker any time if you want to hear it again.',
+                          ? context.tr('learning.try_again_hear')
+                          : context.tr('learning.tap_to_hear'),
                       key: ValueKey('hint_$_wrongAttemptsThisRound'),
                       textAlign: TextAlign.center,
                       style: AppTypography.bodySmall.copyWith(
@@ -874,7 +857,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
                               SizedBox(width: veryTightLayout ? 4 : 6),
                               Flexible(
                                 child: Text(
-                                  'Listen and choose',
+                                  context.tr('learning.find_prompt'),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: AppTypography.bodyStrong.copyWith(
@@ -959,7 +942,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
                   ),
                   SizedBox(height: topSectionGap),
                   Text(
-                    'Listen carefully and tap the number you hear.',
+                    context.tr('learning.find_prompt'),
                     style: AppTypography.bodySmall.copyWith(
                       color: AppColors.textSecondary,
                       fontWeight: FontWeight.w700,
@@ -969,7 +952,9 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
                   ),
                   SizedBox(height: helperGap),
                   Text(
-                    _isSpeaking ? 'Listening...' : 'Tap to hear again',
+                    _isSpeaking
+                        ? context.tr('learning.listen')
+                        : context.tr('learning.tap_to_hear'),
                     style: AppTypography.bodyStrong.copyWith(
                       color: AppColors.bridgeBlue,
                       fontSize: helperFontSize,
@@ -1019,7 +1004,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Which number did you hear?',
+            context.tr('learning.find_prompt'),
             style: AppTypography.bodyStrong.copyWith(
               color: AppColors.textPrimary,
               fontSize: 16,
@@ -1051,7 +1036,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
   }
 
   Widget _buildAnswerCard(int optionIndex) {
-    final number = _currentSystem.numbers[_currentOptions[optionIndex]];
+    final number = _numbers[_currentOptions[optionIndex]];
     final isSelected = optionIndex == _selectedOptionIndex;
     final isCorrect = _currentOptions[optionIndex] == _currentNumberIndex;
     final showHintHighlight =
@@ -1133,7 +1118,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
       children: [
         Expanded(
           child: _ActionButton(
-            label: 'Previous',
+            label: context.tr('learning.previous'),
             icon: Icons.arrow_back_rounded,
             onTap: _currentRoundIndex > 0 ? _previousNumber : null,
             backgroundColor: AppColors.surface.withValues(alpha: 0.92),
@@ -1144,7 +1129,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
         const SizedBox(width: 12),
         Expanded(
           child: _ActionButton(
-            label: 'Hear Again',
+            label: context.tr('learning.speaker'),
             icon: Icons.volume_up_rounded,
             onTap: _speakCurrentPrompt,
             backgroundColor: _currentSystem.color,
@@ -1254,7 +1239,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Amazing!',
+                      context.tr('learning.great_job'),
                       style: AppTypography.h1.copyWith(
                         color: AppColors.premiumGold,
                         fontWeight: FontWeight.w800,
@@ -1262,7 +1247,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'You finished all ${_currentSystem.name} find-the-number rounds.',
+                      context.tr('learning.finish_every_challenge'),
                       style: AppTypography.body.copyWith(
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.w700,
@@ -1271,7 +1256,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Bear is clapping for your smart work!',
+                      context.tr('learning.great_job'),
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textSecondary,
                         fontWeight: FontWeight.w700,
@@ -1421,18 +1406,12 @@ class NumberData {
 
 class NumberSystem {
   const NumberSystem({
-    required this.name,
-    required this.locale,
-    required this.numbers,
     required this.color,
     required this.softColor,
     required this.shadowColor,
     required this.emoji,
   });
 
-  final String name;
-  final String locale;
-  final List<NumberData> numbers;
   final Color color;
   final Color softColor;
   final Color shadowColor;

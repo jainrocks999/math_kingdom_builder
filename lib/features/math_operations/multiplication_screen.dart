@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -7,11 +8,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/audio_service.dart';
-import '../../core/utils/tts_voice_helper.dart';
 import 'math_operation_theme.dart';
 import 'math_operation_widgets.dart';
 
@@ -43,7 +44,8 @@ class _MultiplicationScreenState extends State<MultiplicationScreen>
   static const _speechSettleDelay = Duration(milliseconds: 80);
 
   late final FlutterTts _tts;
-  late final Future<void> _ttsReady;
+  late Future<void> _ttsReady;
+  bool _ttsConfigured = false;
   late final AnimationController _successPulseController;
   late final List<_MultiplicationRound> _rounds;
   final AudioService _feedbackAudio = AudioService();
@@ -78,26 +80,16 @@ class _MultiplicationScreenState extends State<MultiplicationScreen>
       duration: const Duration(milliseconds: 420),
       value: 1,
     );
-    _ttsReady = _configureTts();
+    _ttsReady = Future<void>.value();
     _rounds = _buildRoundPlan();
     _playScreenMusic(delayed: true);
     WidgetsBinding.instance.addPostFrameCallback((_) => _speakPrompt());
   }
 
   Future<void> _configureTts() async {
-    await TtsVoiceHelper.configureSharedAudio(_tts);
+    await AppLocalization.configureTts(_tts, context);
     await _tts.awaitSpeakCompletion(true);
-    await TtsVoiceHelper.applyPreferredVoice(
-      _tts,
-      locale: 'en-IN',
-      fallbackLocales: const ['en-US', 'en-GB'],
-    );
     await _tts.setPitch(1.05);
-    await TtsVoiceHelper.applyPreferredSpeechRate(
-      _tts,
-      normalRate: 0.42,
-      slowRate: 0.3,
-    );
     await _tts.setVolume(1.0);
   }
 
@@ -143,13 +135,26 @@ class _MultiplicationScreenState extends State<MultiplicationScreen>
 
   Future<void> _speakPrompt() async {
     await _speakText(
-      '${_round.groups} groups of ${_round.perGroup} equals what?',
+      context.tr(
+        'learning.multiplication_speak_prompt',
+        namedArgs: {
+          'groups': '${_round.groups}',
+          'perGroup': '${_round.perGroup}',
+        },
+      ),
     );
   }
 
   Future<void> _speakSuccess() async {
     await _speakText(
-      '${_round.groups} groups of ${_round.perGroup} equals ${_round.product}',
+      context.tr(
+        'learning.multiplication_speak_success',
+        namedArgs: {
+          'groups': '${_round.groups}',
+          'perGroup': '${_round.perGroup}',
+          'product': '${_round.product}',
+        },
+      ),
     );
   }
 
@@ -242,6 +247,10 @@ class _MultiplicationScreenState extends State<MultiplicationScreen>
     if (route is PageRoute<dynamic>) {
       appRouteObserver.unsubscribe(this);
       appRouteObserver.subscribe(this, route);
+    }
+    if (!_ttsConfigured) {
+      _ttsConfigured = true;
+      _ttsReady = _configureTts();
     }
   }
 
@@ -358,11 +367,12 @@ class _MultiplicationScreenState extends State<MultiplicationScreen>
           ),
           if (_showCelebration)
             MathOpCelebrationOverlay(
-              title: 'Great!',
+              title: context.tr('learning.multiplication_complete'),
               emoji: '🎉',
               color: _theme.color,
               softColor: _theme.softColor,
-              buttonLabel: 'Division',
+              buttonLabel:
+                  AppLocalization.moduleTitle(context, AppRoutes.division),
               onButtonTap: () {
                 AppAudioService.instance.stopCelebrationMusic();
                 context.pushReplacement(AppRoutes.division);
@@ -399,7 +409,7 @@ class _MultiplicationScreenState extends State<MultiplicationScreen>
           child: Column(
             children: [
               Text(
-                'Make equal groups, then move every object into the big bowl.',
+                context.tr('learning.multiplication_drag_hint'),
                 textAlign: TextAlign.center,
                 style: AppTypography.bodyStrong.copyWith(
                   color: const Color(0xFF5A6B7A),
@@ -413,7 +423,7 @@ class _MultiplicationScreenState extends State<MultiplicationScreen>
                   child: OutlinedButton.icon(
                     onPressed: _moveAllRemaining,
                     icon: const Icon(Icons.touch_app_rounded),
-                    label: const Text('Need help? Tap to move all'),
+                    label: Text(context.tr('learning.need_help_move_all')),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: _theme.color,
                       side: BorderSide(
@@ -505,7 +515,10 @@ class _MultiplicationScreenState extends State<MultiplicationScreen>
       child: Column(
         children: [
           Text(
-            'Group ${groupIndex + 1}',
+            context.tr(
+              'learning.math_group_label',
+              namedArgs: {'index': '${groupIndex + 1}'},
+            ),
             style: AppTypography.bodyStrong.copyWith(
               color: trayColor,
               fontWeight: FontWeight.w800,
@@ -513,7 +526,10 @@ class _MultiplicationScreenState extends State<MultiplicationScreen>
           ),
           const SizedBox(height: 2),
           Text(
-            '${_round.perGroup} each',
+            context.tr(
+              'learning.math_each_label',
+              namedArgs: {'count': '${_round.perGroup}'},
+            ),
             style: AppTypography.caption.copyWith(
               color: const Color(0xFF64748B),
               fontWeight: FontWeight.w700,

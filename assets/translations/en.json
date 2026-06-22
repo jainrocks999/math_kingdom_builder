@@ -14,6 +14,8 @@
     "speech_rate": "Speech Rate",
     "normal": "Normal",
     "slow": "Slow",
+    "star_word_one": "star",
+    "star_word_other": "stars",
     "today": "today",
     "stars": {
       "one": "{} star",
@@ -113,6 +115,40 @@
       "patterns": {
         "label": "Patterns",
         "description": "Spot and complete magical patterns"
+      }
+    },
+    "daily_challenges": {
+      "learn_numbers": {
+        "title": "Learn Numbers",
+        "subtitle": "Wake up the number bear and hear today's counting words."
+      },
+      "count_objects": {
+        "title": "Count Objects",
+        "subtitle": "Count the picture friends and tap the right answer."
+      },
+      "find_number": {
+        "title": "Find Correct Number",
+        "subtitle": "Listen carefully and pick the magical number you hear."
+      },
+      "match_numbers": {
+        "title": "Match Numbers",
+        "subtitle": "Match the number to the right object group."
+      },
+      "mini_quiz": {
+        "title": "Mini Quiz",
+        "subtitle": "Take on a mixed brain challenge and keep your streak glowing."
+      },
+      "addition": {
+        "title": "Addition",
+        "subtitle": "Combine two groups and fill the bowl with the answer."
+      },
+      "sequencing": {
+        "title": "Sequencing",
+        "subtitle": "Complete today's missing number trail in the right order."
+      },
+      "patterns": {
+        "title": "Patterns",
+        "subtitle": "Spot the repeating shape pattern and finish it."
       }
     },
     "error": {
@@ -232,5 +268,449 @@
       "mini_quiz": "Mini Quiz"
     },
     "open_full_settings": "Open Full Settings"
+  },
+  "learning": {
+    "loading_title": "Loading...",
+    "loading_subtitle": "Getting your next activity ready.",
+    "round": "Round {current} of {total}",
+    "tap_to_hear": "Tap 🔊 to hear again",
+    "tap_objects_to_count": "Tap objects to count",
+    "try_again": "Try again!",
+    "try_again_count": "Try again. Count carefully.",
+    "great_job": "Great job!",
+    "finish": "Finish",
+    "next": "Next",
+    "previous": "Previous",
+    "reset": "Reset",
+    "back_to_menu": "Back to Start Learning",
+    "next_module": "Next: {title}",
+    "next_learning": "Next Learning",
+    "collect": "Collect!",
+    "mastered": "Mastered",
+    "start_adventure": "Start adventure",
+    "start_practice": "Start practice",
+    "wins": "{count} wins",
+    "win_one": "1 win",
+    "unlock_at_stars": "Unlock at {stars} stars",
+    "open_rewards": "Open rewards",
+    "claimed_rewards": "{count} claimed rewards",
+    "all_rounds_complete": "All {total} Rounds Complete",
+    "activity_complete": "Activity Complete!",
+    "counting_complete": "Counting Complete!",
+    "finish_every_challenge": "You finished every challenge. Keep going with the next adventure!",
+    "stars_earned": "+{stars} stars earned",
+    "speaker": "Hear again",
+    "listen": "Listen!",
+    "wow": "Wow!",
+    "yay": "Yay!",
+    "tap": "Tap",
+    "drag_here": "Drag here",
+    "drop_zone": "Drop zone",
+    "how_many": "How many {label}?",
+    "count_prompt": "Count each picture and tap the correct number.",
+    "count_the": "Count the {label}. How many do you see?",
+    "great_count": "Great job! {count} {label}.",
+    "match_prompt": "Match the number to the picture group.",
+    "find_prompt": "Listen and tap the correct number.",
+    "quiz_mode_tap": "Tap the number",
+    "quiz_mode_drag": "Drag to match",
+    "quiz_mode_write": "Type the number",
+    "sequencing_prompt": "Put the missing number in the right place.",
+    "compare_more_prompt": "Tap the group with more {label}.",
+    "compare_less_prompt": "Tap the group with fewer {label}.",
+    "patterns_prompt": "Complete the pattern.",
+    "addition_speak_prompt": "{a} plus {b} equals what?",
+    "addition_speak_success": "{a} plus {b} equals {total}.",
+    "subtraction_speak_prompt": "{total} minus {remove} equals what? Take away {remove}.",
+    "subtraction_speak_success": "{total} minus {remove} equals {remaining}.",
+    "multiplication_speak_prompt": "{groups} groups of {perGroup} equals what?",
+    "multiplication_speak_success": "{groups} groups of {perGroup} equals {product}.",
+    "division_speak_prompt": "{total} divided by {groups} equals what? Share the objects into equal groups.",
+    "division_speak_success": "{total} divided by {groups} equals {quotient}.",
+    "addition_complete": "Addition Adventure Complete!",
+    "subtraction_complete": "Subtraction Adventure Complete!",
+    "multiplication_complete": "Multiplication Adventure Complete!",
+    "division_complete": "Division Adventure Complete!",
+    "sequencing_complete": "Sequencing Complete!",
+    "patterns_complete": "Patterns Complete!",
+    "new_adventure_unlocked": "New Adventure Unlocked",
+    "unlocked_message": "You earned enough stars to unlock this new learning adventure.",
+    "later": "Later",
+    "open_now": "Open Now",
+    "module_locked": "{title} is Locked",
+    "stars_needed": "You need {count} more stars to unlock this adventure.",
+    "keep_learning": "Keep Learning",
+    "choose_learner": "Choose Learner",
+    "choose_learner_subtitle": "Pick who is playing right now.",
+    "welcome_back": "Welcome back, {name}!",
+    "welcome_back_message": "Let's collect more stars and unlock new adventures today.",
+    "playing_as": "Playing as {name}",
+    "choose_activity": "Choose a fun activity and become a Math Hero!",
+    "today_mission": "Today's Mission",
+    "stars_collected": "{count} Stars Collected!",
+    "all_unlocked": "{count} completed adventures • everything unlocked",
+    "unlock_next": "{count} completed adventures • unlock {title} at {stars} stars",
+    "daily_goal_progress": "Daily goal progress",
+    "daily_goal_done": "Daily goal complete. Amazing work today!",
+    "daily_goal_remaining": "{count} more adventure to finish today's goal",
+    "daily_goal_remaining_other": "{count} more adventures to finish today's goal",
+    "learning_adventures": "Learning Adventures",
+    "tap_activity_hint": "Tap any activity to start your magical learning journey!",
+    "more_adventures": "More Math Adventures",
+    "more_adventures_subtitle": "Patterns, sequencing, and operation quests from the home map.",
+    "streak_start": "Start now",
+    "streak_days": "{count} days",
+    "today_adventures": "{count}/3 adventures",
+    "rewards_banner_stars": "{count} Stars Earned!",
+    "rewards_banner_claimed": "{count} rewards claimed so far",
+    "try_again_hear": "Try again. Tap the speaker if you want to hear it again.",
+    "amazing_number": "Amazing! It is {word}.",
+    "trace_prompt": "Trace the number with your finger.",
+    "stroke_complete": "Great tracing!",
+    "learn_swipe_hint": "Swipe or tap numbers to explore.",
+    "quiz_write_prompt": "Tap the numbers to answer.",
+    "sequencing_drag_hint": "Drag the missing number into the gap.",
+    "patterns_drag_hint": "Drag the shape to complete the pattern.",
+    "addition_drag_hint": "Drag or tap every object into the bowl.",
+    "subtraction_drag_hint": "Drag objects away to subtract.",
+    "multiplication_drag_hint": "Build equal groups by dragging objects.",
+    "division_drag_hint": "Share objects into equal groups.",
+    "need_help_move_all": "Need help? Tap to move all",
+    "group_a": "Group A",
+    "group_b": "Group B",
+    "math_group_label": "Group {index}",
+    "math_each_label": "{count} each",
+    "division_left_to_share": "{count} left to share",
+    "division_summary": "{total} total • {groups} bowls • {each} each",
+    "left_group": "Left group",
+    "right_group": "Right group",
+    "drop_here": "Drop here",
+    "take_away_count": "Take away {count}",
+    "left_here": "{count} left here",
+    "quiz_drag_card_hint": "Hold a number card and drag it into the glowing box.",
+    "write_the_answer": "Write the answer",
+    "check_answer": "Check Answer",
+    "write_answer": "Write Answer",
+    "count_forward": "Count forward",
+    "count_backward": "Count backward",
+    "fill_missing_number": "Fill the missing number.",
+    "fill_missing_in_order": "Fill the missing number in order.",
+    "count_backward_fill_gap": "Count backward and fill the gap.",
+    "sequence_blank": "blank",
+    "sequencing_forward": "Forward Order",
+    "sequencing_backward": "Backward Order",
+    "patterns_ab": "AB Pattern",
+    "patterns_abb": "ABB Pattern",
+    "trace_start_green_dot": "Start at the green dot.",
+    "trace_follow_path": "Lovely! Keep following the dotted path.",
+    "trace_almost_there": "Almost there, finish the stroke!",
+    "trace_try_again_stroke": "Nice try. Let's start that stroke again.",
+    "trace_start_from_dot": "Start from the green dot to trace {word}.",
+    "trace_ghost_hint": "Ghost hint is showing this stroke path. Trace over the glowing line.",
+    "trace_number_complete": "Hooray! {display} is complete.",
+    "trace_stroke_line": "Stroke {stroke}: {prompt} {hear_again}",
+    "trace_ghost_helper_on": "Ghost helper line is on now."
+  },
+  "modules": {
+    "learn_numbers": {
+      "title": "Learn Numbers",
+      "subtitle": "Swipe giant number art from 0 to 30"
+    },
+    "trace_numbers": {
+      "title": "Trace Numbers",
+      "subtitle": "Trace and write numbers beautifully"
+    },
+    "count_objects": {
+      "title": "Count Objects",
+      "subtitle": "Count fruits, stars and toys"
+    },
+    "find_correct_number": {
+      "title": "Find Correct Number",
+      "subtitle": "Choose the correct magical number"
+    },
+    "match_numbers": {
+      "title": "Match Numbers",
+      "subtitle": "Match numbers with correct objects"
+    },
+    "mini_quiz": {
+      "title": "Mini Quiz",
+      "subtitle": "Test your brain with fun questions"
+    },
+    "rewards": {
+      "title": "Rewards",
+      "subtitle": "Collect stars and unlock trophies"
+    },
+    "math_operations": {
+      "title": "Math Operations",
+      "subtitle": "Add, subtract, multiply, and divide"
+    },
+    "addition": {
+      "title": "Addition",
+      "subtitle": "Combine groups"
+    },
+    "subtraction": {
+      "title": "Subtraction",
+      "subtitle": "Take objects away"
+    },
+    "multiplication": {
+      "title": "Multiplication",
+      "subtitle": "Build equal groups"
+    },
+    "division": {
+      "title": "Division",
+      "subtitle": "Share into groups"
+    },
+    "sequencing": {
+      "title": "Sequencing",
+      "subtitle": "Put numbers in the right order"
+    },
+    "patterns": {
+      "title": "Patterns",
+      "subtitle": "Spot and complete magical patterns"
+    },
+    "kingdom_map": {
+      "title": "Kingdom Map",
+      "subtitle": "Visit the castle & unlock places"
+    },
+    "start_learning": {
+      "title": "Start Learning",
+      "subtitle": "Number magic & playful counting"
+    }
+  },
+  "objects": {
+    "apple": {
+      "singular": "apple",
+      "plural": "apples"
+    },
+    "candy": {
+      "singular": "candy",
+      "plural": "candies"
+    },
+    "car": {
+      "singular": "car",
+      "plural": "cars"
+    },
+    "balloon": {
+      "singular": "balloon",
+      "plural": "balloons"
+    },
+    "star": {
+      "singular": "star",
+      "plural": "stars"
+    }
+  },
+  "math_operations": {
+    "title": "Math Ops",
+    "hero_title": "Operation Adventure",
+    "hero_subtitle": "Practice all four operation worlds and keep building your star bank.",
+    "math_stars": "Math stars",
+    "played": "Played",
+    "all_progress": "All four operations have progress. Amazing work!",
+    "next_milestone": "Next milestone: complete {current} of {total} operation adventures.",
+    "intro": "Addition, subtraction, multiplication, and division in one place."
+  },
+  "start_learning": {
+    "title": "Start Learning",
+    "title_with_name": "{name}'s Quest",
+    "quest_emoji": "🎮"
+  },
+  "kingdom": {
+    "title": "My Kingdom",
+    "subtitle": "Every quest adds something magical to this map.",
+    "reset_map": "Reset map",
+    "find_me": "Find me",
+    "loading": "Loading your kingdom...",
+    "new_place_unlocked": "New Kingdom Place Unlocked",
+    "new_place_message": "Your learning adventures opened a magical new place on the map.",
+    "explore_map": "Explore the Map",
+    "zone_locked_clouds": "This area is still hidden behind kingdom clouds.",
+    "next_best_quest": "Next best quest",
+    "today_completed": "Today completed: {count} quest",
+    "today_completed_other": "Today completed: {count} quests",
+    "unlock_grow_zones": "Unlock this place by growing earlier zones.",
+    "unlock_grow_zones_short": "Unlock by growing earlier zones.",
+    "zones": {
+      "garden": {
+        "title": "Number Garden",
+        "subtitle": "Flowers bloom when number lessons are done.",
+        "hint": "Practice number recognition to grow brighter flowers.",
+        "cta": "Play Number Quest"
+      },
+      "meadow": {
+        "title": "Counting Meadow",
+        "subtitle": "Animals gather here after counting adventures.",
+        "hint": "Count objects to invite more meadow friends.",
+        "cta": "Play Counting Quest"
+      },
+      "castle": {
+        "title": "Shape Castle",
+        "subtitle": "Trace carefully and the castle rises stone by stone.",
+        "hint": "Tracing numbers builds stronger walls and towers.",
+        "cta": "Play Tracing Quest"
+      },
+      "path": {
+        "title": "Pattern Pathway",
+        "subtitle": "Pattern quests add shining tiles to the walkway.",
+        "hint": "Complete pattern adventures to decorate the path.",
+        "cta": "Play Patterns"
+      },
+      "bridge": {
+        "title": "Math Bridge",
+        "subtitle": "Add and take away to grow bridge stones.",
+        "hint": "Play addition and subtraction here.",
+        "cta": "Play Math Ops"
+      },
+      "stairs": {
+        "title": "Sequence Stairs",
+        "subtitle": "Sequencing adventures raise the glowing steps here.",
+        "hint": "Put numbers in order to climb higher.",
+        "cta": "Open Sequencing"
+      }
+    },
+    "rewards_progress": "{progress}/{goal} kingdom rewards"
+  },
+  "rewards": {
+    "title": "Sticker Album",
+    "loading": "Loading your rewards...",
+    "categories": {
+      "stickers": "Stickers",
+      "badges": "Badges",
+      "trophies": "Trophies"
+    },
+    "stars_header": "{count} Stars",
+    "next_reward": "{count} stars to next reward",
+    "all_claimed": "All rewards collected!",
+    "locked": "Locked",
+    "unlocked": "Unlocked",
+    "claim": "Collect!",
+    "claimed": "Collected",
+    "need_stars": "Need {count} stars",
+    "items": {
+      "sticker-sun": {
+        "title": "Sunny Star",
+        "subtitle": "Happy morning sticker",
+        "description": "A bright golden sticker for cheerful learning days."
+      },
+      "sticker-rainbow": {
+        "title": "Rainbow Pop",
+        "subtitle": "Color splash sticker",
+        "description": "Unlocked after a few wins to decorate your collection."
+      },
+      "sticker-balloon": {
+        "title": "Balloon Buddy",
+        "subtitle": "Floating fun sticker",
+        "description": "A party balloon sticker for steady practice."
+      },
+      "sticker-crown": {
+        "title": "Mini Crown",
+        "subtitle": "Royal sticker reward",
+        "description": "A royal crown for children who keep showing up."
+      },
+      "badge-counter": {
+        "title": "Counting Champ",
+        "subtitle": "Badge for number confidence",
+        "description": "Celebrate strong counting progress with this mint badge."
+      },
+      "badge-tracer": {
+        "title": "Tracing Pro",
+        "subtitle": "Badge for careful writing",
+        "description": "Awarded to learners who trace with patience."
+      },
+      "badge-matcher": {
+        "title": "Matching Master",
+        "subtitle": "Badge for quick thinking",
+        "description": "A smart badge for strong visual matching."
+      },
+      "badge-quiz": {
+        "title": "Quiz Wizard",
+        "subtitle": "Badge for mixed challenges",
+        "description": "A shiny badge for handling tap, drag, and write tasks."
+      },
+      "trophy-bronze": {
+        "title": "Bronze Castle Cup",
+        "subtitle": "First kingdom trophy",
+        "description": "A small but proud trophy for early milestones."
+      },
+      "trophy-silver": {
+        "title": "Silver Moon Cup",
+        "subtitle": "Middle milestone trophy",
+        "description": "A silver reward for consistent learning sessions."
+      },
+      "trophy-gold": {
+        "title": "Golden Kingdom Cup",
+        "subtitle": "Big celebration trophy",
+        "description": "A golden cup for building a strong math kingdom."
+      },
+      "trophy-royal": {
+        "title": "Royal Hero Crown",
+        "subtitle": "Top collection reward",
+        "description": "The grand reward for children who finish many adventures."
+      }
+    }
+  },
+  "placeholder": {
+    "coming_soon": "Coming soon in Math Kingdom",
+    "try_start_learning": "Try Start Learning",
+    "back_to_home": "Back To Home"
+  },
+  "numbers": {
+    "0": "Zero",
+    "1": "One",
+    "2": "Two",
+    "3": "Three",
+    "4": "Four",
+    "5": "Five",
+    "6": "Six",
+    "7": "Seven",
+    "8": "Eight",
+    "9": "Nine",
+    "10": "Ten",
+    "11": "Eleven",
+    "12": "Twelve",
+    "13": "Thirteen",
+    "14": "Fourteen",
+    "15": "Fifteen",
+    "16": "Sixteen",
+    "17": "Seventeen",
+    "18": "Eighteen",
+    "19": "Nineteen",
+    "20": "Twenty",
+    "21": "Twenty one",
+    "22": "Twenty two",
+    "23": "Twenty three",
+    "24": "Twenty four",
+    "25": "Twenty five",
+    "26": "Twenty six",
+    "27": "Twenty seven",
+    "28": "Twenty eight",
+    "29": "Twenty nine",
+    "30": "Thirty"
+  },
+  "trace_strokes": {
+    "round_loop": "Make one round loop.",
+    "slide_down": "Start at the top and slide down.",
+    "curve_top_swoop": "Curve across the top, then swoop down and slide right.",
+    "two_belly_curves": "Make two soft belly curves.",
+    "roof_line": "Draw the roof line across the middle.",
+    "standing_line": "Now trace the tall standing line.",
+    "across_tummy": "Go across, down, and around the tummy.",
+    "loop_tuck": "Loop around and tuck into the middle.",
+    "slide_slant": "Slide across the top, then slant down.",
+    "top_loop": "Trace the top loop.",
+    "bottom_loop": "Trace the bottom loop.",
+    "round_head": "Make the round head.",
+    "tall_tail": "Finish with the tall tail.",
+    "trace_one_first": "Trace the one first.",
+    "zero_loop": "Now make the zero loop."
+  },
+  "pattern_prompts": {
+    "ab_next": "Find what comes next.",
+    "ab_turns": "The pieces take turns. Which one comes next?",
+    "ab_repeating": "Look for the repeating pattern.",
+    "ab_repeating_piece": "Find the next repeating piece.",
+    "abb_two_same": "One piece, then two the same. What comes next?",
+    "abb_group_three": "Watch the group of three and complete it.",
+    "abb_repeat_three": "Repeat the three-piece pattern.",
+    "abb_complete_group": "Complete the last group."
   }
 }

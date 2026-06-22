@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -7,11 +8,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/audio_service.dart';
-import '../../core/utils/tts_voice_helper.dart';
 import '../math_operations/math_operation_theme.dart';
 import '../math_operations/math_operation_widgets.dart';
 
@@ -38,8 +39,8 @@ class _PatternRound {
     required this.correctIndex,
     required this.options,
     required this.themeIndex,
-    required this.stageLabel,
-    required this.prompt,
+    required this.stageLabelKey,
+    required this.promptKey,
   });
 
   final _PatternKind kind;
@@ -47,8 +48,8 @@ class _PatternRound {
   final int correctIndex;
   final List<int> options;
   final int themeIndex;
-  final String stageLabel;
-  final String prompt;
+  final String stageLabelKey;
+  final String promptKey;
 }
 
 class PatternsScreen extends StatefulWidget {
@@ -81,7 +82,8 @@ class _PatternsScreenState extends State<PatternsScreen>
   ];
 
   late final FlutterTts _tts;
-  late final Future<void> _ttsReady;
+  late Future<void> _ttsReady;
+  bool _ttsConfigured = false;
   late final AnimationController _successPulseController;
   late final List<_PatternRound> _rounds;
   final AudioService _feedbackAudio = AudioService();
@@ -105,8 +107,10 @@ class _PatternsScreenState extends State<PatternsScreen>
     final spokenPieces = _round.sequence
         .map((index) => _pieces[index].name)
         .toList(growable: true)
-      ..add('blank');
-    return '${_round.stageLabel}. ${spokenPieces.join(', ')}. ${_round.prompt}';
+      ..add(context.tr('learning.sequence_blank'));
+    return '${context.tr('learning.${_round.stageLabelKey}')}. '
+        '${spokenPieces.join(', ')}. '
+        '${context.tr('pattern_prompts.${_round.promptKey}')}';
   }
 
   @override
@@ -118,25 +122,15 @@ class _PatternsScreenState extends State<PatternsScreen>
       duration: const Duration(milliseconds: 420),
       value: 1,
     );
-    _ttsReady = _configureTts();
+    _ttsReady = Future<void>.value();
     _rounds = _buildRoundPlan();
     _playScreenMusic(delayed: true);
     WidgetsBinding.instance.addPostFrameCallback((_) => _speakPrompt());
   }
 
   Future<void> _configureTts() async {
-    await TtsVoiceHelper.configureSharedAudio(_tts);
-    await TtsVoiceHelper.applyPreferredVoice(
-      _tts,
-      locale: 'en-IN',
-      fallbackLocales: const ['en-US', 'en-GB'],
-    );
+    await AppLocalization.configureTts(_tts, context);
     await _tts.setPitch(1.05);
-    await TtsVoiceHelper.applyPreferredSpeechRate(
-      _tts,
-      normalRate: 0.42,
-      slowRate: 0.3,
-    );
     await _tts.setVolume(1.0);
   }
 
@@ -146,57 +140,57 @@ class _PatternsScreenState extends State<PatternsScreen>
         kind: _PatternKind.ab,
         fullPattern: const [0, 1, 0, 1, 0],
         options: const [0, 1, 2],
-        stageLabel: 'AB Pattern',
-        prompt: 'Find what comes next.',
+        stageLabelKey: 'patterns_ab',
+        promptKey: 'ab_next',
       ),
       _buildRound(
         kind: _PatternKind.ab,
         fullPattern: const [1, 0, 1, 0, 1],
         options: const [0, 1, 2],
-        stageLabel: 'AB Pattern',
-        prompt: 'The pieces take turns. Which one comes next?',
+        stageLabelKey: 'patterns_ab',
+        promptKey: 'ab_turns',
       ),
       _buildRound(
         kind: _PatternKind.ab,
         fullPattern: const [0, 2, 0, 2, 0],
         options: const [0, 1, 2],
-        stageLabel: 'AB Pattern',
-        prompt: 'Look for the repeating pattern.',
+        stageLabelKey: 'patterns_ab',
+        promptKey: 'ab_repeating',
       ),
       _buildRound(
         kind: _PatternKind.ab,
         fullPattern: const [2, 1, 2, 1, 2],
         options: const [0, 1, 2],
-        stageLabel: 'AB Pattern',
-        prompt: 'Find the next repeating piece.',
+        stageLabelKey: 'patterns_ab',
+        promptKey: 'ab_repeating_piece',
       ),
       _buildRound(
         kind: _PatternKind.abb,
         fullPattern: const [0, 1, 1, 0, 1, 1],
         options: const [0, 1, 2],
-        stageLabel: 'ABB Pattern',
-        prompt: 'One piece, then two the same. What comes next?',
+        stageLabelKey: 'patterns_abb',
+        promptKey: 'abb_two_same',
       ),
       _buildRound(
         kind: _PatternKind.abb,
         fullPattern: const [1, 0, 0, 1, 0, 0],
         options: const [0, 1, 2],
-        stageLabel: 'ABB Pattern',
-        prompt: 'Watch the group of three and complete it.',
+        stageLabelKey: 'patterns_abb',
+        promptKey: 'abb_group_three',
       ),
       _buildRound(
         kind: _PatternKind.abb,
         fullPattern: const [2, 1, 1, 2, 1, 1],
         options: const [0, 1, 2],
-        stageLabel: 'ABB Pattern',
-        prompt: 'Repeat the three-piece pattern.',
+        stageLabelKey: 'patterns_abb',
+        promptKey: 'abb_repeat_three',
       ),
       _buildRound(
         kind: _PatternKind.abb,
         fullPattern: const [1, 2, 2, 1, 2, 2],
         options: const [0, 1, 2],
-        stageLabel: 'ABB Pattern',
-        prompt: 'Complete the last group.',
+        stageLabelKey: 'patterns_abb',
+        promptKey: 'abb_complete_group',
       ),
     ];
 
@@ -208,8 +202,8 @@ class _PatternsScreenState extends State<PatternsScreen>
         correctIndex: round.correctIndex,
         options: round.options.toList()..shuffle(_random),
         themeIndex: entry.key % mathOperationThemes.length,
-        stageLabel: round.stageLabel,
-        prompt: round.prompt,
+        stageLabelKey: round.stageLabelKey,
+        promptKey: round.promptKey,
       );
     }).toList();
   }
@@ -218,8 +212,8 @@ class _PatternsScreenState extends State<PatternsScreen>
     required _PatternKind kind,
     required List<int> fullPattern,
     required List<int> options,
-    required String stageLabel,
-    required String prompt,
+    required String stageLabelKey,
+    required String promptKey,
   }) {
     return _PatternRound(
       kind: kind,
@@ -227,8 +221,8 @@ class _PatternsScreenState extends State<PatternsScreen>
       correctIndex: fullPattern.last,
       options: options,
       themeIndex: 0,
-      stageLabel: stageLabel,
-      prompt: prompt,
+      stageLabelKey: stageLabelKey,
+      promptKey: promptKey,
     );
   }
 
@@ -329,6 +323,10 @@ class _PatternsScreenState extends State<PatternsScreen>
     if (route is PageRoute<dynamic>) {
       appRouteObserver.unsubscribe(this);
       appRouteObserver.subscribe(this, route);
+    }
+    if (!_ttsConfigured) {
+      _ttsConfigured = true;
+      _ttsReady = _configureTts();
     }
   }
 
@@ -434,11 +432,11 @@ class _PatternsScreenState extends State<PatternsScreen>
           ),
           if (_showCelebration)
             MathOpCelebrationOverlay(
-              title: 'Amazing!',
+              title: context.tr('learning.patterns_complete'),
               emoji: '🔷',
               color: _theme.color,
               softColor: _theme.softColor,
-              buttonLabel: 'Home',
+              buttonLabel: context.tr('placeholder.back_to_home'),
               onButtonTap: () {
                 AppAudioService.instance.stopCelebrationMusic();
                 context.go(AppRoutes.home);
@@ -547,7 +545,7 @@ class _PatternsScreenState extends State<PatternsScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _round.stageLabel,
+                            context.tr('learning.${_round.stageLabelKey}'),
                             style: AppTypography.bodyStrong.copyWith(
                               color: _theme.color,
                               fontWeight: FontWeight.w800,
@@ -555,7 +553,7 @@ class _PatternsScreenState extends State<PatternsScreen>
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            _round.prompt,
+                            context.tr('pattern_prompts.${_round.promptKey}'),
                             style: AppTypography.h3.copyWith(
                               color: const Color(0xFF1A1060),
                               fontWeight: FontWeight.w800,
@@ -578,7 +576,13 @@ class _PatternsScreenState extends State<PatternsScreen>
                     ),
                   ),
                   child: Text(
-                    'Round ${_roundIndex + 1} of $_totalRounds',
+                    context.tr(
+                      'learning.round',
+                      namedArgs: {
+                        'current': '${_roundIndex + 1}',
+                        'total': '$_totalRounds',
+                      },
+                    ),
                     style: AppTypography.caption.copyWith(
                       color: _theme.color,
                       fontWeight: FontWeight.w800,
@@ -619,7 +623,7 @@ class _PatternsScreenState extends State<PatternsScreen>
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Look for the piece that repeats again and again.',
+              context.tr('learning.patterns_prompt'),
               style: AppTypography.body.copyWith(
                 color: const Color(0xFF6E5600),
                 fontWeight: FontWeight.w600,
@@ -721,7 +725,7 @@ class _PatternsScreenState extends State<PatternsScreen>
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Tap the next piece or hold to drag',
+            context.tr('learning.patterns_drag_hint'),
             style: AppTypography.bodyStrong.copyWith(
               color: _theme.color,
               fontWeight: FontWeight.w800,

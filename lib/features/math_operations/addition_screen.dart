@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -7,11 +8,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/audio_service.dart';
-import '../../core/utils/tts_voice_helper.dart';
 import 'math_operation_theme.dart';
 import 'math_operation_widgets.dart';
 
@@ -43,7 +44,8 @@ class _AdditionScreenState extends State<AdditionScreen>
   static const _speechSettleDelay = Duration(milliseconds: 80);
 
   late final FlutterTts _tts;
-  late final Future<void> _ttsReady;
+  late Future<void> _ttsReady;
+  bool _ttsConfigured = false;
   late final AnimationController _successPulseController;
   late final List<_AdditionRound> _rounds;
   final AudioService _feedbackAudio = AudioService();
@@ -75,26 +77,16 @@ class _AdditionScreenState extends State<AdditionScreen>
       duration: const Duration(milliseconds: 420),
       value: 1,
     );
-    _ttsReady = _configureTts();
+    _ttsReady = Future<void>.value();
     _rounds = _buildRoundPlan();
     _playScreenMusic(delayed: true);
     WidgetsBinding.instance.addPostFrameCallback((_) => _speakPrompt());
   }
 
   Future<void> _configureTts() async {
-    await TtsVoiceHelper.configureSharedAudio(_tts);
+    await AppLocalization.configureTts(_tts, context);
     await _tts.awaitSpeakCompletion(true);
-    await TtsVoiceHelper.applyPreferredVoice(
-      _tts,
-      locale: 'en-IN',
-      fallbackLocales: const ['en-US', 'en-GB'],
-    );
     await _tts.setPitch(1.05);
-    await TtsVoiceHelper.applyPreferredSpeechRate(
-      _tts,
-      normalRate: 0.42,
-      slowRate: 0.3,
-    );
     await _tts.setVolume(1.0);
   }
 
@@ -139,12 +131,27 @@ class _AdditionScreenState extends State<AdditionScreen>
   }
 
   Future<void> _speakPrompt() async {
-    await _speakText('${_round.groupA} plus ${_round.groupB} equals what?');
+    await _speakText(
+      context.tr(
+        'learning.addition_speak_prompt',
+        namedArgs: {
+          'a': '${_round.groupA}',
+          'b': '${_round.groupB}',
+        },
+      ),
+    );
   }
 
   Future<void> _speakSuccess() async {
     await _speakText(
-      '${_round.groupA} plus ${_round.groupB} equals ${_round.total}',
+      context.tr(
+        'learning.addition_speak_success',
+        namedArgs: {
+          'a': '${_round.groupA}',
+          'b': '${_round.groupB}',
+          'total': '${_round.total}',
+        },
+      ),
     );
   }
 
@@ -237,6 +244,10 @@ class _AdditionScreenState extends State<AdditionScreen>
     if (route is PageRoute<dynamic>) {
       appRouteObserver.unsubscribe(this);
       appRouteObserver.subscribe(this, route);
+    }
+    if (!_ttsConfigured) {
+      _ttsConfigured = true;
+      _ttsReady = _configureTts();
     }
   }
 
@@ -353,11 +364,12 @@ class _AdditionScreenState extends State<AdditionScreen>
           ),
           if (_showCelebration)
             MathOpCelebrationOverlay(
-              title: 'Great!',
+              title: context.tr('learning.addition_complete'),
               emoji: '🎉',
               color: _theme.color,
               softColor: _theme.softColor,
-              buttonLabel: 'Subtraction',
+              buttonLabel:
+                  AppLocalization.moduleTitle(context, AppRoutes.subtraction),
               onButtonTap: () {
                 AppAudioService.instance.stopCelebrationMusic();
                 context.pushReplacement(AppRoutes.subtraction);
@@ -380,7 +392,7 @@ class _AdditionScreenState extends State<AdditionScreen>
           child: Column(
             children: [
               Text(
-                'Drag or tap every object into the bowl.',
+                context.tr('learning.addition_drag_hint'),
                 textAlign: TextAlign.center,
                 style: AppTypography.bodyStrong.copyWith(
                   color: const Color(0xFF5A6B7A),
@@ -394,7 +406,7 @@ class _AdditionScreenState extends State<AdditionScreen>
                   child: OutlinedButton.icon(
                     onPressed: _moveAllRemaining,
                     icon: const Icon(Icons.touch_app_rounded),
-                    label: const Text('Need help? Tap to move all'),
+                    label: Text(context.tr('learning.need_help_move_all')),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: _theme.color,
                       side: BorderSide(

@@ -1,11 +1,13 @@
 import 'dart:math' as math;
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/localization/app_localization.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/child_profile_service.dart';
 import '../../core/router/app_router.dart';
@@ -15,8 +17,6 @@ import '../../shared/widgets/game_back_button.dart';
 
 class _LearningModule {
   const _LearningModule({
-    required this.title,
-    required this.subtitle,
     required this.emoji,
     required this.color,
     required this.softColor,
@@ -26,8 +26,6 @@ class _LearningModule {
     this.unlockStars = 0,
   });
 
-  final String title;
-  final String subtitle;
   final String emoji;
   final Color color;
   final Color softColor;
@@ -39,8 +37,6 @@ class _LearningModule {
 
 class _AdventureShortcut {
   const _AdventureShortcut({
-    required this.title,
-    required this.subtitle,
     required this.emoji,
     required this.route,
     required this.color,
@@ -48,8 +44,6 @@ class _AdventureShortcut {
     required this.shadowColor,
   });
 
-  final String title;
-  final String subtitle;
   final String emoji;
   final String route;
   final Color color;
@@ -77,8 +71,6 @@ class StartLearningScreen extends StatefulWidget {
 
   static const List<_LearningModule> _modules = [
     _LearningModule(
-      title: 'Learn Numbers',
-      subtitle: 'Swipe giant number art from 0 to 30',
       emoji: '🔢',
       color: AppColors.primary,
       softColor: AppColors.primaryLight,
@@ -88,8 +80,6 @@ class StartLearningScreen extends StatefulWidget {
       unlockStars: 0,
     ),
     _LearningModule(
-      title: 'Trace Numbers',
-      subtitle: 'Trace and write numbers beautifully',
       emoji: '✏️',
       color: AppColors.pathwayPeach,
       softColor: AppColors.primaryLight,
@@ -99,8 +89,6 @@ class StartLearningScreen extends StatefulWidget {
       unlockStars: 0,
     ),
     _LearningModule(
-      title: 'Count Objects',
-      subtitle: 'Count fruits, stars and toys',
       emoji: '🍎',
       color: AppColors.secondary,
       softColor: AppColors.secondaryLight,
@@ -110,8 +98,6 @@ class StartLearningScreen extends StatefulWidget {
       unlockStars: 0,
     ),
     _LearningModule(
-      title: 'Find Correct Number',
-      subtitle: 'Choose the correct magical number',
       emoji: '🎯',
       color: AppColors.stairsLavender,
       softColor: AppColors.restBackground,
@@ -121,8 +107,6 @@ class StartLearningScreen extends StatefulWidget {
       unlockStars: 4,
     ),
     _LearningModule(
-      title: 'Match Numbers',
-      subtitle: 'Match numbers with correct objects',
       emoji: '🃏',
       color: AppColors.bridgeBlue,
       softColor: AppColors.secondaryLight,
@@ -132,8 +116,6 @@ class StartLearningScreen extends StatefulWidget {
       unlockStars: 8,
     ),
     _LearningModule(
-      title: 'Mini Quiz',
-      subtitle: 'Test your brain with fun questions',
       emoji: '🧠',
       color: AppColors.warning,
       softColor: AppColors.premiumGoldLight,
@@ -143,8 +125,6 @@ class StartLearningScreen extends StatefulWidget {
       unlockStars: 14,
     ),
     _LearningModule(
-      title: 'Rewards',
-      subtitle: 'Collect stars and unlock trophies',
       emoji: '🏆',
       color: AppColors.premiumGold,
       softColor: AppColors.premiumGoldLight,
@@ -156,8 +136,6 @@ class StartLearningScreen extends StatefulWidget {
 
   static const List<_AdventureShortcut> _moreAdventures = [
     _AdventureShortcut(
-      title: 'Math Ops',
-      subtitle: 'Add, subtract, multiply, divide',
       emoji: '➕',
       route: AppRoutes.mathOperations,
       color: AppColors.warning,
@@ -165,8 +143,6 @@ class StartLearningScreen extends StatefulWidget {
       shadowColor: Color(0xFFD4A000),
     ),
     _AdventureShortcut(
-      title: 'Sequencing',
-      subtitle: 'Put numbers in order',
       emoji: '📶',
       route: AppRoutes.sequencing,
       color: AppColors.bridgeBlue,
@@ -174,8 +150,6 @@ class StartLearningScreen extends StatefulWidget {
       shadowColor: Color(0xFF2890D0),
     ),
     _AdventureShortcut(
-      title: 'Patterns',
-      subtitle: 'Spot magical repeats',
       emoji: '🔷',
       route: AppRoutes.patterns,
       color: AppColors.success,
@@ -377,7 +351,7 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    'New Adventure Unlocked',
+                    context.tr('learning.new_adventure_unlocked'),
                     style: AppTypography.bodySmall.copyWith(
                       color: module.color,
                       fontWeight: FontWeight.w800,
@@ -393,7 +367,7 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  module.title,
+                  AppLocalization.moduleTitle(context, module.route),
                   textAlign: TextAlign.center,
                   style: AppTypography.h2.copyWith(
                     color: const Color(0xFF1E1060),
@@ -402,7 +376,7 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'You earned enough stars to unlock this new learning adventure.',
+                  context.tr('learning.unlocked_message'),
                   textAlign: TextAlign.center,
                   style: AppTypography.body.copyWith(
                     color: const Color(0xFF5A6B7A),
@@ -415,7 +389,7 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                   children: [
                     Expanded(
                       child: _DialogButton(
-                        label: 'Later',
+                        label: context.tr('learning.later'),
                         backgroundColor: Colors.white,
                         foregroundColor: AppColors.textSecondary,
                         borderColor: AppColors.outlineStrong,
@@ -425,7 +399,7 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                     const SizedBox(width: 10),
                     Expanded(
                       child: _DialogButton(
-                        label: 'Open Now',
+                        label: context.tr('learning.open_now'),
                         backgroundColor: module.color,
                         foregroundColor: Colors.white,
                         borderColor: module.shadowColor,
@@ -527,7 +501,12 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  '${module.title} is Locked',
+                  context.tr(
+                    'learning.module_locked',
+                    namedArgs: {
+                      'title': AppLocalization.moduleTitle(context, module.route),
+                    },
+                  ),
                   textAlign: TextAlign.center,
                   style: AppTypography.h2.copyWith(
                     color: const Color(0xFF1E1060),
@@ -536,7 +515,10 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Earn $starsNeeded more star${starsNeeded == 1 ? '' : 's'} to open this adventure.',
+                  context.tr(
+                    'learning.stars_needed',
+                    namedArgs: {'count': '$starsNeeded'},
+                  ),
                   textAlign: TextAlign.center,
                   style: AppTypography.body.copyWith(
                     color: const Color(0xFF5A6B7A),
@@ -586,7 +568,7 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                   children: [
                     Expanded(
                       child: _DialogButton(
-                        label: 'Keep Learning',
+                        label: context.tr('learning.keep_learning'),
                         backgroundColor: Colors.white,
                         foregroundColor: AppColors.textSecondary,
                         borderColor: AppColors.outlineStrong,
@@ -596,7 +578,7 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                     const SizedBox(width: 10),
                     Expanded(
                       child: _DialogButton(
-                        label: 'Open Rewards',
+                        label: context.tr('learning.open_rewards'),
                         backgroundColor: module.color,
                         foregroundColor: Colors.white,
                         borderColor: module.shadowColor,
@@ -663,7 +645,7 @@ class _StartLearningScreenState extends State<StartLearningScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Choose Learner',
+                  context.tr('learning.choose_learner'),
                   style: AppTypography.h2.copyWith(
                     color: const Color(0xFF1E1060),
                     fontWeight: FontWeight.w800,
@@ -671,7 +653,7 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Pick who is playing right now.',
+                  context.tr('learning.choose_learner_subtitle'),
                   style: AppTypography.body.copyWith(
                     color: const Color(0xFF5A6B7A),
                     fontWeight: FontWeight.w700,
@@ -852,7 +834,7 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Start Learning 🎮',
+                              '${context.tr('start_learning.title')} ${context.tr('start_learning.quest_emoji')}',
                               style: AppTypography.hero.copyWith(
                                 fontSize: AppTypography.responsiveSize(
                                   MediaQuery.sizeOf(context).width,
@@ -878,8 +860,11 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                             ),
                             Text(
                               activeProfile == null
-                                  ? 'Choose a fun activity and become a Math Hero!'
-                                  : 'Playing as ${activeProfile.name}',
+                                  ? context.tr('learning.choose_activity')
+                                  : context.tr(
+                                      'learning.playing_as',
+                                      namedArgs: {'name': activeProfile.name},
+                                    ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: AppTypography.bodySmall.copyWith(
@@ -968,7 +953,7 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                                   borderRadius: BorderRadius.circular(999),
                                 ),
                                 child: Text(
-                                  '✦ Today\'s Mission',
+                                  context.tr('learning.today_mission'),
                                   style: AppTypography.bodySmall.copyWith(
                                     color: const Color(0xFF8A6000),
                                     fontSize: 10,
@@ -979,7 +964,12 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                '${_progressSnapshot.totalStars} Stars Collected!',
+                                context.tr(
+                                  'learning.stars_collected',
+                                  namedArgs: {
+                                    'count': '${_progressSnapshot.totalStars}',
+                                  },
+                                ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: AppTypography.cardTitle.copyWith(
@@ -991,8 +981,24 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                               const SizedBox(height: 4),
                               Text(
                                 nextLockedModule == null
-                                    ? '$completedActivities completed adventures • everything unlocked'
-                                    : '$completedActivities completed adventures • unlock ${nextLockedModule.title} at ${nextLockedModule.unlockStars} stars',
+                                    ? context.tr(
+                                        'learning.all_unlocked',
+                                        namedArgs: {
+                                          'count': '$completedActivities',
+                                        },
+                                      )
+                                    : context.tr(
+                                        'learning.unlock_next',
+                                        namedArgs: {
+                                          'count': '$completedActivities',
+                                          'title': AppLocalization.moduleTitle(
+                                            context,
+                                            nextLockedModule.route,
+                                          ),
+                                          'stars':
+                                              '${nextLockedModule.unlockStars}',
+                                        },
+                                      ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: AppTypography.bodySmall.copyWith(
@@ -1035,10 +1041,19 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                             Expanded(
                               child: _MomentumStat(
                                 emoji: '🔥',
-                                label: 'Streak',
+                                label: context.tr(
+                                  'learning.streak_days',
+                                  namedArgs: {'count': '1'},
+                                ).replaceFirst('1 ', ''),
                                 value: _progressSnapshot.streakDays == 0
-                                    ? 'Start now'
-                                    : '${_progressSnapshot.streakDays} days',
+                                    ? context.tr('learning.streak_start')
+                                    : context.tr(
+                                        'learning.streak_days',
+                                        namedArgs: {
+                                          'count':
+                                              '${_progressSnapshot.streakDays}',
+                                        },
+                                      ),
                                 color: AppColors.primary,
                                 softColor: AppColors.primaryLight,
                               ),
@@ -1047,9 +1062,14 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                             Expanded(
                               child: _MomentumStat(
                                 emoji: '🎯',
-                                label: 'Today',
-                                value:
-                                    '${_progressSnapshot.todayCompletions}/$dailyGoal adventures',
+                                label: context.tr('common.today'),
+                                value: context.tr(
+                                  'learning.today_adventures',
+                                  namedArgs: {
+                                    'count':
+                                        '${_progressSnapshot.todayCompletions}',
+                                  },
+                                ),
                                 color: AppColors.secondary,
                                 softColor: AppColors.secondaryLight,
                               ),
@@ -1060,7 +1080,7 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            'Daily goal progress',
+                            context.tr('learning.daily_goal_progress'),
                             style: AppTypography.bodyStrong.copyWith(
                               color: const Color(0xFF1E1060),
                               fontWeight: FontWeight.w800,
@@ -1084,8 +1104,15 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                           alignment: Alignment.centerLeft,
                           child: Text(
                             _progressSnapshot.todayCompletions >= dailyGoal
-                                ? 'Daily goal complete. Amazing work today!'
-                                : '${dailyGoal - _progressSnapshot.todayCompletions} more adventure${dailyGoal - _progressSnapshot.todayCompletions == 1 ? '' : 's'} to finish today\'s goal',
+                                ? context.tr('learning.daily_goal_done')
+                                : context.plural(
+                                    'learning.daily_goal_remaining',
+                                    dailyGoal -
+                                        _progressSnapshot.todayCompletions,
+                                    namedArgs: {
+                                      'count': '${dailyGoal - _progressSnapshot.todayCompletions}',
+                                    },
+                                  ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.bodySmall.copyWith(
@@ -1101,7 +1128,7 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                   const SizedBox(height: 22),
 
                   Text(
-                    'Learning Adventures 🗺️',
+                    context.tr('learning.learning_adventures'),
                     style: AppTypography.h2.copyWith(
                       color: const Color(0xFF2D1B69),
                       fontWeight: FontWeight.w800,
@@ -1112,7 +1139,7 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                   const SizedBox(height: 6),
 
                   Text(
-                    'Tap any activity to start your magical learning journey!',
+                    context.tr('learning.tap_activity_hint'),
                     style: AppTypography.bodySmall.copyWith(
                       color: const Color(0xFF5A6B7A),
                       fontSize: 13,
@@ -1155,10 +1182,15 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                             : null,
                         customStatusLabel: module.progressId == null
                             ? _claimableRewardsCount > 0
-                                ? '$_claimableRewardsCount reward${_claimableRewardsCount == 1 ? '' : 's'} ready to claim'
+                                ? context.tr('learning.open_rewards')
                                 : claimedRewards == 0
-                                    ? 'Open the reward room'
-                                    : '$claimedRewards reward${claimedRewards == 1 ? '' : 's'} collected'
+                                    ? context.tr('learning.open_rewards')
+                                    : context.tr(
+                                        'learning.claimed_rewards',
+                                        namedArgs: {
+                                          'count': '$claimedRewards',
+                                        },
+                                      )
                             : null,
                         metricLabel: module.progressId == null
                             ? '$_unlockedRewardsCount/${StartLearningScreen._rewardUnlockThresholds.length}'
@@ -1171,7 +1203,7 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                   const SizedBox(height: 4),
 
                   Text(
-                    'More Adventures ✨',
+                    context.tr('learning.more_adventures'),
                     style: AppTypography.h2.copyWith(
                       color: const Color(0xFF2D1B69),
                       fontWeight: FontWeight.w800,
@@ -1182,7 +1214,7 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                   const SizedBox(height: 6),
 
                   Text(
-                    'Try extra math quests outside the main learning path.',
+                    context.tr('learning.more_adventures_subtitle'),
                     style: AppTypography.bodySmall.copyWith(
                       color: const Color(0xFF5A6B7A),
                       fontSize: 13,
@@ -1272,7 +1304,12 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '${_progressSnapshot.totalStars} Stars Earned!',
+                                context.tr(
+                                  'learning.rewards_banner_stars',
+                                  namedArgs: {
+                                    'count': '${_progressSnapshot.totalStars}',
+                                  },
+                                ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: AppTypography.cardTitle.copyWith(
@@ -1284,8 +1321,13 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                               const SizedBox(height: 4),
                               Text(
                                 _claimableRewardsCount > 0
-                                    ? '$_claimableRewardsCount reward${_claimableRewardsCount == 1 ? '' : 's'} ready in Rewards'
-                                    : '$claimedRewards reward${claimedRewards == 1 ? '' : 's'} collected so far',
+                                    ? context.tr('learning.open_rewards')
+                                    : context.tr(
+                                        'learning.rewards_banner_claimed',
+                                        namedArgs: {
+                                          'count': '$claimedRewards',
+                                        },
+                                      ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: AppTypography.bodySmall.copyWith(
@@ -1368,19 +1410,29 @@ class _LearningCard extends StatelessWidget {
     return (completionCount / 3).clamp(0, 1).toDouble();
   }
 
-  String get _statusLabel {
+  String _statusLabel(BuildContext context) {
     if (customStatusLabel != null) return customStatusLabel!;
     if (!isUnlocked) {
-      return 'Earn $starsRemainingToUnlock more star${starsRemainingToUnlock == 1 ? '' : 's'}';
+      return context.tr(
+        'learning.unlock_at_stars',
+        namedArgs: {'stars': '$starsRemainingToUnlock'},
+      );
     }
     if (module.progressId == null) {
       return completionCount == 0
-          ? 'Open rewards'
-          : '$completionCount claimed rewards';
+          ? context.tr('learning.open_rewards')
+          : context.tr(
+              'learning.claimed_rewards',
+              namedArgs: {'count': '$completionCount'},
+            );
     }
-    if (completionCount == 0) return 'Start adventure';
-    if (completionCount >= 3) return 'Mastered';
-    return '$completionCount wins';
+    if (completionCount == 0) return context.tr('learning.start_adventure');
+    if (completionCount >= 3) return context.tr('learning.mastered');
+    if (completionCount == 1) return context.tr('learning.win_one');
+    return context.tr(
+      'learning.wins',
+      namedArgs: {'count': '$completionCount'},
+    );
   }
 
   @override
@@ -1501,7 +1553,7 @@ class _LearningCard extends StatelessWidget {
                                 ),
                               ),
                               child: Text(
-                                'Recommended next',
+                                context.tr('learning.start_adventure'),
                                 style: AppTypography.bodySmall.copyWith(
                                   color: module.color,
                                   fontWeight: FontWeight.w800,
@@ -1511,7 +1563,7 @@ class _LearningCard extends StatelessWidget {
                             ),
                           ],
                           Text(
-                            module.title,
+                            AppLocalization.moduleTitle(context, module.route),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.cardTitle.copyWith(
@@ -1524,7 +1576,7 @@ class _LearningCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 5),
                           Text(
-                            module.subtitle,
+                            AppLocalization.moduleSubtitle(context, module.route),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.bodySmall.copyWith(
@@ -1582,7 +1634,7 @@ class _LearningCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
-                              _statusLabel,
+                              _statusLabel(context),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppTypography.bodySmall.copyWith(
@@ -1807,7 +1859,7 @@ class _AdventureShortcutCard extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                adventure.title,
+                AppLocalization.moduleTitle(context, adventure.route),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.bodyStrong.copyWith(
@@ -1817,7 +1869,7 @@ class _AdventureShortcutCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                adventure.subtitle,
+                AppLocalization.moduleSubtitle(context, adventure.route),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.bodySmall.copyWith(

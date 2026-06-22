@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -7,11 +8,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/audio_service.dart';
-import '../../core/utils/tts_voice_helper.dart';
 import 'math_operation_theme.dart';
 import 'math_operation_widgets.dart';
 
@@ -43,7 +44,8 @@ class _SubtractionScreenState extends State<SubtractionScreen>
   static const _speechSettleDelay = Duration(milliseconds: 80);
 
   late final FlutterTts _tts;
-  late final Future<void> _ttsReady;
+  late Future<void> _ttsReady;
+  bool _ttsConfigured = false;
   late final AnimationController _successPulseController;
   late final List<_SubtractionRound> _rounds;
   final AudioService _feedbackAudio = AudioService();
@@ -72,26 +74,16 @@ class _SubtractionScreenState extends State<SubtractionScreen>
       duration: const Duration(milliseconds: 420),
       value: 1,
     );
-    _ttsReady = _configureTts();
+    _ttsReady = Future<void>.value();
     _rounds = _buildRoundPlan();
     _playScreenMusic(delayed: true);
     WidgetsBinding.instance.addPostFrameCallback((_) => _speakPrompt());
   }
 
   Future<void> _configureTts() async {
-    await TtsVoiceHelper.configureSharedAudio(_tts);
+    await AppLocalization.configureTts(_tts, context);
     await _tts.awaitSpeakCompletion(true);
-    await TtsVoiceHelper.applyPreferredVoice(
-      _tts,
-      locale: 'en-IN',
-      fallbackLocales: const ['en-US', 'en-GB'],
-    );
     await _tts.setPitch(1.05);
-    await TtsVoiceHelper.applyPreferredSpeechRate(
-      _tts,
-      normalRate: 0.42,
-      slowRate: 0.3,
-    );
     await _tts.setVolume(1.0);
   }
 
@@ -137,13 +129,26 @@ class _SubtractionScreenState extends State<SubtractionScreen>
 
   Future<void> _speakPrompt() async {
     await _speakText(
-      '${_round.total} minus ${_round.removeCount} equals what? Take away ${_round.removeCount}.',
+      context.tr(
+        'learning.subtraction_speak_prompt',
+        namedArgs: {
+          'total': '${_round.total}',
+          'remove': '${_round.removeCount}',
+        },
+      ),
     );
   }
 
   Future<void> _speakSuccess() async {
     await _speakText(
-      '${_round.total} minus ${_round.removeCount} equals ${_round.remaining}',
+      context.tr(
+        'learning.subtraction_speak_success',
+        namedArgs: {
+          'total': '${_round.total}',
+          'remove': '${_round.removeCount}',
+          'remaining': '${_round.remaining}',
+        },
+      ),
     );
   }
 
@@ -241,6 +246,10 @@ class _SubtractionScreenState extends State<SubtractionScreen>
     if (route is PageRoute<dynamic>) {
       appRouteObserver.unsubscribe(this);
       appRouteObserver.subscribe(this, route);
+    }
+    if (!_ttsConfigured) {
+      _ttsConfigured = true;
+      _ttsReady = _configureTts();
     }
   }
 
@@ -357,11 +366,14 @@ class _SubtractionScreenState extends State<SubtractionScreen>
           ),
           if (_showCelebration)
             MathOpCelebrationOverlay(
-              title: 'Amazing!',
+              title: context.tr('learning.subtraction_complete'),
               emoji: '☀️',
               color: _theme.color,
               softColor: _theme.softColor,
-              buttonLabel: 'Multiplication',
+              buttonLabel: AppLocalization.moduleTitle(
+                context,
+                AppRoutes.multiplication,
+              ),
               onButtonTap: () {
                 AppAudioService.instance.stopCelebrationMusic();
                 context.pushReplacement(AppRoutes.multiplication);
@@ -380,7 +392,7 @@ class _SubtractionScreenState extends State<SubtractionScreen>
       child: Column(
         children: [
           Text(
-            'Drag or tap the objects you want to take away.',
+            context.tr('learning.subtraction_drag_hint'),
             textAlign: TextAlign.center,
             style: AppTypography.bodyStrong.copyWith(
               color: const Color(0xFF5A6B7A),
@@ -394,7 +406,7 @@ class _SubtractionScreenState extends State<SubtractionScreen>
               child: OutlinedButton.icon(
                 onPressed: _removeAllNeeded,
                 icon: const Icon(Icons.touch_app_rounded),
-                label: const Text('Need help? Tap to take away'),
+                label: Text(context.tr('learning.need_help_move_all')),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: _theme.color,
                   side: BorderSide(
@@ -439,7 +451,10 @@ class _SubtractionScreenState extends State<SubtractionScreen>
           Row(
             children: [
               Text(
-                'Take away ${_round.removeCount}',
+                context.tr(
+                  'learning.take_away_count',
+                  namedArgs: {'count': '${_round.removeCount}'},
+                ),
                 style: AppTypography.bodyStrong.copyWith(
                   color: _theme.color,
                   fontWeight: FontWeight.w800,
@@ -447,7 +462,12 @@ class _SubtractionScreenState extends State<SubtractionScreen>
               ),
               const Spacer(),
               Text(
-                '${_round.total - _removedObjectIds.length} left here',
+                context.tr(
+                  'learning.left_here',
+                  namedArgs: {
+                    'count': '${_round.total - _removedObjectIds.length}',
+                  },
+                ),
                 style: AppTypography.bodySmall.copyWith(
                   color: const Color(0xFF5B6778),
                   fontWeight: FontWeight.w700,
@@ -497,7 +517,7 @@ class _SubtractionScreenState extends State<SubtractionScreen>
                   Text(_theme.emoji, style: const TextStyle(fontSize: 42)),
                   const SizedBox(height: 8),
                   Text(
-                    'Drag objects here to take them away',
+                context.tr('learning.drop_here'),
                     textAlign: TextAlign.center,
                     style: AppTypography.bodySmall.copyWith(
                       color: const Color(0xFF5B6778),

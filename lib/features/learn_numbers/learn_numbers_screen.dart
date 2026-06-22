@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -8,39 +9,18 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../StartLearning/start_learning_next_action_button.dart';
+import '../count_objects/counting_themes.dart';
 import '../../core/services/reward_progress_service.dart';
-import '../../core/utils/tts_voice_helper.dart';
 import '../../shared/widgets/celebration_bear.dart';
 import '../../shared/widgets/game_back_button.dart';
 
 // ─── Enums & data ─────────────────────────────────────────────────────────────
 
 enum _BearMood { idle, talking, wow, clapping }
-
-class _CountObjectTheme {
-  const _CountObjectTheme({
-    required this.emoji,
-    required this.assetPath,
-    required this.singular,
-    required this.plural,
-    required this.color,
-    required this.softColor,
-    required this.shadowColor,
-    this.imageScale = 0.9,
-  });
-
-  final String emoji;
-  final String assetPath;
-  final String singular;
-  final String plural;
-  final Color color;
-  final Color softColor;
-  final Color shadowColor;
-  final double imageScale;
-}
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -54,88 +34,7 @@ class LearnNumbersScreen extends StatefulWidget {
 class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     with TickerProviderStateMixin, RouteAware {
   // ── Data ──────────────────────────────────────────────────────────────────
-  static const List<String> _numberWords = [
-    'Zero',
-    'One',
-    'Two',
-    'Three',
-    'Four',
-    'Five',
-    'Six',
-    'Seven',
-    'Eight',
-    'Nine',
-    'Ten',
-    'Eleven',
-    'Twelve',
-    'Thirteen',
-    'Fourteen',
-    'Fifteen',
-    'Sixteen',
-    'Seventeen',
-    'Eighteen',
-    'Nineteen',
-    'Twenty',
-    'Twenty one',
-    'Twenty two',
-    'Twenty three',
-    'Twenty four',
-    'Twenty five',
-    'Twenty six',
-    'Twenty seven',
-    'Twenty eight',
-    'Twenty nine',
-    'Thirty',
-  ];
-
-  static const List<_CountObjectTheme> _countObjects = [
-    _CountObjectTheme(
-      emoji: '🍎',
-      assetPath: 'assets/images/contingobjects/apple.jpeg',
-      singular: 'apple',
-      plural: 'apples',
-      color: AppColors.primary,
-      softColor: AppColors.primaryLight,
-      shadowColor: Color(0xFFC94A18),
-    ),
-    _CountObjectTheme(
-      emoji: '🍬',
-      assetPath: 'assets/images/contingobjects/candy.jpeg',
-      singular: 'candy',
-      plural: 'candies',
-      color: AppColors.warning,
-      softColor: AppColors.premiumGoldLight,
-      shadowColor: Color(0xFFD4A000),
-    ),
-    _CountObjectTheme(
-      emoji: '🚗',
-      assetPath: 'assets/images/contingobjects/car.jpeg',
-      singular: 'car',
-      plural: 'cars',
-      color: AppColors.bridgeBlue,
-      softColor: AppColors.secondaryLight,
-      shadowColor: Color(0xFF2890D0),
-      imageScale: 0.74,
-    ),
-    _CountObjectTheme(
-      emoji: '🎈',
-      assetPath: 'assets/images/contingobjects/ballun.jpeg',
-      singular: 'balloon',
-      plural: 'balloons',
-      color: AppColors.stairsLavender,
-      softColor: AppColors.restBackground,
-      shadowColor: Color(0xFFA888E8),
-    ),
-    _CountObjectTheme(
-      emoji: '⭐',
-      assetPath: 'assets/images/contingobjects/start.jpeg',
-      singular: 'star',
-      plural: 'stars',
-      color: AppColors.premiumGold,
-      softColor: AppColors.premiumGoldLight,
-      shadowColor: Color(0xFFD4A000),
-    ),
-  ];
+  static const int _numberCount = 31;
 
   // ── State ─────────────────────────────────────────────────────────────────
   int _currentIndex = 0;
@@ -152,7 +51,8 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
 
   // ── Controllers ───────────────────────────────────────────────────────────
   late final FlutterTts _tts;
-  late final Future<void> _ttsReady;
+  late Future<void> _ttsReady;
+  bool _ttsConfigured = false;
   late final ScrollController _selectorController;
 
   // Number pop — elastic scale when digit changes
@@ -174,8 +74,14 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   late final AnimationController _cardTransitionController;
 
   // ── Derived ───────────────────────────────────────────────────────────────
-  _CountObjectTheme get _theme =>
-      _countObjects[_currentIndex % _countObjects.length];
+  CountingTheme get _theme =>
+      countingThemes[_currentIndex % countingThemes.length];
+
+  String _objectLabel(BuildContext context, int count) =>
+      AppLocalization.objectLabel(context, _theme.id, count);
+
+  String _numberWord(BuildContext context) =>
+      AppLocalization.numberWord(context, _currentIndex);
 
   String get _bearAssetPath {
     switch (_bearMood) {
@@ -189,16 +95,16 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     }
   }
 
-  String get _bearMessage {
+  String _bearMessage(BuildContext context) {
     switch (_bearMood) {
       case _BearMood.talking:
-        return 'Listen!';
+        return context.tr('learning.listen');
       case _BearMood.wow:
-        return 'Wow!';
+        return context.tr('learning.wow');
       case _BearMood.clapping:
-        return 'Yay!';
+        return context.tr('learning.yay');
       case _BearMood.idle:
-        return 'Tap';
+        return context.tr('learning.tap');
     }
   }
 
@@ -245,7 +151,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
       value: 1,
     );
 
-    _ttsReady = _configureTts();
+    _ttsReady = Future<void>.value();
     _playScreenMusic(delayed: true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollSelectorTo(_currentIndex, animated: false);
@@ -260,6 +166,10 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     if (route is PageRoute<dynamic>) {
       appRouteObserver.unsubscribe(this);
       appRouteObserver.subscribe(this, route);
+    }
+    if (!_ttsConfigured) {
+      _ttsConfigured = true;
+      _ttsReady = _configureTts();
     }
   }
 
@@ -279,26 +189,17 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   }
 
   Future<void> _configureTts() async {
-    await TtsVoiceHelper.configureSharedAudio(_tts);
-    await _applyIndianEnglishVoice();
-    await _tts.setPitch(1.04);
-    await TtsVoiceHelper.applyPreferredSpeechRate(
+    await AppLocalization.configureTts(
       _tts,
+      context,
       normalRate: 0.34,
       slowRate: 0.26,
     );
+    await _tts.setPitch(1.04);
     await _tts.setVolume(1.0);
     _tts.setCompletionHandler(_onSpeechDone);
     _tts.setCancelHandler(_onSpeechDone);
     _tts.setErrorHandler((_) => _onSpeechDone());
-  }
-
-  Future<void> _applyIndianEnglishVoice() async {
-    await TtsVoiceHelper.applyPreferredVoice(
-      _tts,
-      locale: 'en-IN',
-      fallbackLocales: const ['en-US', 'en-GB'],
-    );
   }
 
   void _onSpeechDone() {
@@ -330,7 +231,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   }
 
   Future<void> _speakCurrentNumber() async =>
-      _speakPhrase(_numberWords[_currentIndex]);
+      _speakPhrase(_numberWord(context));
 
   void _playScreenMusic({bool delayed = false}) {
     final requestToken = ++_musicRequestToken;
@@ -356,7 +257,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   }
 
   Future<void> _selectNumber(int index, {bool speak = true}) async {
-    if (index < 0 || index >= _numberWords.length) return;
+    if (index < 0 || index >= _numberCount) return;
 
     if (_currentIndex == index) {
       HapticFeedback.mediumImpact();
@@ -408,11 +309,11 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
 
     if (speak) await _speakCurrentNumber();
     if (!mounted || transitionToken != _cardTransitionToken) return;
-    if (index == _numberWords.length - 1) {
+    if (index == _numberCount - 1) {
       final completionToken = ++_completionCelebrationToken;
       Future<void>.delayed(const Duration(milliseconds: 900), () {
         if (!mounted || completionToken != _completionCelebrationToken) return;
-        if (_currentIndex != _numberWords.length - 1) return;
+        if (_currentIndex != _numberCount - 1) return;
         _showLearnNumbersCompletion();
       });
     }
@@ -454,13 +355,15 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   Future<void> _handleObjectTap(int index) async {
     if (_currentIndex == 0) return;
     final count = index + 1;
-    final label = count == 1 ? _theme.singular : _theme.plural;
+    final label = _objectLabel(context, count);
     HapticFeedback.lightImpact();
     setState(() {
       _highlightedObjectIndex = index;
       _setBearMood(_BearMood.wow);
     });
-    await _speakPhrase('$count $label');
+    await _speakPhrase(
+      '${AppLocalization.numberWord(context, count)} $label',
+    );
   }
 
   void _scrollSelectorTo(int index, {bool animated = true}) {
@@ -611,7 +514,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
                 const CelebrationBear(size: 118),
                 const SizedBox(height: 10),
                 Text(
-                  'Counting Complete!',
+                  context.tr('learning.activity_complete'),
                   style: AppTypography.h2.copyWith(
                     color: const Color(0xFF1A1060),
                     fontWeight: FontWeight.w800,
@@ -619,7 +522,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'You reached 30 and Bear is celebrating with you!',
+                  context.tr('learning.finish_every_challenge'),
                   textAlign: TextAlign.center,
                   style: AppTypography.body.copyWith(
                     color: const Color(0xFF556172),
@@ -640,7 +543,10 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
                     ),
                   ),
                   child: Text(
-                    '+4 stars earned!',
+                    context.tr(
+                      'learning.stars_earned',
+                      namedArgs: {'stars': '4'},
+                    ),
                     style: AppTypography.bodyStrong.copyWith(
                       color: _theme.color,
                       fontWeight: FontWeight.w800,
@@ -685,7 +591,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Learn Numbers 🔢',
+                '${AppLocalization.moduleTitle(context, AppRoutes.learnNumbers)} 🔢',
                 style: AppTypography.hero.copyWith(
                   fontSize: AppTypography.responsiveSize(
                     MediaQuery.sizeOf(context).width,
@@ -697,7 +603,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
                 ),
               ),
               Text(
-                'Swipe numbers or tap 🔊 to hear again',
+                '${context.tr('learning.learn_swipe_hint')} ${context.tr('learning.tap_to_hear')}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.bodySmall.copyWith(
@@ -833,7 +739,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
             flex: isVeryCompact ? 5 : 4,
             child: _BearBuddy(
               assetPath: _bearAssetPath,
-              message: _bearMessage,
+              message: _bearMessage(context),
               visualToken: _bearVisualToken,
               color: _theme.color,
               softColor: _theme.softColor,
@@ -883,7 +789,13 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
               ),
               const SizedBox(width: 5),
               Text(
-                'Card ${_currentIndex + 1} of ${_numberWords.length}',
+                context.tr(
+                  'learning.round',
+                  namedArgs: {
+                    'current': '${_currentIndex + 1}',
+                    'total': '$_numberCount',
+                  },
+                ),
                 style: AppTypography.bodySmall.copyWith(
                   color: _theme.color,
                   fontSize: isVeryCompact ? 9 : 10,
@@ -968,8 +880,8 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
           child: Align(
             alignment: Alignment.center,
             child: Text(
-              _numberWords[_currentIndex],
-              key: ValueKey(_numberWords[_currentIndex]),
+              _numberWord(context),
+              key: ValueKey(_numberWord(context)),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
@@ -1002,8 +914,8 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
               Flexible(
                 child: Text(
                   _isSpeaking
-                      ? 'Bear is speaking...'
-                      : 'Swipe numbers or tap 🔊',
+                      ? context.tr('learning.listen')
+                      : context.tr('learning.learn_swipe_hint'),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodySmall.copyWith(
@@ -1093,8 +1005,9 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   }) {
     final count = _currentIndex;
     final label = count == 0
-        ? 'Zero means none!'
-        : '$count ${count == 1 ? _theme.singular : _theme.plural}';
+        ? AppLocalization.numberWord(context, 0)
+        : '${AppLocalization.numberWord(context, count)} '
+            '${_objectLabel(context, count)}';
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(26),
@@ -1135,7 +1048,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 220),
                     child: Text(
-                      'Let\'s Count ${_theme.emoji}',
+                      '${context.tr('learning.tap_objects_to_count')} ${_theme.emoji}',
                       key: ValueKey(_theme.emoji),
                       style: AppTypography.h2.copyWith(
                         color: const Color(0xFF2D1B69),
@@ -1235,7 +1148,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
           child: Column(
             children: [
               Text(
-                'Pick a Number',
+                context.tr('learning.tap_objects_to_count'),
                 style: AppTypography.bodySmall.copyWith(
                   color: const Color(0xFF6F7A89),
                   fontSize: isCompact ? 10 : 11,
@@ -1250,7 +1163,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
-                  itemCount: _numberWords.length,
+                  itemCount: _numberCount,
                   separatorBuilder: (_, __) => const SizedBox(width: 8),
                   itemBuilder: (context, index) {
                     final isSelected = index == _currentIndex;
@@ -1325,7 +1238,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
       children: [
         Expanded(
           child: _NavButton(
-            label: 'Previous',
+            label: '←',
             icon: Icons.chevron_left_rounded,
             color: _theme.softColor,
             textColor: _theme.color,
@@ -1340,13 +1253,13 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
         const SizedBox(width: 10),
         Expanded(
           child: _NavButton(
-            label: 'Next',
+            label: context.tr('learning.next'),
             icon: Icons.chevron_right_rounded,
             color: _theme.color,
             textColor: Colors.white,
             borderColor: _theme.shadowColor.withValues(alpha: 0.60),
             shadowColor: _theme.shadowColor.withValues(alpha: 0.55),
-            enabled: _currentIndex < _numberWords.length - 1,
+            enabled: _currentIndex < _numberCount - 1,
             isCompact: isCompact,
             iconLeading: false,
             onTap: () => _selectNumber(_currentIndex + 1),
@@ -1539,7 +1452,7 @@ class _AmbientBubbles extends StatelessWidget {
   });
 
   final AnimationController controller;
-  final _CountObjectTheme theme;
+  final CountingTheme theme;
 
   @override
   Widget build(BuildContext context) {
@@ -1589,7 +1502,7 @@ class _ObjectsGrid extends StatelessWidget {
   });
 
   final int count;
-  final _CountObjectTheme theme;
+  final CountingTheme theme;
   final Animation<double> animation;
   final bool isCompact;
   final bool isVeryCompact;
@@ -1689,7 +1602,7 @@ class _ObjectsGrid extends StatelessWidget {
                               ),
                               child: Center(
                                 child: Transform.scale(
-                                  scale: theme.imageScale,
+                                  scale: 0.9,
                                   child: ClipRRect(
                                     borderRadius:
                                         BorderRadius.circular(tileSize * 0.18),
@@ -1746,7 +1659,7 @@ class _ZeroStateCard extends StatelessWidget {
     required this.isCompact,
   });
 
-  final _CountObjectTheme theme;
+  final CountingTheme theme;
   final bool isCompact;
 
   @override
@@ -1783,7 +1696,7 @@ class _ZeroStateCard extends StatelessWidget {
           ),
           SizedBox(height: isCompact ? 8 : 10),
           Text(
-            'Zero Means None!',
+            context.tr('learning.how_many', namedArgs: {'label': theme.emoji}),
             textAlign: TextAlign.center,
             style: AppTypography.h3.copyWith(
               color: const Color(0xFF1A1060),
@@ -1793,7 +1706,7 @@ class _ZeroStateCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'No ${theme.plural} to count yet.',
+            AppLocalization.numberWord(context, 0),
             textAlign: TextAlign.center,
             style: AppTypography.bodySmall.copyWith(
               color: const Color(0xFF7A849A),

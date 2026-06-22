@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -7,10 +8,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
-import '../../core/utils/tts_voice_helper.dart';
 import '../../shared/helpers/feedback_helper.dart';
 import '../../shared/widgets/celebration_bear.dart';
 import '../StartLearning/start_learning_next_action_button.dart';
@@ -38,7 +39,8 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
   static const int _totalRounds = 10;
 
   late final FlutterTts _tts;
-  late final Future<void> _ttsReady;
+  late Future<void> _ttsReady;
+  bool _ttsConfigured = false;
   late final AnimationController _cardPopController;
   late final AnimationController _celebrationController;
   late List<_RoundConfig> _rounds;
@@ -71,7 +73,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    _ttsReady = _configureTts();
+    _ttsReady = Future<void>.value();
     _rounds = _buildRoundPlan();
     _prepareRound();
     _playScreenMusic(delayed: true);
@@ -81,20 +83,18 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
   }
 
   Future<void> _configureTts() async {
-    await TtsVoiceHelper.configureSharedAudio(_tts);
-    await TtsVoiceHelper.applyPreferredVoice(
+    await AppLocalization.configureTts(
       _tts,
-      locale: 'en-IN',
-      fallbackLocales: const ['en-US', 'en-GB'],
-    );
-    await _tts.setPitch(1.04);
-    await TtsVoiceHelper.applyPreferredSpeechRate(
-      _tts,
+      context,
       normalRate: 0.38,
       slowRate: 0.28,
     );
+    await _tts.setPitch(1.04);
     await _tts.setVolume(1.0);
   }
+
+  String _objectLabel(BuildContext context, int count) =>
+      AppLocalization.objectLabel(context, _theme.id, count);
 
   void _playScreenMusic({bool delayed = false}) {
     final requestToken = ++_musicRequestToken;
@@ -175,21 +175,33 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
   Future<void> _speakPrompt() async {
     await _ttsReady;
     await _tts.stop();
-    final label = _correctCount == 1 ? _theme.singular : _theme.plural;
-    await _tts.speak('Count the $label. How many do you see?');
+    if (!mounted) return;
+    final label = _objectLabel(context, _correctCount);
+    await _tts.speak(
+      context.tr('learning.count_the', namedArgs: {'label': label}),
+    );
   }
 
   Future<void> _speakCorrectAnswer() async {
     await _ttsReady;
     await _tts.stop();
-    final label = _correctCount == 1 ? _theme.singular : _theme.plural;
-    await _tts.speak('Great job! $_correctCount $label.');
+    if (!mounted) return;
+    await _tts.speak(
+      context.tr(
+        'learning.great_count',
+        namedArgs: {
+          'count': '$_correctCount',
+          'label': _objectLabel(context, _correctCount),
+        },
+      ),
+    );
   }
 
   Future<void> _speakWrongAnswer() async {
     await _ttsReady;
     await _tts.stop();
-    await _tts.speak('Try again. Count carefully.');
+    if (!mounted) return;
+    await _tts.speak(context.tr('learning.try_again_count'));
   }
 
   Future<void> _handleAnswerTap(int answer) async {
@@ -246,7 +258,6 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
 
     final spokenCount =
         existingIndex == -1 ? updatedOrder.length : existingIndex + 1;
-    final label = spokenCount == 1 ? _theme.singular : _theme.plural;
 
     setState(() {
       _countedObjectOrder = updatedOrder;
@@ -254,11 +265,23 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
 
     await _ttsReady;
     await _tts.stop();
+    if (!mounted) return;
     if (spokenCount == _correctCount && existingIndex == -1) {
-      await _tts.speak('$spokenCount $label. You counted them all.');
+      await _tts.speak(
+        context.tr(
+          'learning.great_count',
+          namedArgs: {
+            'count': '$_correctCount',
+            'label': _objectLabel(context, _correctCount),
+          },
+        ),
+      );
       return;
     }
-    await _tts.speak('$spokenCount $label');
+    await _tts.speak(
+      '${AppLocalization.numberWord(context, spokenCount)} '
+      '${_objectLabel(context, spokenCount)}',
+    );
   }
 
   void _resetTappedObjects() {
@@ -315,6 +338,10 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
     if (route is PageRoute<dynamic>) {
       appRouteObserver.unsubscribe(this);
       appRouteObserver.subscribe(this, route);
+    }
+    if (!_ttsConfigured) {
+      _ttsConfigured = true;
+      _ttsReady = _configureTts();
     }
   }
 
@@ -416,7 +443,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Count Objects',
+                AppLocalization.moduleTitle(context, AppRoutes.counting),
                 style: AppTypography.h1.copyWith(
                   fontSize: 24,
                   color: const Color(0xFF1A1060),
@@ -424,7 +451,13 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
                 ),
               ),
               Text(
-                'Round ${_roundIndex + 1} of $_totalRounds',
+                context.tr(
+                  'learning.round',
+                  namedArgs: {
+                    'current': '${_roundIndex + 1}',
+                    'total': '$_totalRounds',
+                  },
+                ),
                 style: AppTypography.bodySmall.copyWith(
                   color: const Color(0xFF586374),
                   fontWeight: FontWeight.w700,
@@ -505,7 +538,12 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'How many ${_correctCount == 1 ? _theme.singular : _theme.plural}?',
+                  context.tr(
+                    'learning.how_many',
+                    namedArgs: {
+                      'label': _objectLabel(context, _correctCount),
+                    },
+                  ),
                   style: AppTypography.cardTitle.copyWith(
                     color: const Color(0xFF1A1060),
                     fontSize: 20,
@@ -514,7 +552,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Count each picture and tap the correct number. Tap 🔊 to hear again.',
+                  '${context.tr('learning.count_prompt')} ${context.tr('learning.tap_to_hear')}',
                   style: AppTypography.bodySmall.copyWith(
                     color: const Color(0xFF5F6C7B),
                     fontWeight: FontWeight.w700,
@@ -572,8 +610,8 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
                   ),
                   child: Text(
                     _countedObjectOrder.isEmpty
-                        ? 'Tap objects to count'
-                        : '${_countedObjectOrder.length} of $_correctCount counted',
+                        ? context.tr('learning.tap_objects_to_count')
+                        : '${_countedObjectOrder.length}/$_correctCount',
                     style: AppTypography.bodySmall.copyWith(
                       color: _theme.color,
                       fontWeight: FontWeight.w800,
@@ -592,7 +630,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
                       ),
                     ),
                     icon: const Icon(Icons.refresh_rounded, size: 18),
-                    label: const Text('Reset'),
+                    label: Text(context.tr('learning.reset')),
                   ),
               ],
             ),
@@ -784,7 +822,8 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
 
   Widget _buildBottomAction() {
     final isLastRound = _roundIndex == _totalRounds - 1;
-    final label = isLastRound ? 'Finish' : 'Next';
+    final label =
+        isLastRound ? context.tr('learning.finish') : context.tr('learning.next');
     final isEnabled = _roundSolved;
     return SizedBox(
       width: double.infinity,
@@ -843,7 +882,10 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
-                          'All $_totalRounds Rounds Complete',
+                          context.tr(
+                            'learning.all_rounds_complete',
+                            namedArgs: {'total': '$_totalRounds'},
+                          ),
                           style: AppTypography.bodySmall.copyWith(
                             color: _theme.color,
                             fontWeight: FontWeight.w800,
@@ -854,7 +896,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
                       const CelebrationBear(size: 132),
                       const SizedBox(height: 14),
                       Text(
-                        'Counting Complete!',
+                        context.tr('learning.counting_complete'),
                         textAlign: TextAlign.center,
                         style: AppTypography.h1.copyWith(
                           color: const Color(0xFF1A1060),
@@ -863,7 +905,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        'You finished every counting challenge from 1 to 10. Keep going with the next adventure!',
+                        context.tr('learning.finish_every_challenge'),
                         textAlign: TextAlign.center,
                         style: AppTypography.body.copyWith(
                           color: const Color(0xFF556172),
@@ -884,7 +926,12 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
                           ),
                         ),
                         child: Text(
-                          '+3 stars earned!',
+                          context.tr(
+                            'learning.stars_earned',
+                            namedArgs: {
+                              'stars': '${RewardProgressService.instance.starsForModule(RewardModuleIds.countObjects)}',
+                            },
+                          ),
                           style: AppTypography.bodyStrong.copyWith(
                             color: _theme.color,
                             fontWeight: FontWeight.w800,

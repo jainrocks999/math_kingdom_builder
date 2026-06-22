@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import 'start_learning_navigation.dart';
@@ -30,7 +31,20 @@ class _StartLearningNextActionButtonState
   @override
   void initState() {
     super.initState();
-    _labelFuture = StartLearningNavigation.nextActionLabel(widget.currentRoute);
+    _loadLabel();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadLabel();
+  }
+
+  void _loadLabel() {
+    _labelFuture = StartLearningNavigation.nextActionLabel(
+      context,
+      widget.currentRoute,
+    );
   }
 
   Future<void> _handleTap() async {
@@ -48,7 +62,7 @@ class _StartLearningNextActionButtonState
       builder: (context, snapshot) {
         return widget.builder(
           context,
-          snapshot.data ?? 'Next Learning',
+          snapshot.data ?? context.tr('learning.next_learning'),
           () {
             _handleTap();
           },

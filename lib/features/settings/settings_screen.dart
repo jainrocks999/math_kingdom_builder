@@ -153,6 +153,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final fallbackLocales = context.locale.languageCode == 'hi'
         ? const ['hi-IN', 'en-IN', 'en-US']
         : const ['en-IN', 'en-US', 'en-GB'];
+    final previewMessage = context.tr('settings.voice_preview_message');
     await TtsVoiceHelper.applyPreferredVoice(
       _previewTts,
       locale: preferredLocale,
@@ -166,7 +167,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
     try {
       await _previewTts.stop();
-      await _previewTts.speak(context.tr('settings.voice_preview_message'));
+      await _previewTts.speak(previewMessage);
     } finally {
       if (mounted) {
         setState(() => _isPreviewSpeaking = false);
@@ -209,6 +210,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _isSaving = false;
     });
 
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(context.tr('settings.reset_success'))),
     );
@@ -720,15 +722,17 @@ class _SettingsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.white,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.outline),
+        side: BorderSide(color: AppColors.outline),
       ),
-      child: child,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: SizedBox(width: double.infinity, child: child),
+      ),
     );
   }
 }

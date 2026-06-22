@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -8,9 +9,7 @@ import '../../core/services/reward_progress_service.dart';
 
 class _OperationCardData {
   const _OperationCardData({
-    required this.title,
     required this.emoji,
-    required this.subtitle,
     required this.route,
     required this.color,
     required this.softColor,
@@ -19,9 +18,7 @@ class _OperationCardData {
     required this.progressId,
   });
 
-  final String title;
   final String emoji;
-  final String subtitle;
   final String route;
   final Color color;
   final Color softColor;
@@ -35,9 +32,7 @@ class MathOperationsScreen extends StatefulWidget {
 
   static const _operations = [
     _OperationCardData(
-      title: 'Addition',
       emoji: '➕',
-      subtitle: 'Combine groups',
       route: AppRoutes.addition,
       color: AppColors.warning,
       softColor: AppColors.premiumGoldLight,
@@ -46,9 +41,7 @@ class MathOperationsScreen extends StatefulWidget {
       progressId: RewardModuleIds.addition,
     ),
     _OperationCardData(
-      title: 'Subtraction',
       emoji: '➖',
-      subtitle: 'Take objects away',
       route: AppRoutes.subtraction,
       color: AppColors.secondary,
       softColor: AppColors.secondaryLight,
@@ -57,9 +50,7 @@ class MathOperationsScreen extends StatefulWidget {
       progressId: RewardModuleIds.subtraction,
     ),
     _OperationCardData(
-      title: 'Multiplication',
       emoji: '✖️',
-      subtitle: 'Build equal groups',
       route: AppRoutes.multiplication,
       color: AppColors.primary,
       softColor: AppColors.primaryLight,
@@ -68,9 +59,7 @@ class MathOperationsScreen extends StatefulWidget {
       progressId: RewardModuleIds.multiplication,
     ),
     _OperationCardData(
-      title: 'Division',
       emoji: '➗',
-      subtitle: 'Share into groups',
       route: AppRoutes.division,
       color: AppColors.bridgeBlue,
       softColor: AppColors.secondaryLight,
@@ -206,7 +195,7 @@ class _MathOperationsScreenState extends State<MathOperationsScreen>
                       ),
                       const SizedBox(width: 14),
                       Text(
-                        'Math Ops',
+                        context.tr('math_operations.title'),
                         style: AppTypography.hero.copyWith(
                           fontSize: AppTypography.responsiveSize(
                             MediaQuery.sizeOf(context).width,
@@ -262,7 +251,7 @@ class _MathOperationsScreenState extends State<MathOperationsScreen>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Operation Adventure',
+                                    context.tr('math_operations.hero_title'),
                                     style: AppTypography.cardTitle.copyWith(
                                       color: const Color(0xFF1E1060),
                                       fontSize: 20,
@@ -271,7 +260,7 @@ class _MathOperationsScreenState extends State<MathOperationsScreen>
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'Practice all four operation worlds and keep building your star bank.',
+                                    context.tr('math_operations.hero_subtitle'),
                                     style: AppTypography.bodySmall.copyWith(
                                       color: const Color(0xFF64748B),
                                       fontWeight: FontWeight.w700,
@@ -288,7 +277,7 @@ class _MathOperationsScreenState extends State<MathOperationsScreen>
                             Expanded(
                               child: _HubMetricCard(
                                 emoji: '⭐',
-                                label: 'Math stars',
+                                label: context.tr('math_operations.math_stars'),
                                 value: '$_mathStars',
                                 color: AppColors.warning,
                                 softColor: AppColors.premiumGoldLight,
@@ -298,7 +287,7 @@ class _MathOperationsScreenState extends State<MathOperationsScreen>
                             Expanded(
                               child: _HubMetricCard(
                                 emoji: '🎯',
-                                label: 'Played',
+                                label: context.tr('math_operations.played'),
                                 value:
                                     '$_completedOperations/${MathOperationsScreen._operations.length}',
                                 color: AppColors.secondary,
@@ -324,8 +313,15 @@ class _MathOperationsScreenState extends State<MathOperationsScreen>
                         Text(
                           _completedOperations ==
                                   MathOperationsScreen._operations.length
-                              ? 'All four operations have progress. Amazing work!'
-                              : 'Next milestone: complete $nextPracticeGoal of ${MathOperationsScreen._operations.length} operation adventures.',
+                              ? context.tr('math_operations.all_progress')
+                              : context.tr(
+                                  'math_operations.next_milestone',
+                                  namedArgs: {
+                                    'current': '$nextPracticeGoal',
+                                    'total':
+                                        '${MathOperationsScreen._operations.length}',
+                                  },
+                                ),
                           style: AppTypography.bodySmall.copyWith(
                             color: const Color(0xFF5A6B7A),
                             fontWeight: FontWeight.w700,
@@ -344,7 +340,7 @@ class _MathOperationsScreenState extends State<MathOperationsScreen>
                               ),
                             ),
                             onPressed: () => _goBack(context),
-                            child: const Text('Back to Start Learning'),
+                            child: Text(context.tr('learning.back_to_menu')),
                           ),
                         ),
                       ],
@@ -352,7 +348,7 @@ class _MathOperationsScreenState extends State<MathOperationsScreen>
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    'Addition, subtraction, multiplication, and division in one place.',
+                    context.tr('math_operations.intro'),
                     style: AppTypography.body.copyWith(
                       color: const Color(0xFF5A6B7A),
                       fontWeight: FontWeight.w700,
@@ -402,11 +398,15 @@ class _OperationPlayCard extends StatelessWidget {
 
   double get _progressValue => (completionCount / 3).clamp(0, 1).toDouble();
 
-  String get _statusLabel {
-    if (!data.available) return 'Coming soon';
-    if (completionCount == 0) return 'Start practice';
-    if (completionCount >= 3) return 'Mastered';
-    return '$completionCount win${completionCount == 1 ? '' : 's'}';
+  String _statusLabel(BuildContext context) {
+    if (!data.available) return context.tr('home.coming_soon');
+    if (completionCount == 0) return context.tr('learning.start_practice');
+    if (completionCount >= 3) return context.tr('learning.mastered');
+    if (completionCount == 1) return context.tr('learning.win_one');
+    return context.tr(
+      'learning.wins',
+      namedArgs: {'count': '$completionCount'},
+    );
   }
 
   @override
@@ -468,7 +468,7 @@ class _OperationPlayCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            data.title,
+                            context.tr('modules.${data.progressId}.title'),
                             style: AppTypography.cardTitle.copyWith(
                               color: const Color(0xFF1E1060),
                               fontSize: 22,
@@ -497,7 +497,7 @@ class _OperationPlayCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      data.subtitle,
+                      context.tr('modules.${data.progressId}.subtitle'),
                       style: AppTypography.bodySmall.copyWith(
                         color: const Color(0xFF6E768A),
                         fontWeight: FontWeight.w700,
@@ -518,7 +518,7 @@ class _OperationPlayCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            _statusLabel,
+                            _statusLabel(context),
                             style: AppTypography.bodySmall.copyWith(
                               color: const Color(0xFF5A6B7A),
                               fontWeight: FontWeight.w700,
@@ -547,7 +547,7 @@ class _OperationPlayCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
-                    'Soon',
+                    context.tr('home.coming_soon'),
                     style: AppTypography.bodySmall.copyWith(
                       color: data.color,
                       fontWeight: FontWeight.w800,

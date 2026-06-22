@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -20,12 +21,14 @@ enum _MasteryLevel { exploring, practicing, confident }
 
 class _ActivityReport {
   const _ActivityReport({
+    required this.moduleId,
     required this.title,
     required this.emoji,
     required this.completions,
     required this.starsEarned,
   });
 
+  final String moduleId;
   final String title;
   final String emoji;
   final int completions;
@@ -109,6 +112,23 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     _bootstrap();
   }
 
+  String _moduleTitle(String moduleId, String fallback) {
+    final key = 'parent_dashboard.modules.$moduleId';
+    final translated = context.tr(key);
+    return translated == key ? fallback : translated;
+  }
+
+  String _masteryLabel(_MasteryLevel mastery) {
+    switch (mastery) {
+      case _MasteryLevel.exploring:
+        return context.tr('parent_dashboard.mastery.exploring');
+      case _MasteryLevel.practicing:
+        return context.tr('parent_dashboard.mastery.practicing');
+      case _MasteryLevel.confident:
+        return context.tr('parent_dashboard.mastery.confident');
+    }
+  }
+
   @override
   void dispose() {
     _cooldownTicker?.cancel();
@@ -177,7 +197,8 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   Future<void> _submitPin() async {
     final pin = _enteredPin;
     if (pin.length != 4) {
-      setState(() => _errorMessage = 'Please enter all 4 digits.');
+      setState(
+          () => _errorMessage = context.tr('parent_dashboard.pin_enter_all'));
       return;
     }
 
@@ -204,8 +225,12 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       if (!mounted) return;
       setState(() {
         _isSubmitting = false;
-        _errorMessage =
-            'Please wait $seconds second${seconds == 1 ? '' : 's'} before trying again.';
+        _errorMessage = context.tr(
+          'parent_dashboard.pin_wait_before_retry',
+          namedArgs: {
+            'seconds': context.plural('common.seconds', seconds),
+          },
+        );
       });
       return;
     }
@@ -229,8 +254,13 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     setState(() {
       _isSubmitting = false;
       _errorMessage = seconds > 0
-          ? 'Too many tries. Wait $seconds second${seconds == 1 ? '' : 's'}.'
-          : 'That PIN did not match. Try again.';
+          ? context.tr(
+              'parent_dashboard.pin_too_many_tries',
+              namedArgs: {
+                'seconds': context.plural('common.seconds', seconds),
+              },
+            )
+          : context.tr('parent_dashboard.pin_did_not_match');
     });
     for (final controller in _pinControllers) {
       controller.clear();
@@ -308,9 +338,9 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
       backgroundColor: AppColors.parentBackground,
       body: SafeArea(
         child: _isLoading
-            ? const KidLoadingView(
-                title: 'Parent Dashboard',
-                subtitle: 'Loading family progress.',
+            ? KidLoadingView(
+                title: context.tr('parent_dashboard.title'),
+                subtitle: context.tr('parent_dashboard.loading_subtitle'),
                 color: AppColors.parentAccent,
                 compact: true,
               )
@@ -341,15 +371,17 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    _needsSetup ? 'Set Parent PIN' : 'Parent Zone',
+                    _needsSetup
+                        ? context.tr('parent_dashboard.set_pin_title')
+                        : context.tr('parent_dashboard.zone_title'),
                     style: AppTypography.h1
                         .copyWith(color: const Color(0xFF1E1060)),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     _needsSetup
-                        ? 'Create a 4-digit PIN so only grown-ups can open this area.'
-                        : 'Enter your parent PIN to view learning progress.',
+                        ? context.tr('parent_dashboard.set_pin_subtitle')
+                        : context.tr('parent_dashboard.zone_subtitle'),
                     style: AppTypography.body.copyWith(
                       color: const Color(0xFF5A6B7A),
                       fontWeight: FontWeight.w600,
@@ -402,7 +434,13 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                   if (_cooldownSeconds > 0) ...[
                     const SizedBox(height: 10),
                     Text(
-                      'PIN locked for $_cooldownSeconds second${_cooldownSeconds == 1 ? '' : 's'}.',
+                      context.tr(
+                        'parent_dashboard.pin_locked',
+                        namedArgs: {
+                          'seconds': context.plural(
+                              'common.seconds', _cooldownSeconds),
+                        },
+                      ),
                       style: AppTypography.bodySmall.copyWith(
                         color: const Color(0xFF7A4A00),
                         fontWeight: FontWeight.w700,
@@ -420,8 +458,12 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                       ),
                       child: Text(
                         _isSubmitting
-                            ? 'Please wait...'
-                            : (_needsSetup ? 'Save PIN' : 'Unlock Dashboard'),
+                            ? context.tr('parent_dashboard.please_wait')
+                            : (_needsSetup
+                                ? context.tr('parent_dashboard.save_pin')
+                                : context.tr(
+                                    'parent_dashboard.unlock_dashboard',
+                                  )),
                         style: AppTypography.button,
                       ),
                     ),
@@ -441,7 +483,8 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     final reports = _reports
         .map(
           (entry) => _ActivityReport(
-            title: entry.$2,
+            moduleId: entry.$1,
+            title: _moduleTitle(entry.$1, entry.$2),
             emoji: entry.$3,
             completions: progress?.completionCountFor(entry.$1) ?? 0,
             starsEarned: (progress?.completionCountFor(entry.$1) ?? 0) *
@@ -463,7 +506,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Parent Dashboard',
+                  context.tr('parent_dashboard.title'),
                   style: AppTypography.h2.copyWith(
                     color: const Color(0xFF1E1060),
                     fontWeight: FontWeight.w800,
@@ -488,8 +531,11 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
               children: [
                 Text(
                   activeProfile == null
-                      ? 'Family Progress'
-                      : '${activeProfile.name}\'s Progress',
+                      ? context.tr('parent_dashboard.family_progress')
+                      : context.tr(
+                          'parent_dashboard.child_progress',
+                          namedArgs: {'name': activeProfile.name},
+                        ),
                   style: AppTypography.cardTitle.copyWith(
                     color: const Color(0xFF1E1060),
                   ),
@@ -500,17 +546,24 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                   runSpacing: 10,
                   children: [
                     _StatChip(
-                      label: '${progress?.totalStars ?? 0} stars',
+                      label: context.plural(
+                        'common.stars',
+                        progress?.totalStars ?? 0,
+                      ),
                       icon: Icons.star_rounded,
                       color: AppColors.premiumGold,
                     ),
                     _StatChip(
-                      label: '${progress?.streakDays ?? 0} day streak',
+                      label: context.tr(
+                        'parent_dashboard.streak_label',
+                        namedArgs: {'count': '${progress?.streakDays ?? 0}'},
+                      ),
                       icon: Icons.local_fire_department_rounded,
                       color: AppColors.primary,
                     ),
                     _StatChip(
-                      label: '${progress?.todayCompletions ?? 0} today',
+                      label:
+                          '${progress?.todayCompletions ?? 0} ${context.tr('common.today')}',
                       icon: Icons.today_rounded,
                       color: AppColors.secondary,
                     ),
@@ -521,33 +574,33 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
           ),
           const SizedBox(height: 20),
           _buildSectionHeader(
-            'Child Profile',
-            'Choose which child is active for the next learning session.',
+            context.tr('parent_dashboard.child_profile_title'),
+            context.tr('parent_dashboard.child_profile_subtitle'),
           ),
           const SizedBox(height: 12),
           _buildProfileSwitcher(),
           const SizedBox(height: 20),
           _buildSectionHeader(
-            'Audio Settings',
-            'These controls apply to music, sound effects, and spoken prompts.',
+            context.tr('parent_dashboard.audio_title'),
+            context.tr('parent_dashboard.audio_subtitle'),
           ),
           const SizedBox(height: 12),
           _buildSettingsSection(),
           const SizedBox(height: 20),
           _buildSectionHeader(
-            'Family Summary',
-            'A quick adult-friendly snapshot of today and the current streak.',
+            context.tr('parent_dashboard.summary_title'),
+            context.tr('parent_dashboard.summary_subtitle'),
           ),
           const SizedBox(height: 12),
           _buildSummaryCard(progress),
           const SizedBox(height: 20),
           Text(
-            'Activity Levels',
+            context.tr('parent_dashboard.activity_levels_title'),
             style: AppTypography.h3.copyWith(color: const Color(0xFF1E1060)),
           ),
           const SizedBox(height: 4),
           Text(
-            'No scores — only gentle progress labels for young learners.',
+            context.tr('parent_dashboard.activity_levels_subtitle'),
             style: AppTypography.bodySmall.copyWith(
               color: const Color(0xFF5A6B7A),
             ),
@@ -560,7 +613,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
             child: OutlinedButton.icon(
               onPressed: () => context.push(AppRoutes.startlearning),
               icon: const Icon(Icons.play_arrow_rounded),
-              label: const Text('Open Start Learning'),
+              label: Text(context.tr('parent_dashboard.open_start_learning')),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.parentAccent,
                 padding: const EdgeInsets.symmetric(vertical: 14),
@@ -593,7 +646,13 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                 Text(report.title, style: AppTypography.bodyStrong),
                 const SizedBox(height: 4),
                 Text(
-                  '${report.completions} sessions • ${report.starsEarned} stars',
+                  context.tr(
+                    'parent_dashboard.sessions_and_stars',
+                    namedArgs: {
+                      'sessions': '${report.completions}',
+                      'stars': '${report.starsEarned}',
+                    },
+                  ),
                   style: AppTypography.caption,
                 ),
               ],
@@ -606,7 +665,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
-              report.masteryLabel,
+              _masteryLabel(report.mastery),
               style: AppTypography.caption.copyWith(
                 color: report.masteryColor,
                 fontWeight: FontWeight.w700,
@@ -679,75 +738,81 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   }
 
   Widget _buildSettingsSection() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.white,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.outline),
+        side: BorderSide(color: AppColors.outline),
       ),
-      child: Column(
-        children: [
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            value: _audioSettings.musicEnabled,
-            onChanged: _updateMusicEnabled,
-            title: const Text('Music'),
-            subtitle: const Text('Background music across the app'),
-          ),
-          SwitchListTile.adaptive(
-            contentPadding: EdgeInsets.zero,
-            value: _audioSettings.sfxEnabled,
-            onChanged: _updateSfxEnabled,
-            title: const Text('Sound Effects'),
-            subtitle: const Text('Correct / wrong feedback sounds'),
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'Speech Rate',
-              style: AppTypography.bodyStrong.copyWith(
-                color: const Color(0xFF1E1060),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: SizedBox(
+          width: double.infinity,
+          child: Column(
+            children: [
+              SwitchListTile.adaptive(
+                contentPadding: EdgeInsets.zero,
+                value: _audioSettings.musicEnabled,
+                onChanged: _updateMusicEnabled,
+                title: Text(context.tr('common.music')),
+                subtitle: Text(context.tr('settings.music_subtitle')),
               ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          SegmentedButton<String>(
-            segments: const [
-              ButtonSegment<String>(
-                value: 'normal',
-                label: Text('Normal'),
+              SwitchListTile.adaptive(
+                contentPadding: EdgeInsets.zero,
+                value: _audioSettings.sfxEnabled,
+                onChanged: _updateSfxEnabled,
+                title: Text(context.tr('common.sound_effects')),
+                subtitle: Text(context.tr('settings.sfx_subtitle')),
               ),
-              ButtonSegment<String>(
-                value: 'slow',
-                label: Text('Slow'),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  context.tr('common.speech_rate'),
+                  style: AppTypography.bodyStrong.copyWith(
+                    color: const Color(0xFF1E1060),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              SegmentedButton<String>(
+                segments: [
+                  ButtonSegment<String>(
+                    value: 'normal',
+                    label: Text(context.tr('common.normal')),
+                  ),
+                  ButtonSegment<String>(
+                    value: 'slow',
+                    label: Text(context.tr('common.slow')),
+                  ),
+                ],
+                selected: {_audioSettings.speechRateMode},
+                onSelectionChanged: (selection) {
+                  if (selection.isEmpty) return;
+                  _updateSpeechRateMode(selection.first);
+                },
+              ),
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    await context.push('${AppRoutes.settings}?source=parent');
+                    await _loadDashboardData();
+                  },
+                  icon: const Icon(Icons.settings_rounded),
+                  label:
+                      Text(context.tr('parent_dashboard.open_full_settings')),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.parentAccent,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
               ),
             ],
-            selected: {_audioSettings.speechRateMode},
-            onSelectionChanged: (selection) {
-              if (selection.isEmpty) return;
-              _updateSpeechRateMode(selection.first);
-            },
           ),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () async {
-                await context.push('${AppRoutes.settings}?source=parent');
-                await _loadDashboardData();
-              },
-              icon: const Icon(Icons.settings_rounded),
-              label: const Text('Open Full Settings'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.parentAccent,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -766,7 +831,14 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
         border: Border.all(color: AppColors.outline),
       ),
       child: Text(
-        'This week\'s focus: keep the ${_streakLabel(streak)} alive, celebrate $today adventures today, and build on $stars stars earned so far.',
+        context.tr(
+          'parent_dashboard.summary_body',
+          namedArgs: {
+            'streak': _streakLabel(streak),
+            'today': '$today',
+            'stars': '$stars',
+          },
+        ),
         style: AppTypography.body.copyWith(
           color: const Color(0xFF1E1060),
           fontWeight: FontWeight.w600,
@@ -776,7 +848,10 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     );
   }
 
-  String _streakLabel(int streak) => '$streak-day streak';
+  String _streakLabel(int streak) => context.tr(
+        'parent_dashboard.streak_label',
+        namedArgs: {'count': '$streak'},
+      );
 }
 
 class _StatChip extends StatelessWidget {

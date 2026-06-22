@@ -1,17 +1,17 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/reward_progress_service.dart';
 
 class StartLearningModuleSpec {
   const StartLearningModuleSpec({
-    required this.title,
     required this.route,
     required this.unlockStars,
   });
 
-  final String title;
   final String route;
   final int unlockStars;
 }
@@ -20,32 +20,26 @@ class StartLearningModuleSpec {
 abstract final class StartLearningNavigation {
   static const List<StartLearningModuleSpec> learningModules = [
     StartLearningModuleSpec(
-      title: 'Learn Numbers',
       route: AppRoutes.learnNumbers,
       unlockStars: 0,
     ),
     StartLearningModuleSpec(
-      title: 'Trace Numbers',
       route: AppRoutes.tracing,
       unlockStars: 0,
     ),
     StartLearningModuleSpec(
-      title: 'Count Objects',
       route: AppRoutes.counting,
       unlockStars: 0,
     ),
     StartLearningModuleSpec(
-      title: 'Find Correct Number',
       route: AppRoutes.findNumber,
       unlockStars: 4,
     ),
     StartLearningModuleSpec(
-      title: 'Match Numbers',
       route: AppRoutes.matching,
       unlockStars: 8,
     ),
     StartLearningModuleSpec(
-      title: 'Mini Quiz',
       route: AppRoutes.miniQuiz,
       unlockStars: 14,
     ),
@@ -68,16 +62,21 @@ abstract final class StartLearningNavigation {
     return AppRoutes.startlearning;
   }
 
-  static Future<String> nextActionLabel(String currentRoute) async {
+  static Future<String> nextActionLabel(
+    BuildContext context,
+    String currentRoute,
+  ) async {
     final nextRoute = await resolveNextRoute(currentRoute);
     if (nextRoute == null || nextRoute == AppRoutes.startlearning) {
-      return 'Back to Learning Menu';
+      return context.tr('learning.back_to_menu');
     }
 
-    final module = learningModules.firstWhere(
-      (entry) => entry.route == nextRoute,
+    final title = AppLocalization.moduleTitle(context, nextRoute);
+    return AppLocalization.tr(
+      context,
+      'learning.next_module',
+      {'title': title},
     );
-    return 'Next: ${module.title}';
   }
 
   static Future<void> goToNextLearning(

@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -54,7 +55,7 @@ class KingdomTopBar extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'My Kingdom',
+                      context.tr('kingdom.title'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.h2.copyWith(
@@ -63,7 +64,7 @@ class KingdomTopBar extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Every quest adds something magical to this map.',
+                      context.tr('kingdom.subtitle'),
                       maxLines: compact ? 1 : 2,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.bodySmall,
@@ -75,12 +76,21 @@ class KingdomTopBar extends StatelessWidget {
                       children: [
                         KingdomInfoPill(
                           icon: Icons.star_rounded,
-                          label: '$stars stars',
+                          label: context.plural(
+                            'common.stars',
+                            stars,
+                            namedArgs: {'count': '$stars'},
+                          ),
                           color: AppColors.premiumGold,
                         ),
                         KingdomInfoPill(
                           icon: Icons.local_fire_department_rounded,
-                          label: '${math.max(streakDays, 0)} day streak',
+                          label: context.tr(
+                            'parent_dashboard.streak_label',
+                            namedArgs: {
+                              'count': '${math.max(streakDays, 0)}',
+                            },
+                          ),
                           color: AppColors.primary,
                         ),
                       ],

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:video_player/video_player.dart';
@@ -131,7 +132,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     backgroundColor: Colors.white.withValues(alpha: 0.88),
                     foregroundColor: const Color(0xFF1E1060),
                   ),
-                  child: const Text('Skip'),
+                  child: Text(context.tr('splash.skip')),
                 ),
               ),
           ],
@@ -168,7 +169,7 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             const SizedBox(height: 18),
             Text(
-              'Math Kingdom',
+              context.tr('splash.title'),
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w800,

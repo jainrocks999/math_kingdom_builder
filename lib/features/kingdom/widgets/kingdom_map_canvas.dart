@@ -1,10 +1,12 @@
 import 'dart:math' as math;
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_typography.dart';
+import '../../../core/localization/app_localization.dart';
 import '../kingdom_zone_data.dart';
 import 'kingdom_shared_widgets.dart';
 
@@ -267,15 +269,19 @@ class KingdomZoneArea extends StatelessWidget {
                             SizedBox(width: compact ? 6 : 8),
                             Expanded(
                               child: Text(
-                                zone.title,
+                                AppLocalization.kingdomZone(
+                                  context,
+                                  zone.id,
+                                  'title',
+                                ),
                                 maxLines: compact ? 1 : 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: titleStyle,
                               ),
                             ),
                             if (!zone.playable)
-                              const KingdomMiniBadge(
-                                label: 'Soon',
+                              KingdomMiniBadge(
+                                label: context.tr('home.coming_soon'),
                                 color: AppColors.info,
                               ),
                           ],
@@ -287,8 +293,12 @@ class KingdomZoneArea extends StatelessWidget {
                               alignment: Alignment.topLeft,
                               child: Text(
                                 isLocked
-                                    ? 'Unlock this place by growing earlier zones.'
-                                    : zone.subtitle,
+                                    ? context.tr('kingdom.unlock_grow_zones')
+                                    : AppLocalization.kingdomZone(
+                                        context,
+                                        zone.id,
+                                        'subtitle',
+                                      ),
                                 maxLines: cozy ? 2 : 3,
                                 overflow: TextOverflow.ellipsis,
                                 style: AppTypography.bodySmall.copyWith(
@@ -301,8 +311,12 @@ class KingdomZoneArea extends StatelessWidget {
                         else
                           Text(
                             isLocked
-                                ? 'Unlock by growing earlier zones.'
-                                : zone.subtitle,
+                                ? context.tr('kingdom.unlock_grow_zones_short')
+                                : AppLocalization.kingdomZone(
+                                    context,
+                                    zone.id,
+                                    'subtitle',
+                                  ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.caption.copyWith(
@@ -324,7 +338,13 @@ class KingdomZoneArea extends StatelessWidget {
                         ),
                         SizedBox(height: compact ? 4 : 8),
                         Text(
-                          '${zone.progress}/${zone.goal} kingdom rewards',
+                          context.tr(
+                            'kingdom.rewards_progress',
+                            namedArgs: {
+                              'progress': '${zone.progress}',
+                              'goal': '${zone.goal}',
+                            },
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.caption.copyWith(

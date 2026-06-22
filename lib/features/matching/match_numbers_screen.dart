@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
@@ -7,13 +8,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/audio_service.dart';
 import '../StartLearning/start_learning_next_action_button.dart';
 import '../count_objects/counting_themes.dart';
-import '../../core/utils/tts_voice_helper.dart';
 import '../../shared/widgets/celebration_bear.dart';
 
 class _MatchRound {
@@ -40,7 +41,8 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
   static const _speechSettleDelay = Duration(milliseconds: 80);
 
   late final FlutterTts _tts;
-  late final Future<void> _ttsReady;
+  late Future<void> _ttsReady;
+  bool _ttsConfigured = false;
   late final AnimationController _numberPulseController;
   late final AnimationController _celebrationController;
 
@@ -75,7 +77,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
-    _ttsReady = _configureTts();
+    _ttsReady = Future<void>.value();
     _rounds = _buildRoundPlan();
     _prepareRound();
     _playScreenMusic(delayed: true);
@@ -85,21 +87,14 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
   }
 
   Future<void> _configureTts() async {
-    await TtsVoiceHelper.configureSharedAudio(_tts);
+    await AppLocalization.configureTts(_tts, context, normalRate: 0.4, slowRate: 0.3);
     await _tts.awaitSpeakCompletion(true);
-    await TtsVoiceHelper.applyPreferredVoice(
-      _tts,
-      locale: 'en-IN',
-      fallbackLocales: const ['en-US', 'en-GB'],
-    );
     await _tts.setPitch(1.04);
-    await TtsVoiceHelper.applyPreferredSpeechRate(
-      _tts,
-      normalRate: 0.4,
-      slowRate: 0.3,
-    );
     await _tts.setVolume(1.0);
   }
+
+  String _objectLabel(BuildContext context, int count) =>
+      AppLocalization.objectLabel(context, _theme.id, count);
 
   List<_MatchRound> _buildRoundPlan() {
     final counts = List<int>.generate(_totalRounds, (index) => index + 1)
@@ -180,13 +175,24 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
   }
 
   Future<void> _speakPrompt() async {
-    final label = _correctCount == 1 ? _theme.singular : _theme.plural;
-    await _speakText('Tap the group with $_correctCount $label.');
+    if (!mounted) return;
+    final label = _objectLabel(context, _correctCount);
+    await _speakText(
+      context.tr('learning.how_many', namedArgs: {'label': label}),
+    );
   }
 
   Future<void> _speakCorrectPraise() async {
-    final label = _correctCount == 1 ? _theme.singular : _theme.plural;
-    await _speakText('Great matching! $_correctCount $label.');
+    if (!mounted) return;
+    await _speakText(
+      context.tr(
+        'learning.great_count',
+        namedArgs: {
+          'count': '$_correctCount',
+          'label': _objectLabel(context, _correctCount),
+        },
+      ),
+    );
   }
 
   Future<void> _speakText(String text) async {
@@ -295,6 +301,10 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
     if (route is PageRoute<dynamic>) {
       appRouteObserver.unsubscribe(this);
       appRouteObserver.subscribe(this, route);
+    }
+    if (!_ttsConfigured) {
+      _ttsConfigured = true;
+      _ttsReady = _configureTts();
     }
   }
 
@@ -467,7 +477,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Match Numbers',
+                AppLocalization.moduleTitle(context, AppRoutes.matching),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.h1.copyWith(
@@ -517,7 +527,13 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
                 children: [
                   Expanded(
                     child: Text(
-                      'Round ${_roundIndex + 1} of $_totalRounds',
+                      context.tr(
+                        'learning.round',
+                        namedArgs: {
+                          'current': '${_roundIndex + 1}',
+                          'total': '$_totalRounds',
+                        },
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.bodyStrong.copyWith(
@@ -529,7 +545,9 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    _roundSolved ? 'Matched!' : 'Keep going',
+                    _roundSolved
+                        ? context.tr('learning.great_job')
+                        : context.tr('learning.match_prompt'),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.bodySmall.copyWith(
@@ -609,7 +627,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Match the number to the right group.',
+                  context.tr('learning.match_prompt'),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.cardTitle.copyWith(
@@ -620,7 +638,12 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
                 ),
                 SizedBox(height: veryCompact ? 4 : 6),
                 Text(
-                  'Tap the group that has exactly $_correctCount ${_correctCount == 1 ? _theme.singular : _theme.plural}.',
+                  context.tr(
+                    'learning.how_many',
+                    namedArgs: {
+                      'label': _objectLabel(context, _correctCount),
+                    },
+                  ),
                   maxLines: veryCompact ? 3 : 4,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodySmall.copyWith(
@@ -655,7 +678,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Match the number to the right group.',
+                        context.tr('learning.match_prompt'),
                         maxLines: veryCompact ? 1 : 2,
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.cardTitle.copyWith(
@@ -666,7 +689,12 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
                       ),
                       SizedBox(height: veryCompact ? 4 : 6),
                       Text(
-                        'Tap the group that has exactly $_correctCount ${_correctCount == 1 ? _theme.singular : _theme.plural}.',
+                        context.tr(
+                    'learning.how_many',
+                    namedArgs: {
+                      'label': _objectLabel(context, _correctCount),
+                    },
+                  ),
                         maxLines: veryCompact ? 2 : 3,
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.bodySmall.copyWith(
@@ -722,7 +750,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Find this number',
+                  context.tr('learning.match_prompt'),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.bodyStrong.copyWith(
@@ -749,7 +777,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
-                    _correctCount == 1 ? _theme.singular : _theme.plural,
+                    _objectLabel(context, _correctCount),
                     maxLines: 1,
                     style: AppTypography.h2.copyWith(
                       color: _theme.color,
@@ -943,7 +971,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
       children: [
         Expanded(
           child: _ActionButton(
-            label: 'Hear Again',
+            label: context.tr('learning.speaker'),
             icon: Icons.volume_up_rounded,
             backgroundColor: Colors.white.withValues(alpha: 0.95),
             foregroundColor: _theme.color,
@@ -957,9 +985,9 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
           child: _ActionButton(
             label: _roundSolved
                 ? (_roundIndex == _totalRounds - 1
-                    ? 'Finishing...'
-                    : 'Next coming...')
-                : 'Match it',
+                    ? context.tr('learning.finish')
+                    : context.tr('learning.next'))
+                : context.tr('learning.match_prompt'),
             icon: _roundSolved
                 ? Icons.auto_awesome_rounded
                 : Icons.touch_app_rounded,
@@ -1018,7 +1046,10 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Text(
-                          'All $_totalRounds Matches Complete',
+                          context.tr(
+                            'learning.all_rounds_complete',
+                            namedArgs: {'total': '$_totalRounds'},
+                          ),
                           style: AppTypography.bodySmall.copyWith(
                             color: _theme.color,
                             fontWeight: FontWeight.w800,
@@ -1029,7 +1060,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
                       const CelebrationBear(size: 132),
                       const SizedBox(height: 14),
                       Text(
-                        'Matching Complete!',
+                        context.tr('learning.activity_complete'),
                         textAlign: TextAlign.center,
                         style: AppTypography.h1.copyWith(
                           color: const Color(0xFF1A1060),
@@ -1038,7 +1069,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        'You matched every number with the correct object group. Bear is cheering for you!',
+                        context.tr('learning.finish_every_challenge'),
                         textAlign: TextAlign.center,
                         style: AppTypography.body.copyWith(
                           color: const Color(0xFF556172),

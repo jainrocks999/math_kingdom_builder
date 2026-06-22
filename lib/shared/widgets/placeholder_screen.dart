@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -129,7 +130,7 @@ class PlaceholderScreen extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(999),
                                 ),
                                 child: Text(
-                                  'Coming soon in Math Kingdom',
+                                  context.tr('placeholder.coming_soon'),
                                   style: AppTypography.bodySmall.copyWith(
                                     color: accentColor,
                                     fontWeight: FontWeight.w800,
@@ -143,7 +144,7 @@ class PlaceholderScreen extends StatelessWidget {
                                   onPressed: () =>
                                       context.push(AppRoutes.startlearning),
                                   icon: const Icon(Icons.play_arrow_rounded),
-                                  label: const Text('Try Start Learning'),
+                                  label: Text(context.tr('placeholder.try_start_learning')),
                                   style: FilledButton.styleFrom(
                                     backgroundColor: accentColor,
                                     foregroundColor: AppColors.surface,
@@ -158,7 +159,7 @@ class PlaceholderScreen extends StatelessWidget {
                                 width: double.infinity,
                                 child: OutlinedButton(
                                   onPressed: () => _goBack(context),
-                                  child: const Text('Back To Home'),
+                                  child: Text(context.tr('placeholder.back_to_home')),
                                 ),
                               ),
                             ],

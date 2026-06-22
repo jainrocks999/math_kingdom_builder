@@ -18,6 +18,7 @@ class AppAudioService {
   final Map<String, Source> _sourceCache = {};
   bool _isConfigured = false;
   bool _isBackgroundMusicPlaying = false;
+  bool _resumeBackgroundOnForeground = false;
   String? _currentBackgroundTrack;
 
   String _assetPath(String filePath) {
@@ -118,6 +119,7 @@ class AppAudioService {
   Future<void> stopBackgroundMusic() async {
     await _bgPlayer.stop();
     _isBackgroundMusicPlaying = false;
+    _resumeBackgroundOnForeground = false;
     _currentBackgroundTrack = null;
   }
 
@@ -128,6 +130,26 @@ class AppAudioService {
   Future<void> pauseBackgroundMusic() async {
     await _bgPlayer.pause();
     _isBackgroundMusicPlaying = false;
+  }
+
+  Future<void> handleAppBackgrounded() async {
+    _resumeBackgroundOnForeground =
+        _isBackgroundMusicPlaying && _currentBackgroundTrack != null;
+    if (_resumeBackgroundOnForeground) {
+      await _bgPlayer.pause();
+      _isBackgroundMusicPlaying = false;
+    }
+    await _celebrationPlayer.stop();
+  }
+
+  Future<void> handleAppResumed() async {
+    if (!_resumeBackgroundOnForeground) return;
+    _resumeBackgroundOnForeground = false;
+    if (!await AudioSettingsService.instance.isMusicEnabled()) {
+      return;
+    }
+    await _bgPlayer.resume();
+    _isBackgroundMusicPlaying = true;
   }
 
   Future<void> playCelebrationMusic() async {
