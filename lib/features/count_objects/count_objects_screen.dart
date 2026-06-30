@@ -27,6 +27,16 @@ class _RoundConfig {
   final int themeIndex;
 }
 
+class _ObjectLayoutConfig {
+  const _ObjectLayoutConfig({
+    required this.columns,
+    required this.itemSize,
+  });
+
+  final int columns;
+  final double itemSize;
+}
+
 class CountObjectsScreen extends StatefulWidget {
   const CountObjectsScreen({super.key});
 
@@ -95,6 +105,50 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
 
   String _objectLabel(BuildContext context, int count) =>
       AppLocalization.objectLabel(context, _theme.id, count);
+
+  _ObjectLayoutConfig _resolveObjectLayout(BoxConstraints constraints) {
+    const spacing = 14.0;
+    const maxItemSize = 110.0;
+    const preferredMinItemSize = 72.0;
+
+    _ObjectLayoutConfig? bestLayout;
+    var bestScore = double.negativeInfinity;
+
+    for (var columns = 1; columns <= _correctCount; columns++) {
+      final rows = (_correctCount / columns).ceil();
+      final usableWidth = constraints.maxWidth - ((columns - 1) * spacing);
+      final usableHeight = constraints.maxHeight - ((rows - 1) * spacing);
+
+      if (usableWidth <= 0 || usableHeight <= 0) {
+        continue;
+      }
+
+      final itemSize = math.min(
+        maxItemSize,
+        math.min(usableWidth / columns, usableHeight / rows),
+      );
+      final remainder = _correctCount % columns;
+      final emptySlots = remainder == 0 ? 0 : columns - remainder;
+      final score = itemSize +
+          (remainder == 0 ? 34 : 0) -
+          (emptySlots * 12) -
+          ((rows - 1) * 2.5) -
+          ((columns - rows).abs() * 1.5) -
+          (itemSize < preferredMinItemSize
+              ? (preferredMinItemSize - itemSize) * 4
+              : 0);
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestLayout = _ObjectLayoutConfig(
+          columns: columns,
+          itemSize: itemSize,
+        );
+      }
+    }
+
+    return bestLayout ?? const _ObjectLayoutConfig(columns: 1, itemSize: 72);
+  }
 
   void _playScreenMusic({bool delayed = false}) {
     final requestToken = ++_musicRequestToken;
@@ -638,110 +692,110 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final columns = constraints.maxWidth > 520 ? 4 : 3;
-                  final rows = (_correctCount / columns).ceil();
                   const spacing = 14.0;
-                  final itemSize = math.min(
-                    110.0,
-                    math.min(
-                      (constraints.maxWidth - ((columns - 1) * spacing)) /
-                          columns,
-                      (constraints.maxHeight - ((rows - 1) * spacing)) / rows,
-                    ),
-                  );
+                  final layout = _resolveObjectLayout(constraints);
+                  final gridWidth = (layout.columns * layout.itemSize) +
+                      ((layout.columns - 1) * spacing);
+
                   return Center(
-                    child: Wrap(
-                      spacing: spacing,
-                      runSpacing: spacing,
-                      alignment: WrapAlignment.center,
-                      children: List.generate(_correctCount, (index) {
-                        final countedIndex = _countedObjectOrder.indexOf(index);
-                        final isCounted = countedIndex != -1;
-                        return Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(22),
-                            onTap: () => _handleObjectTap(index),
-                            child: Container(
-                              width: itemSize,
-                              height: itemSize,
-                              decoration: BoxDecoration(
-                                color: isCounted
-                                    ? _theme.softColor.withValues(alpha: 0.88)
-                                    : _theme.softColor.withValues(alpha: 0.42),
-                                borderRadius: BorderRadius.circular(22),
-                                border: Border.all(
+                    child: SizedBox(
+                      width: gridWidth,
+                      child: Wrap(
+                        spacing: spacing,
+                        runSpacing: spacing,
+                        alignment: WrapAlignment.center,
+                        children: List.generate(_correctCount, (index) {
+                          final countedIndex = _countedObjectOrder.indexOf(
+                            index,
+                          );
+                          final isCounted = countedIndex != -1;
+                          return Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(22),
+                              onTap: () => _handleObjectTap(index),
+                              child: Container(
+                                width: layout.itemSize,
+                                height: layout.itemSize,
+                                decoration: BoxDecoration(
                                   color: isCounted
-                                      ? _theme.color.withValues(alpha: 0.6)
-                                      : _theme.color.withValues(alpha: 0.16),
-                                  width: isCounted ? 2.4 : 1.4,
-                                ),
-                                boxShadow: isCounted
-                                    ? [
-                                        BoxShadow(
-                                          color: _theme.color.withValues(
-                                            alpha: 0.18,
+                                      ? _theme.softColor.withValues(alpha: 0.88)
+                                      : _theme.softColor
+                                          .withValues(alpha: 0.42),
+                                  borderRadius: BorderRadius.circular(22),
+                                  border: Border.all(
+                                    color: isCounted
+                                        ? _theme.color.withValues(alpha: 0.6)
+                                        : _theme.color.withValues(alpha: 0.16),
+                                    width: isCounted ? 2.4 : 1.4,
+                                  ),
+                                  boxShadow: isCounted
+                                      ? [
+                                          BoxShadow(
+                                            color: _theme.color.withValues(
+                                              alpha: 0.18,
+                                            ),
+                                            blurRadius: 12,
+                                            offset: const Offset(0, 8),
                                           ),
-                                          blurRadius: 12,
-                                          offset: const Offset(0, 8),
+                                        ]
+                                      : null,
+                                ),
+                                padding: const EdgeInsets.all(10),
+                                child: Stack(
+                                  children: [
+                                    Center(
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(16),
+                                        child: Image.asset(
+                                          _theme.assetPath,
+                                          fit: BoxFit.contain,
+                                          width: layout.itemSize * 0.72,
+                                          height: layout.itemSize * 0.72,
+                                          errorBuilder:
+                                              (context, error, stackTrace) {
+                                            return Icon(
+                                              Icons.auto_awesome_rounded,
+                                              size: layout.itemSize * 0.34,
+                                              color: _theme.color,
+                                            );
+                                          },
                                         ),
-                                      ]
-                                    : null,
-                              ),
-                              padding: const EdgeInsets.all(10),
-                              child: Stack(
-                                children: [
-                                  Center(
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(16),
-                                      child: Image.asset(
-                                        _theme.assetPath,
-                                        fit: BoxFit.contain,
-                                        width: itemSize * 0.72,
-                                        height: itemSize * 0.72,
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                          return Icon(
-                                            Icons.auto_awesome_rounded,
-                                            size: itemSize * 0.34,
-                                            color: _theme.color,
-                                          );
-                                        },
                                       ),
                                     ),
-                                  ),
-                                  if (isCounted)
-                                    Align(
-                                      alignment: Alignment.topRight,
-                                      child: Container(
-                                        width: 28,
-                                        height: 28,
-                                        decoration: BoxDecoration(
-                                          color: _theme.color,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: Colors.white,
-                                            width: 2,
-                                          ),
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            '${countedIndex + 1}',
-                                            style:
-                                                AppTypography.caption.copyWith(
+                                    if (isCounted)
+                                      Align(
+                                        alignment: Alignment.topRight,
+                                        child: Container(
+                                          width: 28,
+                                          height: 28,
+                                          decoration: BoxDecoration(
+                                            color: _theme.color,
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
                                               color: Colors.white,
-                                              fontWeight: FontWeight.w900,
+                                              width: 2,
+                                            ),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              '${countedIndex + 1}',
+                                              style: AppTypography.caption
+                                                  .copyWith(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w900,
+                                              ),
                                             ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      }),
+                          );
+                        }),
+                      ),
                     ),
                   );
                 },
@@ -822,8 +876,9 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
 
   Widget _buildBottomAction() {
     final isLastRound = _roundIndex == _totalRounds - 1;
-    final label =
-        isLastRound ? context.tr('learning.finish') : context.tr('learning.next');
+    final label = isLastRound
+        ? context.tr('learning.finish')
+        : context.tr('learning.next');
     final isEnabled = _roundSolved;
     return SizedBox(
       width: double.infinity,
@@ -929,7 +984,8 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
                           context.tr(
                             'learning.stars_earned',
                             namedArgs: {
-                              'stars': '${RewardProgressService.instance.starsForModule(RewardModuleIds.countObjects)}',
+                              'stars':
+                                  '${RewardProgressService.instance.starsForModule(RewardModuleIds.countObjects)}',
                             },
                           ),
                           style: AppTypography.bodyStrong.copyWith(

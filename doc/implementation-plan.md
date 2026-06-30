@@ -2,6 +2,25 @@
 
 Phased rollout with scope boundaries and testing.
 
+## Task Sheet Update: 2026-06-22
+
+Completed work recorded from git history on 2026-06-22:
+
+- [x] Added translation asset support and locale discovery for app languages
+- [x] Added shared app localization helpers and translation wiring across updated screens
+- [x] Added English and Hindi translation files and expanded localized copy coverage
+- [x] Built the Settings screen with language switching, audio toggles, speech preview, child profile switching, and parent PIN handling
+- [x] Added shared completion UX pieces including `ActivityCompletionCard` and `FeedbackHelper`
+- [x] Updated Start Learning next-step flow and shared next-action navigation
+- [x] Polished learning modules including Learn Numbers, Count Objects, Match Numbers, Mini Quiz, Number Recognition, Number Tracing, Sequencing, Patterns, and math operation screens
+- [x] Updated Home, Kingdom, Rewards, Parent Dashboard, Onboarding, Splash, loading, and placeholder flows to align with the new localization and completion experience
+- [x] Added and aligned regression coverage notes through the release checklist and related task docs
+
+Reference commits:
+
+- `30e2721` at 2026-06-22 12:53 IST
+- `ed3dca9` at 2026-06-22 17:15 IST
+
 ## Phase 1: Fix global bugs (Week 1)
 
 **Implement**
