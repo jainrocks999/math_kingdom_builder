@@ -7,6 +7,7 @@ Product audit and screen-by-screen improvement guides for the kids learning app.
 | Document | Description |
 |----------|-------------|
 | [Overview](./overview.md) | What the app does, screens, design, assets |
+| [Alphabet Kingdom Pack](./alphabet-kingdom/README.md) | Full bilingual Hindi + English sibling-app documentation pack |
 | [Development Strategy](./development-strategy.md) | How to implement improvements safely |
 | [Global Issues](./global-issues.md) | App-wide bugs and consistency issues |
 | [Functionality Improvements](./functionality-improvements.md) | Existing feature enhancement opportunities |
