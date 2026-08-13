@@ -436,10 +436,10 @@ class _DivisionScreenState extends State<DivisionScreen>
         final remainingCount = _pileIds().length;
         final useWrappedBowls = constraints.maxWidth < 380 || _round.groups > 3;
         final bowlRows = (_round.groups / 2).ceil();
-        final helperHeight = _failedDragCount >= 2 ? 58.0 : 0.0;
+        final helperHeight = _failedDragCount >= 2 ? 64.0 : 0.0;
         final availableStageHeight = math.max(
           260.0,
-          constraints.maxHeight - 70 - helperHeight,
+          constraints.maxHeight - 88 - helperHeight,
         );
         final desiredPileHeight =
             (140.0 + (math.min(remainingCount, 6) * 16.0)).clamp(160.0, 230.0);
@@ -465,6 +465,8 @@ class _DivisionScreenState extends State<DivisionScreen>
               Text(
                 context.tr('learning.division_drag_hint'),
                 textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: AppTypography.bodyStrong.copyWith(
                   color: const Color(0xFF5A6B7A),
                   fontWeight: FontWeight.w800,
@@ -477,7 +479,12 @@ class _DivisionScreenState extends State<DivisionScreen>
                   child: OutlinedButton.icon(
                     onPressed: _shareAllRemaining,
                     icon: const Icon(Icons.touch_app_rounded),
-                    label: Text(context.tr('learning.need_help_move_all')),
+                    label: Text(
+                      context.tr('learning.need_help_move_all'),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: _theme.color,
                       side: BorderSide(
@@ -492,9 +499,9 @@ class _DivisionScreenState extends State<DivisionScreen>
                   ),
                 ),
               ],
-              const SizedBox(height: 12),
-              SizedBox(height: pileHeight, child: _pileZone()),
               const SizedBox(height: 10),
+              SizedBox(height: pileHeight, child: _pileZone()),
+              const SizedBox(height: 8),
               if (useWrappedBowls)
                 SizedBox(
                   height: bowlsHeight,

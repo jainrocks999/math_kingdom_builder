@@ -38,18 +38,16 @@ class _SequencingRound {
 
 class _SequenceConfig {
   const _SequenceConfig({
-    required this.start,
-    required this.length,
-    required this.step,
+    required this.sequence,
     required this.allowEdgeGap,
     required this.stageLabelKey,
+    required this.promptKey,
   });
 
-  final int start;
-  final int length;
-  final int step;
+  final List<int> sequence;
   final bool allowEdgeGap;
   final String stageLabelKey;
+  final String promptKey;
 }
 
 class SequencingScreen extends StatefulWidget {
@@ -93,12 +91,14 @@ class _SequencingScreenState extends State<SequencingScreen>
         spokenSequence.add('${_round.sequence[i]}');
       }
     }
-    final isBackward = _round.stageLabelKey == 'sequencing_backward';
-    final direction = isBackward
-        ? context.tr('learning.count_backward')
-        : context.tr('learning.count_forward');
-    return '$direction. ${spokenSequence.join(', ')}. '
-        '${context.tr('learning.fill_missing_number')}';
+    final intro = switch (_round.stageLabelKey) {
+      'sequencing_forward' => context.tr('learning.count_forward'),
+      'sequencing_backward' => context.tr('learning.count_backward'),
+      _ => context.tr('learning.${_round.stageLabelKey}'),
+    };
+    return '$intro. '
+        '${spokenSequence.join(', ')}. '
+        '${context.tr('learning.${_round.promptKey}')}';
   }
 
   @override
@@ -125,85 +125,75 @@ class _SequencingScreenState extends State<SequencingScreen>
   List<_SequencingRound> _buildRoundPlan() {
     const configs = <_SequenceConfig>[
       _SequenceConfig(
-        start: 1,
-        length: 4,
-        step: 1,
+        sequence: [1, 2, 3, 4],
         allowEdgeGap: false,
         stageLabelKey: 'sequencing_forward',
+        promptKey: 'fill_missing_in_order',
       ),
       _SequenceConfig(
-        start: 2,
-        length: 5,
-        step: 1,
+        sequence: [10, 9, 8, 7],
+        allowEdgeGap: true,
+        stageLabelKey: 'sequencing_backward',
+        promptKey: 'count_backward_fill_gap',
+      ),
+      _SequenceConfig(
+        sequence: [2, 4, 6, 8, 10],
+        allowEdgeGap: false,
+        stageLabelKey: 'sequencing_skip_two',
+        promptKey: 'count_by_twos_fill_gap',
+      ),
+      _SequenceConfig(
+        sequence: [3, 6, 9, 12],
+        allowEdgeGap: true,
+        stageLabelKey: 'sequencing_skip_three',
+        promptKey: 'count_by_threes_fill_gap',
+      ),
+      _SequenceConfig(
+        sequence: [5, 10, 15, 20],
+        allowEdgeGap: true,
+        stageLabelKey: 'sequencing_skip_five',
+        promptKey: 'count_by_fives_fill_gap',
+      ),
+      _SequenceConfig(
+        sequence: [2, 4, 6, 8, 10],
+        allowEdgeGap: false,
+        stageLabelKey: 'sequencing_even',
+        promptKey: 'find_even_number',
+      ),
+      _SequenceConfig(
+        sequence: [1, 3, 5, 7, 9],
+        allowEdgeGap: false,
+        stageLabelKey: 'sequencing_odd',
+        promptKey: 'find_odd_number',
+      ),
+      _SequenceConfig(
+        sequence: [6, 7, 8, 9, 10],
         allowEdgeGap: false,
         stageLabelKey: 'sequencing_forward',
-      ),
-      _SequenceConfig(
-        start: 4,
-        length: 5,
-        step: 1,
-        allowEdgeGap: true,
-        stageLabelKey: 'sequencing_forward',
-      ),
-      _SequenceConfig(
-        start: 6,
-        length: 5,
-        step: 1,
-        allowEdgeGap: true,
-        stageLabelKey: 'sequencing_forward',
-      ),
-      _SequenceConfig(
-        start: 5,
-        length: 4,
-        step: -1,
-        allowEdgeGap: false,
-        stageLabelKey: 'sequencing_backward',
-      ),
-      _SequenceConfig(
-        start: 7,
-        length: 5,
-        step: -1,
-        allowEdgeGap: false,
-        stageLabelKey: 'sequencing_backward',
-      ),
-      _SequenceConfig(
-        start: 10,
-        length: 5,
-        step: -1,
-        allowEdgeGap: true,
-        stageLabelKey: 'sequencing_backward',
-      ),
-      _SequenceConfig(
-        start: 9,
-        length: 6,
-        step: -1,
-        allowEdgeGap: true,
-        stageLabelKey: 'sequencing_backward',
+        promptKey: 'fill_missing_in_order',
       ),
     ];
 
     return List.generate(configs.length, (index) {
       final config = configs[index];
-      final sequence = List.generate(
-        config.length,
-        (itemIndex) => config.start + (itemIndex * config.step),
-      );
       final missingIndex = _pickMissingIndex(
-        length: config.length,
+        length: config.sequence.length,
         allowEdgeGap: config.allowEdgeGap,
       );
-      final correctAnswer = sequence[missingIndex];
+      final correctAnswer = config.sequence[missingIndex];
 
       return _SequencingRound(
-        sequence: sequence,
+        sequence: config.sequence,
         missingIndex: missingIndex,
         correctAnswer: correctAnswer,
-        options: _buildOptions(correctAnswer),
+        options: _buildOptions(
+          correctAnswer,
+          minValue: 1,
+          maxValue: 20,
+        ),
         themeIndex: index % mathOperationThemes.length,
         stageLabelKey: config.stageLabelKey,
-        promptKey: config.step > 0
-            ? 'fill_missing_in_order'
-            : 'count_backward_fill_gap',
+        promptKey: config.promptKey,
       );
     });
   }
@@ -215,26 +205,35 @@ class _SequencingScreenState extends State<SequencingScreen>
     return 1 + _random.nextInt(length - 2);
   }
 
-  List<int> _buildOptions(int correct) {
+  List<int> _buildOptions(
+    int correct, {
+    required int minValue,
+    required int maxValue,
+  }) {
     final candidates = <int>[
-      correct - 2,
       correct - 1,
       correct + 1,
+      correct - 2,
       correct + 2,
       correct - 3,
       correct + 3,
+      correct - 4,
+      correct + 4,
+      correct - 5,
+      correct + 5,
     ];
     final pool = <int>{correct};
 
     for (final candidate in candidates) {
-      if (candidate >= 1 && candidate <= 10) {
+      if (candidate >= minValue && candidate <= maxValue) {
         pool.add(candidate);
       }
       if (pool.length == 3) break;
     }
 
-    var fallback = 1;
+    var fallback = minValue;
     while (pool.length < 3) {
+      if (fallback > maxValue) break;
       pool.add(fallback);
       fallback++;
     }
@@ -262,9 +261,10 @@ class _SequencingScreenState extends State<SequencingScreen>
   }
 
   Future<void> _speakPrompt() async {
+    final prompt = _spokenSequencePrompt(context);
     await _ttsReady;
     await _tts.stop();
-    await _tts.speak(_spokenSequencePrompt(context));
+    await _tts.speak(prompt);
   }
 
   Future<void> _speakSuccess() async {

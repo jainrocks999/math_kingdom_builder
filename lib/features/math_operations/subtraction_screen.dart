@@ -511,20 +511,24 @@ class _SubtractionScreenState extends State<SubtractionScreen>
         builder: (context, constraints) {
           if (_removedObjectIds.isEmpty) {
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(_theme.emoji, style: const TextStyle(fontSize: 42)),
-                  const SizedBox(height: 8),
-                  Text(
-                context.tr('learning.drop_here'),
-                    textAlign: TextAlign.center,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: const Color(0xFF5B6778),
-                      fontWeight: FontWeight.w700,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(_theme.emoji, style: const TextStyle(fontSize: 42)),
+                    const SizedBox(height: 6),
+                    Text(
+                      context.tr('learning.drop_here'),
+                      textAlign: TextAlign.center,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: const Color(0xFF5B6778),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           }
