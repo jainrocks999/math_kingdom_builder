@@ -12,7 +12,9 @@ class TtsVoiceHelper {
     if (kIsWeb || !Platform.isIOS) return;
 
     await tts.setSharedInstance(true);
-    await tts.autoStopSharedSession(true);
+    // Keep the shared AVAudioSession alive so background music is not
+    // torn down when a screen's TTS utterance stops or is cancelled.
+    await tts.autoStopSharedSession(false);
     await tts.setIosAudioCategory(
       IosTextToSpeechAudioCategory.playback,
       const [IosTextToSpeechAudioCategoryOptions.mixWithOthers],

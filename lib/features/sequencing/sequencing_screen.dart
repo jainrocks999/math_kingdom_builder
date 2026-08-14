@@ -338,7 +338,7 @@ class _SequencingScreenState extends State<SequencingScreen>
   void _goBack() {
     _autoAdvanceToken++;
     AppAudioService.instance.stopCelebrationMusic();
-    _stopScreenMusic();
+    _musicRequestToken++;
     context.pop();
   }
 
@@ -373,7 +373,6 @@ class _SequencingScreenState extends State<SequencingScreen>
     _musicRequestToken++;
     _autoAdvanceToken++;
     AppAudioService.instance.stopCelebrationMusic();
-    AppAudioService.instance.stopBackgroundMusic();
     _tts.stop();
     _successPulseController.dispose();
     super.dispose();

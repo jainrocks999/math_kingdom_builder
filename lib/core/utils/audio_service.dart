@@ -16,8 +16,6 @@ class AudioService {
 
   bool _musicEnabled = true;
   bool _sfxEnabled = true;
-  bool _isMusicPlaying = false;
-  bool _resumeMusicOnForeground = false;
 
   Future<void> init() async {
     // Configure TTS
@@ -107,7 +105,6 @@ class AudioService {
     }
     try {
       await _musicPlayer.play(AssetSource('audio/$fileName'));
-      _isMusicPlaying = true;
     } catch (e) {
       debugPrint("Music asset missing: $fileName");
     }
@@ -116,12 +113,9 @@ class AudioService {
   void setMusicEnabled(bool enabled) {
     _musicEnabled = enabled;
     if (!enabled) {
-      _musicPlayer.pause();
-      _isMusicPlaying = false;
-      _resumeMusicOnForeground = false;
+      _musicPlayer.stop();
     } else {
       _musicPlayer.resume();
-      _isMusicPlaying = true;
     }
   }
 
@@ -137,23 +131,12 @@ class AudioService {
   }
 
   Future<void> handleAppBackgrounded() async {
-    _resumeMusicOnForeground = _isMusicPlaying;
-    if (_resumeMusicOnForeground) {
-      await _musicPlayer.pause();
-      _isMusicPlaying = false;
-    }
+    await _musicPlayer.stop();
     await _sfxPlayer.stop();
     await _tts.stop();
   }
 
   Future<void> handleAppResumed() async {
-    if (!_resumeMusicOnForeground) return;
-    _resumeMusicOnForeground = false;
-    if (!_musicEnabled ||
-        !await AudioSettingsService.instance.isMusicEnabled()) {
-      return;
-    }
-    await _musicPlayer.resume();
-    _isMusicPlaying = true;
+    // Screen-owned background music is restored by AppAudioService.
   }
 }

@@ -472,8 +472,12 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
     AppAudioService.instance.stopBackgroundMusic();
   }
 
-  void _stopAllAudioAndSpeech() {
-    _stopScreenMusic();
+  void _stopAllAudioAndSpeech({bool stopBackgroundMusic = true}) {
+    if (stopBackgroundMusic) {
+      _stopScreenMusic();
+    } else {
+      _musicRequestToken++;
+    }
     AppAudioService.instance.stopCelebrationMusic();
     _speechRequestToken++;
     _autoAdvanceToken++;
@@ -565,7 +569,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
   void _handleBackNavigation() {
     _celebrationToken++;
     _finalCelebrationToken++;
-    _stopAllAudioAndSpeech();
+    _stopAllAudioAndSpeech(stopBackgroundMusic: false);
     if (_showFinalCelebration && mounted) {
       setState(() {
         _showFinalCelebration = false;
@@ -790,7 +794,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
   void dispose() {
     _finalCelebrationToken++;
     appRouteObserver.unsubscribe(this);
-    _stopAllAudioAndSpeech();
+    _stopAllAudioAndSpeech(stopBackgroundMusic: false);
     _celebrationController.dispose();
     super.dispose();
   }

@@ -71,8 +71,8 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
 
   @override
   void dispose() {
+    _musicRequestToken++;
     appRouteObserver.unsubscribe(this);
-    _stopAmbientMusic();
     _mapController.dispose();
     super.dispose();
   }
@@ -176,7 +176,7 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
   }
 
   void _goBack() {
-    _stopAmbientMusic();
+    _musicRequestToken++;
     if (Navigator.of(context).canPop()) {
       context.pop();
       return;

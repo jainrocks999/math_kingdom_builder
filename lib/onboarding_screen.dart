@@ -85,7 +85,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   void dispose() {
-    AppAudioService.instance.stopHomeMusic();
     _pageController.dispose();
     super.dispose();
   }

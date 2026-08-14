@@ -167,8 +167,12 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
     AppAudioService.instance.stopBackgroundMusic();
   }
 
-  void _stopAllAudioAndSpeech() {
-    _stopScreenMusic();
+  void _stopAllAudioAndSpeech({bool stopBackgroundMusic = true}) {
+    if (stopBackgroundMusic) {
+      _stopScreenMusic();
+    } else {
+      _musicRequestToken++;
+    }
     AppAudioService.instance.stopCelebrationMusic();
     _speechRequestToken++;
     _tts.stop();
@@ -282,7 +286,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
 
   void _goBack() {
     _autoAdvanceToken++;
-    _stopAllAudioAndSpeech();
+    _stopAllAudioAndSpeech(stopBackgroundMusic: false);
     context.pop();
   }
 
@@ -328,10 +332,8 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
   @override
   void dispose() {
     appRouteObserver.unsubscribe(this);
-    _musicRequestToken++;
     _autoAdvanceToken++;
-    _speechRequestToken++;
-    _stopAllAudioAndSpeech();
+    _stopAllAudioAndSpeech(stopBackgroundMusic: false);
     _numberPulseController.dispose();
     _celebrationController.dispose();
     super.dispose();

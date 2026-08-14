@@ -22,9 +22,13 @@ import 'package:math_kingdom_builder/onboarding_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/number_recognition/number_recognition_screen.dart';
 import '../../splash_screen.dart';
+import 'screen_music_observer.dart';
 
 final RouteObserver<ModalRoute<dynamic>> appRouteObserver =
     RouteObserver<ModalRoute<dynamic>>();
+
+final ScreenMusicNavigatorObserver screenMusicNavigatorObserver =
+    ScreenMusicNavigatorObserver();
 
 class AppRoutes {
   static const splash = '/';
@@ -55,7 +59,7 @@ GoRouter get appRouter => _appRouter;
 
 final GoRouter _appRouter = GoRouter(
   initialLocation: AppRoutes.splash,
-  observers: [appRouteObserver],
+  observers: [appRouteObserver, screenMusicNavigatorObserver],
   routes: [
     GoRoute(
       path: AppRoutes.splash,

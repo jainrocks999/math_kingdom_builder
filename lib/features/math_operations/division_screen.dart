@@ -284,7 +284,7 @@ class _DivisionScreenState extends State<DivisionScreen>
     _autoAdvanceToken++;
     _speechRequestToken++;
     AppAudioService.instance.stopCelebrationMusic();
-    _stopScreenMusic();
+    _musicRequestToken++;
     context.pop();
   }
 
@@ -320,7 +320,6 @@ class _DivisionScreenState extends State<DivisionScreen>
     _autoAdvanceToken++;
     _speechRequestToken++;
     AppAudioService.instance.stopCelebrationMusic();
-    AppAudioService.instance.stopBackgroundMusic();
     _tts.stop();
     _successPulseController.dispose();
     super.dispose();

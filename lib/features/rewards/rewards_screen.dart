@@ -321,7 +321,7 @@ class _RewardsScreenState extends State<RewardsScreen>
 
   void _goBack() {
     AppAudioService.instance.stopCelebrationMusic();
-    _stopScreenMusic();
+    _musicRequestToken++;
     context.pop();
   }
 
@@ -407,9 +407,9 @@ class _RewardsScreenState extends State<RewardsScreen>
 
   @override
   void dispose() {
+    _musicRequestToken++;
     appRouteObserver.unsubscribe(this);
     AppAudioService.instance.stopCelebrationMusic();
-    _stopScreenMusic();
     _detailTts.stop();
     _collectAnimationController.dispose();
     super.dispose();

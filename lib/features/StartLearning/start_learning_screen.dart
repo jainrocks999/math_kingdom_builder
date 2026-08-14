@@ -600,7 +600,7 @@ class _StartLearningScreenState extends State<StartLearningScreen>
 
   void _goBack() {
     AppAudioService.instance.stopCelebrationMusic();
-    _stopScreenMusic();
+    _musicRequestToken++;
     if (Navigator.of(context).canPop()) {
       context.pop();
       return;
@@ -770,8 +770,8 @@ class _StartLearningScreenState extends State<StartLearningScreen>
 
   @override
   void dispose() {
+    _musicRequestToken++;
     AppAudioService.instance.stopCelebrationMusic();
-    _stopScreenMusic();
     appRouteObserver.unsubscribe(this);
     super.dispose();
   }

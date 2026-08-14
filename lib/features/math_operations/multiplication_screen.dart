@@ -236,7 +236,7 @@ class _MultiplicationScreenState extends State<MultiplicationScreen>
     _autoAdvanceToken++;
     _speechRequestToken++;
     AppAudioService.instance.stopCelebrationMusic();
-    _stopScreenMusic();
+    _musicRequestToken++;
     context.pop();
   }
 
@@ -272,7 +272,6 @@ class _MultiplicationScreenState extends State<MultiplicationScreen>
     _autoAdvanceToken++;
     _speechRequestToken++;
     AppAudioService.instance.stopCelebrationMusic();
-    AppAudioService.instance.stopBackgroundMusic();
     _tts.stop();
     _successPulseController.dispose();
     super.dispose();

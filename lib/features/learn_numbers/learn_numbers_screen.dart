@@ -250,8 +250,12 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
     AppAudioService.instance.stopBackgroundMusic();
   }
 
-  void _stopAllAudioAndSpeech() {
-    _stopScreenMusic();
+  void _stopAllAudioAndSpeech({bool stopBackgroundMusic = true}) {
+    if (stopBackgroundMusic) {
+      _stopScreenMusic();
+    } else {
+      _musicRequestToken++;
+    }
     AppAudioService.instance.stopCelebrationMusic();
     _tts.stop();
   }
@@ -348,7 +352,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
         _showCompletionCelebration = false;
       });
     }
-    _stopAllAudioAndSpeech();
+    _stopAllAudioAndSpeech(stopBackgroundMusic: false);
     context.pop();
   }
 
@@ -392,7 +396,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   @override
   void dispose() {
     appRouteObserver.unsubscribe(this);
-    _stopAllAudioAndSpeech();
+    _stopAllAudioAndSpeech(stopBackgroundMusic: false);
     _selectorController.dispose();
     _numberPopController.dispose();
     _objectsRevealController.dispose();

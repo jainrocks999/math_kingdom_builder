@@ -18,8 +18,16 @@ class AppAudioService {
   final Map<String, Source> _sourceCache = {};
   bool _isConfigured = false;
   bool _isBackgroundMusicPlaying = false;
+  bool _isAppInBackground = false;
   bool _resumeBackgroundOnForeground = false;
   String? _currentBackgroundTrack;
+
+  int _commandSeq = 0;
+  Future<void> _commandQueue = Future<void>.value();
+  String? _desiredTrackPath;
+  double _desiredVolume = 0.35;
+  String? _resumeTrackPath;
+  double _resumeVolume = 0.35;
 
   String _assetPath(String filePath) {
     return filePath.startsWith('assets/')
@@ -65,30 +73,86 @@ class AppAudioService {
     return source;
   }
 
-  Future<void> _playLoopingBackgroundMusic(
-    String filePath, {
-    required double volume,
-  }) async {
+  void _enqueue(Future<void> Function() action) {
+    _commandQueue = _commandQueue.then((_) => action()).catchError((
+      Object error,
+      StackTrace stackTrace,
+    ) {
+      debugPrint('AppAudioService error: $error');
+    });
+  }
+
+  Future<void> _applyDesired(int seq) async {
+    if (seq != _commandSeq) return;
+
     await _ensureConfigured();
-    if (!await AudioSettingsService.instance.isMusicEnabled()) {
-      await stopBackgroundMusic();
+    if (seq != _commandSeq) return;
+
+    if (_isAppInBackground) {
+      if (_desiredTrackPath != null) {
+        _resumeTrackPath = _desiredTrackPath;
+        _resumeVolume = _desiredVolume;
+        _resumeBackgroundOnForeground = true;
+      }
+      await _bgPlayer.stop();
+      if (seq != _commandSeq) return;
+      _isBackgroundMusicPlaying = false;
+      _currentBackgroundTrack = null;
       return;
     }
-    final assetPath = _assetPath(filePath);
+
+    if (_desiredTrackPath == null) {
+      await _bgPlayer.stop();
+      if (seq != _commandSeq) return;
+      _isBackgroundMusicPlaying = false;
+      _currentBackgroundTrack = null;
+      return;
+    }
+
+    if (!await AudioSettingsService.instance.isMusicEnabled()) {
+      await _bgPlayer.stop();
+      if (seq != _commandSeq) return;
+      _isBackgroundMusicPlaying = false;
+      _currentBackgroundTrack = null;
+      return;
+    }
+
+    final assetPath = _assetPath(_desiredTrackPath!);
     if (_isBackgroundMusicPlaying && _currentBackgroundTrack == assetPath) {
+      await _bgPlayer.setVolume(_desiredVolume);
       return;
     }
 
     try {
       await _bgPlayer.stop();
+      if (seq != _commandSeq) return;
       await _bgPlayer.setReleaseMode(ReleaseMode.loop);
-      await _bgPlayer.setVolume(volume);
-      await _bgPlayer.play(await _sourceForAsset(filePath));
+      await _bgPlayer.setVolume(_desiredVolume);
+      await _bgPlayer.play(await _sourceForAsset(_desiredTrackPath!));
+      if (seq != _commandSeq) return;
       _currentBackgroundTrack = assetPath;
       _isBackgroundMusicPlaying = true;
     } catch (error) {
-      debugPrint('Background music asset missing: $filePath ($error)');
+      debugPrint('Background music asset missing: $_desiredTrackPath ($error)');
     }
+  }
+
+  Future<void> _playLoopingBackgroundMusic(
+    String filePath, {
+    required double volume,
+  }) async {
+    if (_isAppInBackground) {
+      _resumeTrackPath = filePath;
+      _resumeVolume = volume;
+      _resumeBackgroundOnForeground = true;
+      return;
+    }
+
+    _desiredTrackPath = filePath;
+    _desiredVolume = volume;
+    _resumeBackgroundOnForeground = false;
+    final seq = ++_commandSeq;
+    _enqueue(() => _applyDesired(seq));
   }
 
   Future<void> playHomeMusic() async {
@@ -117,10 +181,11 @@ class AppAudioService {
   }
 
   Future<void> stopBackgroundMusic() async {
-    await _bgPlayer.stop();
-    _isBackgroundMusicPlaying = false;
+    _desiredTrackPath = null;
     _resumeBackgroundOnForeground = false;
-    _currentBackgroundTrack = null;
+    _resumeTrackPath = null;
+    final seq = ++_commandSeq;
+    _enqueue(() => _applyDesired(seq));
   }
 
   Future<void> pauseHomeMusic() async {
@@ -133,26 +198,41 @@ class AppAudioService {
   }
 
   Future<void> handleAppBackgrounded() async {
-    _resumeBackgroundOnForeground =
-        _isBackgroundMusicPlaying && _currentBackgroundTrack != null;
-    if (_resumeBackgroundOnForeground) {
-      await _bgPlayer.pause();
-      _isBackgroundMusicPlaying = false;
+    _isAppInBackground = true;
+    final shouldResumeLater =
+        _desiredTrackPath != null || _resumeTrackPath != null;
+    if (shouldResumeLater) {
+      _resumeTrackPath = _desiredTrackPath ?? _resumeTrackPath;
+      _resumeVolume =
+          _desiredTrackPath != null ? _desiredVolume : _resumeVolume;
     }
-    await _celebrationPlayer.stop();
+
+    _desiredTrackPath = null;
+    _resumeBackgroundOnForeground = shouldResumeLater;
+    final seq = ++_commandSeq;
+    _enqueue(() async {
+      if (seq != _commandSeq) return;
+      await _bgPlayer.stop();
+      await _celebrationPlayer.stop();
+      if (seq != _commandSeq) return;
+      _isBackgroundMusicPlaying = false;
+      _currentBackgroundTrack = null;
+    });
   }
 
   Future<void> handleAppResumed() async {
+    _isAppInBackground = false;
     if (!_resumeBackgroundOnForeground) return;
     _resumeBackgroundOnForeground = false;
-    if (!await AudioSettingsService.instance.isMusicEnabled()) {
-      return;
-    }
-    await _bgPlayer.resume();
-    _isBackgroundMusicPlaying = true;
+    final track = _resumeTrackPath;
+    final volume = _resumeVolume;
+    _resumeTrackPath = null;
+    if (track == null) return;
+    await _playLoopingBackgroundMusic(track, volume: volume);
   }
 
   Future<void> playCelebrationMusic() async {
+    if (_isAppInBackground) return;
     await _ensureConfigured();
     try {
       await _celebrationPlayer.stop();

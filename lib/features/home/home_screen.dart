@@ -24,6 +24,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
   static const int _dailyGoal = 3;
+  int _musicRequestToken = 0;
 
   RewardProgressSnapshot _progressSnapshot = const RewardProgressSnapshot(
     totalStars: 0,
@@ -37,7 +38,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
   @override
   void initState() {
     super.initState();
-    AppAudioService.instance.playHomeMusic();
+    _playHomeMusic();
     _loadProgress();
   }
 
@@ -45,32 +46,50 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final route = ModalRoute.of(context);
-    if (route is PageRoute<dynamic>) {
+    if (route != null) {
       appRouteObserver.unsubscribe(this);
-      appRouteObserver.subscribe(this, route);
+      if (route is PageRoute<dynamic>) {
+        appRouteObserver.subscribe(this, route);
+      }
     }
   }
 
   @override
   void dispose() {
+    _musicRequestToken++;
     appRouteObserver.unsubscribe(this);
-    AppAudioService.instance.stopHomeMusic();
     super.dispose();
   }
 
   @override
   void didPopNext() {
-    AppAudioService.instance.playHomeMusic();
+    _playHomeMusic(delayed: true);
     _loadProgress();
   }
 
   @override
   void didPushNext() {
+    _stopHomeMusic();
+  }
+
+  void _playHomeMusic({bool delayed = false}) {
+    final requestToken = ++_musicRequestToken;
+    Future<void>.delayed(
+      delayed ? const Duration(milliseconds: 180) : Duration.zero,
+      () {
+        if (!mounted || requestToken != _musicRequestToken) return;
+        AppAudioService.instance.playHomeMusic();
+      },
+    );
+  }
+
+  void _stopHomeMusic() {
+    _musicRequestToken++;
     AppAudioService.instance.stopHomeMusic();
   }
 
   void _navigateWithoutHomeMusic(String route, {bool replace = false}) {
-    AppAudioService.instance.stopHomeMusic();
+    _stopHomeMusic();
 
     if (replace) {
       context.go(route);

@@ -131,8 +131,12 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
     AppAudioService.instance.stopBackgroundMusic();
   }
 
-  void _stopAllAudioAndSpeech() {
-    _stopScreenMusic();
+  void _stopAllAudioAndSpeech({bool stopBackgroundMusic = true}) {
+    if (stopBackgroundMusic) {
+      _stopScreenMusic();
+    } else {
+      _musicRequestToken++;
+    }
     AppAudioService.instance.stopCelebrationMusic();
     _speechRequestToken++;
     if (mounted && _isSpeaking) {
@@ -309,7 +313,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
 
   void _goBackToLearningMenu() {
     _autoAdvanceToken++;
-    _stopAllAudioAndSpeech();
+    _stopAllAudioAndSpeech(stopBackgroundMusic: false);
     Navigator.of(context).pop();
   }
 
@@ -356,10 +360,8 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
   @override
   void dispose() {
     appRouteObserver.unsubscribe(this);
-    _musicRequestToken++;
     _autoAdvanceToken++;
-    _speechRequestToken++;
-    _stopAllAudioAndSpeech();
+    _stopAllAudioAndSpeech(stopBackgroundMusic: false);
     _speakerPulseController.dispose();
     _cardBounceController.dispose();
     _celebrationController.dispose();

@@ -166,8 +166,12 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
     AppAudioService.instance.stopBackgroundMusic();
   }
 
-  void _stopAllAudioAndSpeech() {
-    _stopScreenMusic();
+  void _stopAllAudioAndSpeech({bool stopBackgroundMusic = true}) {
+    if (stopBackgroundMusic) {
+      _stopScreenMusic();
+    } else {
+      _musicRequestToken++;
+    }
     AppAudioService.instance.stopCelebrationMusic();
     _tts.stop();
   }
@@ -374,7 +378,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
   }
 
   void _goBack() {
-    _stopAllAudioAndSpeech();
+    _stopAllAudioAndSpeech(stopBackgroundMusic: false);
     context.pop();
   }
 
@@ -419,8 +423,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
   @override
   void dispose() {
     appRouteObserver.unsubscribe(this);
-    _musicRequestToken++;
-    _stopAllAudioAndSpeech();
+    _stopAllAudioAndSpeech(stopBackgroundMusic: false);
     _cardPopController.dispose();
     _celebrationController.dispose();
     super.dispose();

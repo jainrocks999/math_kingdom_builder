@@ -312,7 +312,7 @@ class _PatternsScreenState extends State<PatternsScreen>
   void _goBack() {
     _autoAdvanceToken++;
     AppAudioService.instance.stopCelebrationMusic();
-    _stopScreenMusic();
+    _musicRequestToken++;
     context.pop();
   }
 
@@ -347,7 +347,6 @@ class _PatternsScreenState extends State<PatternsScreen>
     _musicRequestToken++;
     _autoAdvanceToken++;
     AppAudioService.instance.stopCelebrationMusic();
-    AppAudioService.instance.stopBackgroundMusic();
     _tts.stop();
     _successPulseController.dispose();
     super.dispose();
