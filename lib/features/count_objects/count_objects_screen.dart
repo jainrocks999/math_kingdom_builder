@@ -12,6 +12,7 @@ import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
+import '../../core/utils/responsive_layout.dart';
 import '../../shared/helpers/feedback_helper.dart';
 import '../../shared/widgets/celebration_bear.dart';
 import '../StartLearning/start_learning_next_action_button.dart';
@@ -458,13 +459,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
             ),
           ),
           SafeArea(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                16,
-                12,
-                16,
-                20 + (MediaQuery.of(context).padding.bottom * 0.2),
-              ),
+            child: AdaptiveGameFrame(
               child: Column(
                 children: [
                   _buildTopBar(progress),
@@ -813,7 +808,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
   Widget _buildAnswerGrid() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 360;
+        final isNarrow = ResponsiveLayout.isCompactWidth(context, 360, constraints: constraints);
         final buttonHeight = isNarrow ? 74.0 : 82.0;
 
         return GridView.builder(

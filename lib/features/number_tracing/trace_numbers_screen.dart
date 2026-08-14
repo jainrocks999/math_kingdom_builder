@@ -13,6 +13,7 @@ import '../../core/services/audio_service.dart';
 import '../StartLearning/start_learning_next_action_button.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/audio_service.dart';
+import '../../core/utils/responsive_layout.dart';
 import '../../shared/widgets/celebration_bear.dart';
 
 class _TraceStrokeTemplate {
@@ -829,46 +830,43 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
             ),
           ),
           SafeArea(
-            child: LayoutBuilder(
+            child: AdaptiveGameFrame(
+              child: LayoutBuilder(
               builder: (context, constraints) {
-                final isCompact = constraints.maxHeight < 780;
+                final isCompact = ResponsiveLayout.isCompactHeight(
+                  context,
+                  780,
+                  constraints: constraints,
+                );
                 final boardSize = math.min(
-                  constraints.maxWidth - 24,
+                  constraints.maxWidth,
                   math.max(
                     isCompact ? 308.0 : 340.0,
                     constraints.maxHeight * (isCompact ? 0.52 : 0.58),
                   ),
                 );
 
-                return Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    18,
-                    isCompact ? 8 : 10,
-                    18,
-                    (isCompact ? 12 : 14) +
-                        MediaQuery.of(context).padding.bottom * 0.2,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildTopBar(
-                        context,
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildTopBar(
+                      context,
+                      isCompact: isCompact,
+                      lessonProgress: lessonProgress,
+                      earnedStars: earnedStars,
+                    ),
+                    SizedBox(height: isCompact ? 6 : 8),
+                    Expanded(
+                      child: _buildTracingCard(
+                        boardSize,
                         isCompact: isCompact,
-                        lessonProgress: lessonProgress,
-                        earnedStars: earnedStars,
                       ),
-                      SizedBox(height: isCompact ? 6 : 8),
-                      Expanded(
-                        child: _buildTracingCard(
-                          boardSize,
-                          isCompact: isCompact,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 );
               },
             ),
+          ),
           ),
         ],
       ),

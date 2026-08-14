@@ -11,6 +11,7 @@ import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/router/app_router.dart';
 import '../../core/utils/audio_service.dart';
+import '../../core/utils/responsive_layout.dart';
 import '../StartLearning/start_learning_next_action_button.dart';
 import '../../shared/widgets/celebration_bear.dart';
 
@@ -377,18 +378,17 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
         children: [
           _buildBackground(),
           SafeArea(
-            child: LayoutBuilder(
+            child: AdaptiveGameFrame(
+              child: LayoutBuilder(
               builder: (context, constraints) {
-                final compactLayout = constraints.maxHeight < 860;
+                final compactLayout = ResponsiveLayout.isCompactHeight(
+                  context,
+                  860,
+                  constraints: constraints,
+                );
 
                 if (compactLayout) {
                   return SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(
-                      16,
-                      12,
-                      16,
-                      16 + (MediaQuery.of(context).padding.bottom * 0.2),
-                    ),
                     child: ConstrainedBox(
                       constraints:
                           BoxConstraints(minHeight: constraints.maxHeight),
@@ -410,36 +410,29 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
                   );
                 }
 
-                return Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    16,
-                    12,
-                    16,
-                    16 + (MediaQuery.of(context).padding.bottom * 0.2),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildTopBar(),
-                      const SizedBox(height: 12),
-                      _buildProgressCard(),
-                      const SizedBox(height: 12),
-                      Expanded(
-                        child: Column(
-                          children: [
-                            Expanded(child: _buildLearningCard()),
-                            const SizedBox(height: 12),
-                            _buildAnswerSection(),
-                            const SizedBox(height: 12),
-                            _buildNavigationControls(),
-                          ],
-                        ),
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildTopBar(),
+                    const SizedBox(height: 12),
+                    _buildProgressCard(),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Expanded(child: _buildLearningCard()),
+                          const SizedBox(height: 12),
+                          _buildAnswerSection(),
+                          const SizedBox(height: 12),
+                          _buildNavigationControls(),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 );
               },
             ),
+          ),
           ),
           if (_showCelebration) _buildCelebrationOverlay(),
         ],
@@ -1015,7 +1008,11 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
           const SizedBox(height: 12),
           LayoutBuilder(
             builder: (context, constraints) {
-              final isNarrow = constraints.maxWidth < 360;
+              final isNarrow = ResponsiveLayout.isCompactWidth(
+                context,
+                360,
+                constraints: constraints,
+              );
               return GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),

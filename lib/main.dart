@@ -5,6 +5,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import 'app.dart';
 import 'core/localization/app_locale_config.dart';
+import 'core/services/device_orientation_service.dart';
 import 'data/models/child_profile.dart';
 import 'data/models/kingdom_state.dart';
 import 'data/models/lesson_progress.dart';
@@ -28,6 +29,8 @@ void main() async {
     await kingdomsBox.put('current', KingdomState.empty());
   }
   await Hive.openBox<LessonProgress>('progress');
+
+  await DeviceOrientationService.initialize();
 
   runApp(
     EasyLocalization(

@@ -9,6 +9,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
+import '../../core/utils/responsive_layout.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../data/models/kingdom_state.dart';
@@ -191,7 +192,8 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Stack(
+        child: AdaptiveContentWidth(
+          child: Stack(
           children: [
             Positioned.fill(
               child: DecoratedBox(
@@ -239,9 +241,11 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
                         orElse: () => recommendedZone,
                       );
 
-                      final mapHeight = viewport.maxHeight < 720
-                          ? math.max(300.0, viewport.maxHeight * 0.46)
-                          : math.min(540.0, viewport.maxHeight * 0.58);
+                      final mapHeight = ResponsiveLayout.isTablet(context)
+                          ? math.min(520.0, viewport.maxHeight * 0.62)
+                          : viewport.maxHeight < 720
+                              ? math.max(300.0, viewport.maxHeight * 0.46)
+                              : math.min(540.0, viewport.maxHeight * 0.58);
 
                       return SingleChildScrollView(
                         padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
@@ -390,6 +394,7 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
               ),
             ),
           ],
+        ),
         ),
       ),
     );

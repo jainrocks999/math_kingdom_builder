@@ -11,7 +11,10 @@ import '../../core/services/daily_challenge_service.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../data/models/home_action_model.dart';
 import '../../data/models/quest_model.dart';
+import '../../data/repositories/home_content_repository.dart';
+import '../../shared/widgets/adaptive_hub_scaffold.dart';
 import '../../shared/widgets/kid_oops_view.dart';
+import '../../core/utils/responsive_layout.dart';
 import 'home_content_mappers.dart';
 import 'home_content_provider.dart';
 
@@ -42,22 +45,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
     _loadProgress();
   }
 
+  ModalRoute<dynamic>? _routeSubscription;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final route = ModalRoute.of(context);
-    if (route != null) {
+    if (route == _routeSubscription) return;
+    if (_routeSubscription != null) {
       appRouteObserver.unsubscribe(this);
-      if (route is PageRoute<dynamic>) {
-        appRouteObserver.subscribe(this, route);
-      }
+    }
+    _routeSubscription = route;
+    if (route is PageRoute<dynamic>) {
+      appRouteObserver.subscribe(this, route);
     }
   }
 
   @override
   void dispose() {
     _musicRequestToken++;
-    appRouteObserver.unsubscribe(this);
+    if (_routeSubscription != null) {
+      appRouteObserver.unsubscribe(this);
+      _routeSubscription = null;
+    }
     super.dispose();
   }
 
@@ -149,16 +159,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
     return AppTypography.responsiveSize(maxWidth, min: 29, max: 36);
   }
 
-  double _featuredAspectRatio(double maxWidth) {
-    if (maxWidth < 340) return 0.94;
-    if (maxWidth < 380) return 1.02;
-    return 1.14;
+  double _featuredAspectRatio(BuildContext context) {
+    return ResponsiveLayout.featuredCardAspectRatio(context);
   }
 
-  double _questAspectRatio(double maxWidth) {
-    if (maxWidth < 340) return 0.78;
-    if (maxWidth < 380) return 0.87;
-    return 0.96;
+  double _questAspectRatio(BuildContext context) {
+    return ResponsiveLayout.questCardAspectRatio(context);
   }
 
   String _featureTitle(BuildContext context, HomeActionModel action) {
@@ -185,221 +191,206 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
     return translated == key ? quest.description : translated;
   }
 
+  Widget _buildHomeContent(
+    BuildContext context,
+    HomeContentBundle content,
+    BoxConstraints constraints,
+  ) {
+    final featuredGridCount = ResponsiveLayout.gridCrossAxisCount(context);
+    final questGridCount = ResponsiveLayout.gridCrossAxisCount(context);
+
+    final header = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Expanded(child: _SunBadge()),
+        const SizedBox(width: 12),
+        _HeaderActions(
+          totalStars: _progressSnapshot.totalStars,
+          onParentTap: () => _navigateWithoutHomeMusic(
+            AppRoutes.parentDashboard,
+          ),
+          onSettingsTap: () => _navigateWithoutHomeMusic(
+            AppRoutes.settings,
+          ),
+          onRewardsTap: () => _navigateWithoutHomeMusic(
+            AppRoutes.stickers,
+          ),
+        ),
+      ],
+    );
+
+    final heroSection = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          context.tr('home.hero_title'),
+          style: AppTypography.hero.copyWith(
+            fontSize: _heroTitleSize(constraints.maxWidth),
+            color: const Color(0xFF1A1060),
+            fontWeight: FontWeight.w800,
+            shadows: [
+              const Shadow(
+                color: Colors.white,
+                blurRadius: 0,
+                offset: Offset(0, 2),
+              ),
+              Shadow(
+                color: AppColors.parentAccent.withValues(alpha: 0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          context.tr('home.hero_subtitle'),
+          style: AppTypography.body.copyWith(
+            color: const Color(0xFF4A5568),
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            height: 1.4,
+          ),
+        ),
+        const SizedBox(height: 20),
+        _PrimaryPlayButton(
+          onPressed: () => _navigateWithoutHomeMusic(
+            AppRoutes.startlearning,
+          ),
+        ),
+      ],
+    );
+
+    final featuredGrid = GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: content.featuredActions.length,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: featuredGridCount,
+        mainAxisSpacing: 14,
+        crossAxisSpacing: 14,
+        childAspectRatio: _featuredAspectRatio(context),
+      ),
+      itemBuilder: (context, index) {
+        final action = content.featuredActions[index];
+        return _FeatureCard(
+          action: action,
+          title: _featureTitle(context, action),
+          subtitle: _featureSubtitle(context, action),
+          onTap: () => _navigateWithoutHomeMusic(
+            action.route,
+          ),
+        );
+      },
+    );
+
+    final questsSection = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          context.tr('home.choose_quest_title'),
+          style: AppTypography.h2.copyWith(
+            color: const Color(0xFF2D1B69),
+            fontWeight: FontWeight.w800,
+            fontSize: 22,
+            shadows: [
+              const Shadow(
+                color: Colors.white,
+                blurRadius: 0,
+                offset: Offset(0, 1),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          context.tr('home.choose_quest_subtitle'),
+          style: AppTypography.bodySmall.copyWith(
+            color: const Color(0xFF5A6B7A),
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 14),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: content.quests.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: questGridCount,
+            mainAxisSpacing: 14,
+            crossAxisSpacing: 14,
+            childAspectRatio: _questAspectRatio(context),
+          ),
+          itemBuilder: (context, index) {
+            final quest = content.quests[index];
+            return _QuestCard(
+              quest: quest,
+              label: _questLabel(context, quest),
+              description: _questDescription(context, quest),
+              progressStars: _progressForQuest(quest).clamp(
+                0,
+                3,
+              ),
+              onTap: quest.isComingSoon
+                  ? null
+                  : () => _navigateWithoutHomeMusic(
+                        quest.route,
+                      ),
+            );
+          },
+        ),
+      ],
+    );
+
+    final dailyBanner = _DailyChallengeBanner(
+      challengeSnapshot: _dailyChallengeSnapshot,
+      todayCompletions: _progressSnapshot.todayCompletions,
+      dailyGoal: _dailyGoal,
+      streakDays: _progressSnapshot.streakDays,
+      onTap: () => _navigateWithoutHomeMusic(
+        _dailyChallengeSnapshot?.challenge.route ?? AppRoutes.startlearning,
+      ),
+    );
+
+    return SingleChildScrollView(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          minHeight: constraints.maxHeight.isFinite ? constraints.maxHeight : 0,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            header,
+            const SizedBox(height: 12),
+            heroSection,
+            const SizedBox(height: 20),
+            featuredGrid,
+            const SizedBox(height: 26),
+            questsSection,
+            const SizedBox(height: 24),
+            dailyBanner,
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final homeContent = ref.watch(homeContentProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/backround.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-
-          // Positioned.fill(
-          //   child: SvgPicture.asset(
-          //     'assets/images/svg/math_kingdom_bg.svg',
-          //     fit: BoxFit.cover,
-          //     alignment: Alignment.topCenter,
-          //   ),
-          // ),
-          // Sky gradient overlay
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  const Color(0xFF87CEEB).withValues(alpha: 0.55),
-                  const Color(0xFFB8E4FF).withValues(alpha: 0.30),
-                  AppColors.background.withValues(alpha: 0.25),
-                  AppColors.restBackground.withValues(alpha: 0.15),
-                ],
-              ),
-            ),
-          ),
-          SafeArea(
-            child: homeContent.when(
-              data: (content) => LayoutBuilder(
-                builder: (context, constraints) {
-                  return SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(18, 12, 18, 32),
-                    child: ConstrainedBox(
-                      constraints:
-                          BoxConstraints(minHeight: constraints.maxHeight),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Expanded(child: _SunBadge()),
-                              const SizedBox(width: 12),
-                              _HeaderActions(
-                                totalStars: _progressSnapshot.totalStars,
-                                onParentTap: () => _navigateWithoutHomeMusic(
-                                  AppRoutes.parentDashboard,
-                                ),
-                                onSettingsTap: () => _navigateWithoutHomeMusic(
-                                  AppRoutes.settings,
-                                ),
-                                onRewardsTap: () => _navigateWithoutHomeMusic(
-                                  AppRoutes.stickers,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            context.tr('home.hero_title'),
-                            style: AppTypography.hero.copyWith(
-                              fontSize: _heroTitleSize(constraints.maxWidth),
-                              color: const Color(0xFF1A1060),
-                              fontWeight: FontWeight.w800,
-                              shadows: [
-                                const Shadow(
-                                  color: Colors.white,
-                                  blurRadius: 0,
-                                  offset: Offset(0, 2),
-                                ),
-                                Shadow(
-                                  color: AppColors.parentAccent
-                                      .withValues(alpha: 0.3),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            context.tr('home.hero_subtitle'),
-                            style: AppTypography.body.copyWith(
-                              color: const Color(0xFF4A5568),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              height: 1.4,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          _PrimaryPlayButton(
-                            onPressed: () => _navigateWithoutHomeMusic(
-                              AppRoutes.startlearning,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: content.featuredActions.length,
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              mainAxisSpacing: 14,
-                              crossAxisSpacing: 14,
-                              childAspectRatio: _featuredAspectRatio(
-                                constraints.maxWidth,
-                              ),
-                            ),
-                            itemBuilder: (context, index) {
-                              final action = content.featuredActions[index];
-                              return _FeatureCard(
-                                action: action,
-                                title: _featureTitle(context, action),
-                                subtitle: _featureSubtitle(context, action),
-                                onTap: () => _navigateWithoutHomeMusic(
-                                  action.route,
-                                ),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 26),
-                          Text(
-                            context.tr('home.choose_quest_title'),
-                            style: AppTypography.h2.copyWith(
-                              color: const Color(0xFF2D1B69),
-                              fontWeight: FontWeight.w800,
-                              fontSize: 22,
-                              shadows: [
-                                const Shadow(
-                                  color: Colors.white,
-                                  blurRadius: 0,
-                                  offset: Offset(0, 1),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            context.tr('home.choose_quest_subtitle'),
-                            style: AppTypography.bodySmall.copyWith(
-                              color: const Color(0xFF5A6B7A),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: content.quests.length,
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              mainAxisSpacing: 14,
-                              crossAxisSpacing: 14,
-                              childAspectRatio: _questAspectRatio(
-                                constraints.maxWidth,
-                              ),
-                            ),
-                            itemBuilder: (context, index) {
-                              final quest = content.quests[index];
-                              return _QuestCard(
-                                quest: quest,
-                                label: _questLabel(context, quest),
-                                description: _questDescription(context, quest),
-                                progressStars: _progressForQuest(quest).clamp(
-                                  0,
-                                  3,
-                                ),
-                                onTap: quest.isComingSoon
-                                    ? null
-                                    : () => _navigateWithoutHomeMusic(
-                                          quest.route,
-                                        ),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 24),
-                          _DailyChallengeBanner(
-                            challengeSnapshot: _dailyChallengeSnapshot,
-                            todayCompletions:
-                                _progressSnapshot.todayCompletions,
-                            dailyGoal: _dailyGoal,
-                            streakDays: _progressSnapshot.streakDays,
-                            onTap: () => _navigateWithoutHomeMusic(
-                              _dailyChallengeSnapshot?.challenge.route ??
-                                  AppRoutes.startlearning,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-              loading: _HomeLoadingView.new,
-              error: (error, stackTrace) => _HomeErrorView(
-                onRetry: () => ref.invalidate(homeContentProvider),
-              ),
-            ),
-          ),
-        ],
+    return AdaptiveHubScaffold(
+      body: homeContent.when(
+        data: (content) => LayoutBuilder(
+          builder: (context, constraints) {
+            return _buildHomeContent(context, content, constraints);
+          },
+        ),
+        loading: _HomeLoadingView.new,
+        error: (error, stackTrace) => _HomeErrorView(
+          onRetry: () => ref.invalidate(homeContentProvider),
+        ),
       ),
     );
   }

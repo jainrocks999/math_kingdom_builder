@@ -12,6 +12,7 @@ import '../../core/services/audio_service.dart';
 import '../../core/services/child_profile_service.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/reward_progress_service.dart';
+import '../../shared/widgets/adaptive_hub_scaffold.dart';
 import '../../shared/widgets/celebration_bear.dart';
 import '../../shared/widgets/game_back_button.dart';
 
@@ -165,6 +166,7 @@ class StartLearningScreen extends StatefulWidget {
 class _StartLearningScreenState extends State<StartLearningScreen>
     with RouteAware {
   int _musicRequestToken = 0;
+  ModalRoute<dynamic>? _routeSubscription;
   bool _isShowingUnlockDialog = false;
   final List<String> _pendingUnlockRoutes = <String>[];
   ChildProfileSnapshot? _profileSnapshot;
@@ -745,8 +747,12 @@ class _StartLearningScreenState extends State<StartLearningScreen>
   void didChangeDependencies() {
     super.didChangeDependencies();
     final route = ModalRoute.of(context);
-    if (route is PageRoute<dynamic>) {
+    if (route == _routeSubscription) return;
+    if (_routeSubscription != null) {
       appRouteObserver.unsubscribe(this);
+    }
+    _routeSubscription = route;
+    if (route is PageRoute<dynamic>) {
       appRouteObserver.subscribe(this, route);
     }
   }
@@ -772,7 +778,10 @@ class _StartLearningScreenState extends State<StartLearningScreen>
   void dispose() {
     _musicRequestToken++;
     AppAudioService.instance.stopCelebrationMusic();
-    appRouteObserver.unsubscribe(this);
+    if (_routeSubscription != null) {
+      appRouteObserver.unsubscribe(this);
+      _routeSubscription = null;
+    }
     super.dispose();
   }
 
@@ -791,37 +800,11 @@ class _StartLearningScreenState extends State<StartLearningScreen>
     final todayProgress =
         (_progressSnapshot.todayCompletions / dailyGoal).clamp(0, 1).toDouble();
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/backround.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  const Color(0xFF87CEEB).withValues(alpha: 0.55),
-                  const Color(0xFFB8E4FF).withValues(alpha: 0.30),
-                  AppColors.background.withValues(alpha: 0.25),
-                  AppColors.restBackground.withValues(alpha: 0.15),
-                ],
-              ),
-            ),
-          ),
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(18, 16, 18, 34),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+    return AdaptiveHubScaffold(
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
                   // Top Bar
                   Row(
                     children: [
@@ -1156,7 +1139,8 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                       child: _LearningCard(
                         module: module,
                         isUnlocked: _isUnlocked(module),
-                        isRecommended: recommendedModule?.route == module.route,
+                        isRecommended:
+                            recommendedModule?.route == module.route,
                         starsRemainingToUnlock: math.max(
                           0,
                           module.unlockStars - _progressSnapshot.totalStars,
@@ -1359,9 +1343,6 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                 ],
               ),
             ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -7,6 +7,7 @@ import 'core/constants/app_typography.dart';
 import 'core/router/app_router.dart';
 import 'core/services/app_session_service.dart';
 import 'core/services/audio_service.dart';
+import 'core/utils/responsive_layout.dart';
 
 class OnboardingPageData {
   const OnboardingPageData({
@@ -155,13 +156,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
           SafeArea(
-            child: LayoutBuilder(
+            child: AdaptiveContentWidth(
+              child: LayoutBuilder(
               builder: (context, constraints) {
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 16, 18, 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                       Row(
                         children: [
                           const _SunnyBadge(),
@@ -253,9 +253,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         }),
                       ),
                     ],
-                  ),
                 );
               },
+            ),
             ),
           ),
         ],

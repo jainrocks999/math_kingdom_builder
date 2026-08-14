@@ -15,6 +15,7 @@ import '../../core/services/audio_service.dart';
 import '../StartLearning/start_learning_next_action_button.dart';
 import '../count_objects/counting_themes.dart';
 import '../../core/services/reward_progress_service.dart';
+import '../../core/utils/responsive_layout.dart';
 import '../../shared/widgets/celebration_bear.dart';
 import '../../shared/widgets/game_back_button.dart';
 
@@ -444,47 +445,52 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
             theme: _theme,
           ),
           // Main content
-          SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final isCompact = constraints.maxHeight < 800;
-                final isVeryCompact = constraints.maxHeight < 710;
-                final isNarrow = constraints.maxWidth < 360;
+          Positioned.fill(
+            child: SafeArea(
+              child: AdaptiveGameFrame(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isCompact = ResponsiveLayout.isCompactHeight(
+                      context,
+                      800,
+                      constraints: constraints,
+                    );
+                    final isVeryCompact = ResponsiveLayout.isCompactHeight(
+                      context,
+                      710,
+                      constraints: constraints,
+                    );
+                    final isNarrow = ResponsiveLayout.isCompactWidth(
+                      context,
+                      360,
+                      constraints: constraints,
+                    );
 
-                return Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    14,
-                    isVeryCompact ? 8 : 12,
-                    14,
-                    (isVeryCompact ? 10 : 14) +
-                        MediaQuery.of(context).padding.bottom * 0.2,
-                  ),
-                  child: Column(
-                    children: [
-                      _buildHeader(isCompact: isCompact),
-                      SizedBox(height: isVeryCompact ? 8 : 12),
-                      // Main number card
-                      _buildMainCard(
-                        isCompact: isCompact,
-                        isVeryCompact: isVeryCompact,
-                        isNarrow: isNarrow,
-                      ),
-                      SizedBox(height: isVeryCompact ? 8 : 10),
-                      // Count card — fills remaining space
-                      Expanded(
-                        child: _buildCountCard(
+                    return Column(
+                      children: [
+                        _buildHeader(isCompact: isCompact),
+                        SizedBox(height: isVeryCompact ? 8 : 12),
+                        _buildMainCard(
                           isCompact: isCompact,
                           isVeryCompact: isVeryCompact,
+                          isNarrow: isNarrow,
                         ),
-                      ),
-                      SizedBox(height: isVeryCompact ? 8 : 10),
-                      _buildSelectorBar(isCompact: isCompact),
-                      SizedBox(height: isVeryCompact ? 6 : 8),
-                      _buildNavRow(isCompact: isCompact),
-                    ],
-                  ),
-                );
-              },
+                        SizedBox(height: isVeryCompact ? 8 : 10),
+                        Expanded(
+                          child: _buildCountCard(
+                            isCompact: isCompact,
+                            isVeryCompact: isVeryCompact,
+                          ),
+                        ),
+                        SizedBox(height: isVeryCompact ? 8 : 10),
+                        _buildSelectorBar(isCompact: isCompact),
+                        SizedBox(height: isVeryCompact ? 6 : 8),
+                        _buildNavRow(isCompact: isCompact),
+                      ],
+                    );
+                  },
+                ),
+              ),
             ),
           ),
           if (_showCompletionCelebration) _buildCompletionOverlay(),
@@ -882,10 +888,10 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
             );
           },
           child: Align(
+            key: ValueKey('word-$_currentIndex'),
             alignment: Alignment.center,
             child: Text(
               _numberWord(context),
-              key: ValueKey(_numberWord(context)),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
@@ -908,7 +914,7 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 250),
           child: Row(
-            key: ValueKey(_isSpeaking),
+            key: ValueKey('speaking-$_isSpeaking'),
             mainAxisSize: MainAxisSize.min,
             children: [
               if (_isSpeaking) ...[

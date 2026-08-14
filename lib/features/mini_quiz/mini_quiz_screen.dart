@@ -16,10 +16,10 @@ import '../../core/services/audio_service.dart';
 import '../../core/services/child_profile_service.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/audio_service.dart';
+import '../../core/utils/responsive_layout.dart';
 import '../StartLearning/start_learning_next_action_button.dart';
 import '../count_objects/counting_themes.dart';
 import '../../shared/widgets/activity_completion_card.dart';
-import '../../shared/widgets/celebration_overlay.dart';
 import '../../shared/widgets/kid_loading_view.dart';
 
 enum _QuizMode {
@@ -779,52 +779,57 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
               ),
             ),
           ),
-          if (_showCelebration) const CelebrationOverlay(isVisible: true),
           SafeArea(
-            child: LayoutBuilder(
+            child: AdaptiveGameFrame(
+              child: LayoutBuilder(
               builder: (context, constraints) {
-                final isNarrowWidth = constraints.maxWidth < 380;
-                final isCompactHeight = constraints.maxHeight < 760;
-                final isVeryCompactHeight = constraints.maxHeight < 690;
+                final isNarrowWidth = ResponsiveLayout.isCompactWidth(
+                  context,
+                  380,
+                  constraints: constraints,
+                );
+                final isCompactHeight = ResponsiveLayout.isCompactHeight(
+                  context,
+                  760,
+                  constraints: constraints,
+                );
+                final isVeryCompactHeight = ResponsiveLayout.isCompactHeight(
+                  context,
+                  690,
+                  constraints: constraints,
+                );
                 final gap = isVeryCompactHeight ? 10.0 : 14.0;
 
-                return Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    16,
-                    12,
-                    16,
-                    16 + (MediaQuery.of(context).padding.bottom * 0.2),
-                  ),
-                  child: Column(
-                    children: [
-                      _buildTopBar(
-                        progress,
-                        compact: isCompactHeight,
-                        narrowWidth: isNarrowWidth,
-                      ),
-                      SizedBox(height: gap),
-                      Expanded(
-                        child: AnimatedBuilder(
-                          animation: _successPulseController,
-                          builder: (context, child) {
-                            final scale = 1 +
-                                ((_successPulseController.value - 1) * 0.03);
-                            return Transform.scale(scale: scale, child: child);
-                          },
-                          child: _buildActivityPanel(
-                            narrowWidth: isNarrowWidth,
-                            compactHeight: isCompactHeight,
-                            veryCompactHeight: isVeryCompactHeight,
-                          ),
+                return Column(
+                  children: [
+                    _buildTopBar(
+                      progress,
+                      compact: isCompactHeight,
+                      narrowWidth: isNarrowWidth,
+                    ),
+                    SizedBox(height: gap),
+                    Expanded(
+                      child: AnimatedBuilder(
+                        animation: _successPulseController,
+                        builder: (context, child) {
+                          final scale = 1 +
+                              ((_successPulseController.value - 1) * 0.03);
+                          return Transform.scale(scale: scale, child: child);
+                        },
+                        child: _buildActivityPanel(
+                          narrowWidth: isNarrowWidth,
+                          compactHeight: isCompactHeight,
+                          veryCompactHeight: isVeryCompactHeight,
                         ),
                       ),
-                      SizedBox(height: isVeryCompactHeight ? 10 : 12),
-                      _buildBottomBar(compact: isVeryCompactHeight),
-                    ],
-                  ),
+                    ),
+                    SizedBox(height: isVeryCompactHeight ? 10 : 12),
+                    _buildBottomBar(compact: isVeryCompactHeight),
+                  ],
                 );
               },
             ),
+          ),
           ),
           if (_showCelebration) _buildCelebrationOverlay(),
         ],

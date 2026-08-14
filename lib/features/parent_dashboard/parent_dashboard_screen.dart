@@ -14,6 +14,7 @@ import '../../core/services/child_profile_service.dart';
 import '../../core/services/parent_pin_service.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/audio_service.dart';
+import '../../core/utils/responsive_layout.dart';
 import '../../shared/widgets/game_back_button.dart';
 import '../../shared/widgets/kid_loading_view.dart';
 
@@ -337,7 +338,8 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     return Scaffold(
       backgroundColor: AppColors.parentBackground,
       body: SafeArea(
-        child: _isLoading
+        child: AdaptiveContentWidth(
+          child: _isLoading
             ? KidLoadingView(
                 title: context.tr('parent_dashboard.title'),
                 subtitle: context.tr('parent_dashboard.loading_subtitle'),
@@ -347,6 +349,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
             : _isUnlocked
                 ? _buildDashboard()
                 : _buildPinGate(),
+        ),
       ),
     );
   }

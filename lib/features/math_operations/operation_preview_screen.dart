@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/router/app_router.dart';
+import '../../core/utils/responsive_layout.dart';
 
 class OperationPreviewScreen extends StatelessWidget {
   const OperationPreviewScreen({
@@ -66,8 +67,7 @@ class OperationPreviewScreen extends StatelessWidget {
             ),
           ),
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
+            child: AdaptiveGameFrame(
               child: Column(
                 children: [
                   Align(

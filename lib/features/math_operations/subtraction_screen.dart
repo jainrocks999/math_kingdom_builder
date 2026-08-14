@@ -13,6 +13,7 @@ import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/audio_service.dart';
+import '../../core/utils/responsive_layout.dart';
 import 'math_operation_theme.dart';
 import 'math_operation_widgets.dart';
 
@@ -303,8 +304,7 @@ class _SubtractionScreenState extends State<SubtractionScreen>
             ),
           ),
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            child: AdaptiveGameFrame(
               child: Column(
                 children: [
                   Row(

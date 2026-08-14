@@ -6,6 +6,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/reward_progress_service.dart';
+import '../../core/utils/responsive_layout.dart';
 
 class _OperationCardData {
   const _OperationCardData({
@@ -170,8 +171,8 @@ class _MathOperationsScreenState extends State<MathOperationsScreen>
             ),
           ),
           SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(18, 16, 18, 32),
+            child: AdaptiveContentWidth(
+              child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -375,6 +376,7 @@ class _MathOperationsScreenState extends State<MathOperationsScreen>
                   ),
                 ],
               ),
+            ),
             ),
           ),
         ],

@@ -13,6 +13,7 @@ import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/audio_service.dart';
+import '../../core/utils/responsive_layout.dart';
 import '../StartLearning/start_learning_next_action_button.dart';
 import '../count_objects/counting_themes.dart';
 import '../../shared/widgets/celebration_bear.dart';
@@ -368,13 +369,24 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
             ),
           ),
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            child: AdaptiveGameFrame(
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final isNarrowWidth = constraints.maxWidth < 360;
-                  final isVeryCompactHeight = constraints.maxHeight < 700;
-                  final isCompactHeight = constraints.maxHeight < 760;
+                  final isNarrowWidth = ResponsiveLayout.isCompactWidth(
+                    context,
+                    360,
+                    constraints: constraints,
+                  );
+                  final isVeryCompactHeight = ResponsiveLayout.isCompactHeight(
+                    context,
+                    700,
+                    constraints: constraints,
+                  );
+                  final isCompactHeight = ResponsiveLayout.isCompactHeight(
+                    context,
+                    760,
+                    constraints: constraints,
+                  );
                   final gap = isVeryCompactHeight
                       ? 8.0
                       : (isCompactHeight ? 10.0 : 14.0);

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
+import '../utils/responsive_layout.dart';
 
 class AppTypography {
   static double responsiveSize(
@@ -8,9 +9,30 @@ class AppTypography {
     required double max,
     double minWidth = 320,
     double maxWidth = 430,
+    double tabletMaxWidth = 1024,
+    double? tabletMax,
   }) {
-    final t = ((width - minWidth) / (maxWidth - minWidth)).clamp(0.0, 1.0);
-    return min + ((max - min) * t);
+    final onTablet = width >= ResponsiveLayout.tabletBreakpoint;
+    final upperWidth = onTablet ? tabletMaxWidth : maxWidth;
+    final upperSize = onTablet ? (tabletMax ?? max * 1.22) : max;
+    final lowerSize = onTablet ? min * 1.08 : min;
+    final t = ((width - minWidth) / (upperWidth - minWidth)).clamp(0.0, 1.0);
+    return lowerSize + ((upperSize - lowerSize) * t);
+  }
+
+  static double sizeForContext(
+    BuildContext context, {
+    required double phone,
+    required double tablet,
+  }) {
+    return ResponsiveLayout.isTablet(context) ? tablet : phone;
+  }
+
+  static TextStyle scaleForContext(BuildContext context, TextStyle style) {
+    if (!ResponsiveLayout.isTablet(context)) return style;
+    final size = style.fontSize;
+    if (size == null) return style;
+    return style.copyWith(fontSize: size * ResponsiveLayout.uiScale(context));
   }
 
   // Hero Text

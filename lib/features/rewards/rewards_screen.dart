@@ -12,6 +12,7 @@ import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
+import '../../core/utils/responsive_layout.dart';
 import '../../shared/widgets/celebration_bear.dart';
 import '../../shared/widgets/game_back_button.dart';
 import '../../shared/widgets/kid_loading_view.dart';
@@ -457,10 +458,16 @@ class _RewardsScreenState extends State<RewardsScreen>
             ),
           ),
           SafeArea(
-            child: LayoutBuilder(
+            child: AdaptiveContentWidth(
+              child: LayoutBuilder(
               builder: (context, constraints) {
-                final isCompact =
-                    constraints.maxWidth < 860 || constraints.maxHeight < 760;
+                final isCompact = !ResponsiveLayout.isTablet(context) &&
+                    (constraints.maxWidth < 860 ||
+                        ResponsiveLayout.isCompactHeight(
+                          context,
+                          760,
+                          constraints: constraints,
+                        ));
 
                 if (isCompact) {
                   return SingleChildScrollView(
@@ -526,6 +533,7 @@ class _RewardsScreenState extends State<RewardsScreen>
                   ),
                 );
               },
+            ),
             ),
           ),
         ],
