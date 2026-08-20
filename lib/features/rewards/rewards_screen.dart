@@ -16,6 +16,7 @@ import '../../core/utils/responsive_layout.dart';
 import '../../shared/widgets/celebration_bear.dart';
 import '../../shared/widgets/game_back_button.dart';
 import '../../shared/widgets/kid_loading_view.dart';
+import '../../shared/widgets/bottom_banner_layout.dart';
 
 enum _RewardCategory { stickers, badges, trophies }
 
@@ -421,9 +422,11 @@ class _RewardsScreenState extends State<RewardsScreen>
     if (_isLoadingProgress) {
       return Scaffold(
         backgroundColor: AppColors.background,
-        body: KidLoadingView(
-          title: context.tr('rewards.title'),
-          subtitle: context.tr('rewards.loading'),
+        body: ScreenBannerHost(
+          child: KidLoadingView(
+            title: context.tr('rewards.title'),
+            subtitle: context.tr('rewards.loading'),
+          ),
         ),
       );
     }
@@ -434,7 +437,8 @@ class _RewardsScreenState extends State<RewardsScreen>
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
+      body: ScreenBannerHost(
+        child: Stack(
         fit: StackFit.expand,
         children: [
           Positioned.fill(
@@ -537,6 +541,7 @@ class _RewardsScreenState extends State<RewardsScreen>
             ),
           ),
         ],
+      ),
       ),
     );
   }

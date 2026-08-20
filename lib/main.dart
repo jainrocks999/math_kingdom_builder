@@ -3,17 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import 'ads/ad_service.dart';
 import 'app.dart';
 import 'core/localization/app_locale_config.dart';
 import 'core/services/device_orientation_service.dart';
 import 'data/models/child_profile.dart';
 import 'data/models/kingdom_state.dart';
 import 'data/models/lesson_progress.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-    MobileAds.instance.initialize();
+  await AdService.instance.initialize();
   await EasyLocalization.ensureInitialized();
   await AppLocaleConfig.ensureLoaded();
   await Hive.initFlutter();

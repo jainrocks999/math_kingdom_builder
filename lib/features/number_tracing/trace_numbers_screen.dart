@@ -15,6 +15,7 @@ import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/audio_service.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../shared/widgets/celebration_bear.dart';
+import '../../shared/widgets/bottom_banner_layout.dart';
 
 class _TraceStrokeTemplate {
   const _TraceStrokeTemplate({
@@ -807,7 +808,8 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
+      body: ScreenBannerHost(
+        child: Stack(
         fit: StackFit.expand,
         children: [
           Positioned.fill(
@@ -869,6 +871,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
           ),
           ),
         ],
+      ),
       ),
     );
   }

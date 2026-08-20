@@ -34,9 +34,9 @@ class ResponsiveLayout {
 
   static EdgeInsets hubPadding(BuildContext context) {
     if (isTablet(context)) {
-      return const EdgeInsets.fromLTRB(28, 14, 28, 24);
+      return const EdgeInsets.fromLTRB(28, 14, 28, 18);
     }
-    return const EdgeInsets.fromLTRB(18, 12, 18, 28);
+    return const EdgeInsets.fromLTRB(18, 12, 18, 16);
   }
 
   static EdgeInsets gamePadding(BuildContext context) {
@@ -158,7 +158,8 @@ class AdaptiveGameFrame extends StatelessWidget {
         final contentWidth = math.min(constraints.maxWidth, maxWidth);
         final effectivePadding =
             padding ?? ResponsiveLayout.gamePadding(context);
-        final resolvedPadding = effectivePadding.resolve(Directionality.of(context));
+        final resolvedPadding =
+            effectivePadding.resolve(Directionality.of(context));
         final availableHeight = constraints.hasBoundedHeight
             ? math.max(0.0, constraints.maxHeight - resolvedPadding.vertical)
             : null;

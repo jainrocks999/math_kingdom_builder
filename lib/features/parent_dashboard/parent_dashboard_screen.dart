@@ -17,6 +17,7 @@ import '../../core/utils/audio_service.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../shared/widgets/game_back_button.dart';
 import '../../shared/widgets/kid_loading_view.dart';
+import '../../shared/widgets/bottom_banner_layout.dart';
 
 enum _MasteryLevel { exploring, practicing, confident }
 
@@ -337,7 +338,8 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.parentBackground,
-      body: SafeArea(
+      body: ScreenBannerHost(
+        child: SafeArea(
         child: AdaptiveContentWidth(
           child: _isLoading
             ? KidLoadingView(
@@ -350,6 +352,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
                 ? _buildDashboard()
                 : _buildPinGate(),
         ),
+      ),
       ),
     );
   }

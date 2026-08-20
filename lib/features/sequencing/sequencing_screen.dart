@@ -16,6 +16,7 @@ import '../../core/utils/audio_service.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../math_operations/math_operation_theme.dart';
 import '../math_operations/math_operation_widgets.dart';
+import '../../shared/widgets/bottom_banner_layout.dart';
 
 class _SequencingRound {
   const _SequencingRound({
@@ -385,7 +386,8 @@ class _SequencingScreenState extends State<SequencingScreen>
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
+      body: ScreenBannerHost(
+        child: Stack(
         fit: StackFit.expand,
         children: [
           Positioned.fill(
@@ -469,6 +471,7 @@ class _SequencingScreenState extends State<SequencingScreen>
               },
             ),
         ],
+      ),
       ),
     );
   }

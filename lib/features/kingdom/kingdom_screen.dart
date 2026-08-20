@@ -20,6 +20,7 @@ import 'widgets/kingdom_map_canvas.dart';
 import 'widgets/kingdom_shared_widgets.dart';
 import 'widgets/kingdom_top_bar.dart';
 import 'widgets/kingdom_unlock_dialog.dart';
+import '../../shared/widgets/bottom_banner_layout.dart';
 
 class KingdomScreen extends StatefulWidget {
   const KingdomScreen({super.key});
@@ -191,7 +192,8 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
+      body: ScreenBannerHost(
+        child: SafeArea(
         child: AdaptiveContentWidth(
           child: Stack(
           children: [
@@ -396,6 +398,7 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
           ],
         ),
         ),
+      ),
       ),
     );
   }

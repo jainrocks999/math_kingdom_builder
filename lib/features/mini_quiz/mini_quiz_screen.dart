@@ -21,6 +21,7 @@ import '../StartLearning/start_learning_next_action_button.dart';
 import '../count_objects/counting_themes.dart';
 import '../../shared/widgets/activity_completion_card.dart';
 import '../../shared/widgets/kid_loading_view.dart';
+import '../../shared/widgets/bottom_banner_layout.dart';
 
 enum _QuizMode {
   tapNumber,
@@ -721,7 +722,8 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
     if (_rounds.isEmpty) {
       return Scaffold(
         backgroundColor: AppColors.background,
-        body: Stack(
+        body: ScreenBannerHost(
+        child: Stack(
           fit: StackFit.expand,
           children: [
             Positioned.fill(
@@ -750,6 +752,7 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
             ),
           ],
         ),
+      ),
       );
     }
 
@@ -757,7 +760,8 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
+      body: ScreenBannerHost(
+        child: Stack(
         fit: StackFit.expand,
         children: [
           Positioned.fill(
@@ -833,6 +837,7 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
           ),
           if (_showCelebration) _buildCelebrationOverlay(),
         ],
+      ),
       ),
     );
   }

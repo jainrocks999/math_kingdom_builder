@@ -5,6 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
 import '../../core/router/app_router.dart';
 import '../../core/utils/responsive_layout.dart';
+import '../../shared/widgets/bottom_banner_layout.dart';
 
 class OperationPreviewScreen extends StatelessWidget {
   const OperationPreviewScreen({
@@ -44,7 +45,8 @@ class OperationPreviewScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
+      body: ScreenBannerHost(
+        child: Stack(
         fit: StackFit.expand,
         children: [
           Positioned.fill(
@@ -145,6 +147,7 @@ class OperationPreviewScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

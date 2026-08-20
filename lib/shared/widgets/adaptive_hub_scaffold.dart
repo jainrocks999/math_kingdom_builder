@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:math_kingdom_builder/ads/mobile_banner_ads.dart';
 
 import '../../core/utils/responsive_layout.dart';
+import 'bottom_banner_layout.dart';
 
 /// Background + safe area wrapper for hub screens (home, start learning, etc.).
 class AdaptiveHubScaffold extends StatelessWidget {
@@ -9,10 +9,12 @@ class AdaptiveHubScaffold extends StatelessWidget {
     super.key,
     required this.body,
     this.backgroundAsset = 'assets/images/backround.png',
+    this.showBanner = true,
   });
 
   final Widget body;
   final String backgroundAsset;
+  final bool showBanner;
 
   @override
   Widget build(BuildContext context) {
@@ -43,19 +45,16 @@ class AdaptiveHubScaffold extends StatelessWidget {
               ),
             ),
           ),
-          SafeArea(
-              child: Stack(children: [
-            AdaptiveContentWidth(
-              padding: ResponsiveLayout.hubPadding(context),
-              child: body,
+          ScreenBannerHost(
+            showBanner: showBanner,
+            child: SafeArea(
+              bottom: !showBanner,
+              child: AdaptiveContentWidth(
+                padding: ResponsiveLayout.hubPadding(context),
+                child: body,
+              ),
             ),
-           Positioned(
-        left: 0,
-        right: 0,
-        bottom: 0,
-        child: BannerAdWidget(),
-      ),
-          ])),
+          ),
         ],
       ),
     );

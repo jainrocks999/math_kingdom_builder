@@ -17,6 +17,7 @@ import '../../shared/helpers/feedback_helper.dart';
 import '../../shared/widgets/celebration_bear.dart';
 import '../StartLearning/start_learning_next_action_button.dart';
 import 'counting_themes.dart';
+import '../../shared/widgets/bottom_banner_layout.dart';
 
 class _RoundConfig {
   const _RoundConfig({
@@ -436,7 +437,8 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
+      body: ScreenBannerHost(
+        child: Stack(
         fit: StackFit.expand,
         children: [
           Positioned.fill(
@@ -477,6 +479,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
           ),
           if (_showCelebration) _buildCelebrationOverlay(),
         ],
+      ),
       ),
     );
   }

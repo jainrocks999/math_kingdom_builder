@@ -8,6 +8,7 @@ import 'core/router/app_router.dart';
 import 'core/services/app_session_service.dart';
 import 'core/services/audio_service.dart';
 import 'core/utils/responsive_layout.dart';
+import 'shared/widgets/bottom_banner_layout.dart';
 
 class OnboardingPageData {
   const OnboardingPageData({
@@ -132,7 +133,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
+      body: ScreenBannerHost(
+        child: Stack(
         fit: StackFit.expand,
         children: [
           Positioned.fill(
@@ -259,6 +261,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

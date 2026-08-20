@@ -14,6 +14,7 @@ import '../../core/utils/audio_service.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../StartLearning/start_learning_next_action_button.dart';
 import '../../shared/widgets/celebration_bear.dart';
+import '../../shared/widgets/bottom_banner_layout.dart';
 
 class FindCorrectNumberScreen extends StatefulWidget {
   const FindCorrectNumberScreen({super.key});
@@ -27,6 +28,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
     with TickerProviderStateMixin, RouteAware {
   static const _postSuccessPause = Duration(milliseconds: 250);
   static const _speechSettleDelay = Duration(milliseconds: 80);
+  static const _maxWrongAttemptsBeforeAdvance = 3;
 
   late final FlutterTts _flutterTts;
   late Future<void> _ttsReady;
@@ -149,10 +151,9 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
   }
 
   void _prepareQuestion({required bool autoSpeak}) {
-    final allIndices =
-        List<int>.generate(_numbers.length, (i) => i)
-          ..remove(_currentNumberIndex)
-          ..shuffle();
+    final allIndices = List<int>.generate(_numbers.length, (i) => i)
+      ..remove(_currentNumberIndex)
+      ..shuffle();
 
     final options = <int>[_currentNumberIndex, ...allIndices.take(3)]
       ..shuffle();
@@ -220,11 +221,24 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
     }
   }
 
+  void _advanceAfterTooManyWrongAnswers() {
+    final requestToken = ++_autoAdvanceToken;
+    Future<void>.delayed(const Duration(milliseconds: 850), () {
+      if (!mounted || requestToken != _autoAdvanceToken) return;
+      if (_currentRoundIndex == _numbers.length - 1) {
+        _showCompletionCelebration();
+      } else {
+        _nextNumber(force: true);
+      }
+    });
+  }
+
   void _handleAnswerTap(int optionIndex) {
     if (_showCelebration || _answerLocked) return;
 
     final chosenIndex = _currentOptions[optionIndex];
     final isCorrect = chosenIndex == _currentNumberIndex;
+    final wrongAttempts = _wrongAttemptsThisRound + 1;
 
     setState(() {
       _selectedOptionIndex = optionIndex;
@@ -246,15 +260,21 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
       HapticFeedback.lightImpact();
       _feedbackAudio.playWrongFeedback();
       _speakWrongAnswerHint();
-      final requestToken = ++_autoAdvanceToken;
-      Future<void>.delayed(const Duration(milliseconds: 650), () {
-        if (!mounted || requestToken != _autoAdvanceToken) return;
-        setState(() {
-          _wrongAttemptsThisRound++;
-          _selectedOptionIndex = null;
-          _answerLocked = false;
-        });
+      setState(() {
+        _wrongAttemptsThisRound = wrongAttempts;
       });
+      if (wrongAttempts >= _maxWrongAttemptsBeforeAdvance) {
+        _advanceAfterTooManyWrongAnswers();
+      } else {
+        final requestToken = ++_autoAdvanceToken;
+        Future<void>.delayed(const Duration(milliseconds: 650), () {
+          if (!mounted || requestToken != _autoAdvanceToken) return;
+          setState(() {
+            _selectedOptionIndex = null;
+            _answerLocked = false;
+          });
+        });
+      }
     }
   }
 
@@ -263,8 +283,8 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
     await _speakText(context.tr('learning.try_again_hear'));
   }
 
-  void _nextNumber() {
-    if (!_hasAnsweredCorrectly) return;
+  void _nextNumber({bool force = false}) {
+    if (!force && !_hasAnsweredCorrectly) return;
 
     if (_currentRoundIndex >= _numbers.length - 1) {
       _showCompletionCelebration();
@@ -373,69 +393,71 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          _buildBackground(),
-          SafeArea(
-            child: AdaptiveGameFrame(
-              child: LayoutBuilder(
-              builder: (context, constraints) {
-                final compactLayout = ResponsiveLayout.isCompactHeight(
-                  context,
-                  860,
-                  constraints: constraints,
-                );
+      body: ScreenBannerHost(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            _buildBackground(),
+            SafeArea(
+              child: AdaptiveGameFrame(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final compactLayout = ResponsiveLayout.isCompactHeight(
+                      context,
+                      860,
+                      constraints: constraints,
+                    );
 
-                if (compactLayout) {
-                  return SingleChildScrollView(
-                    child: ConstrainedBox(
-                      constraints:
-                          BoxConstraints(minHeight: constraints.maxHeight),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildTopBar(),
-                          const SizedBox(height: 12),
-                          _buildProgressCard(),
-                          const SizedBox(height: 12),
-                          _buildLearningCard(),
-                          const SizedBox(height: 12),
-                          _buildAnswerSection(),
-                          const SizedBox(height: 12),
-                          _buildNavigationControls(),
-                        ],
-                      ),
-                    ),
-                  );
-                }
+                    if (compactLayout) {
+                      return SingleChildScrollView(
+                        child: ConstrainedBox(
+                          constraints:
+                              BoxConstraints(minHeight: constraints.maxHeight),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildTopBar(),
+                              const SizedBox(height: 12),
+                              _buildProgressCard(),
+                              const SizedBox(height: 12),
+                              _buildLearningCard(),
+                              const SizedBox(height: 12),
+                              _buildAnswerSection(),
+                              const SizedBox(height: 12),
+                              _buildNavigationControls(),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildTopBar(),
-                    const SizedBox(height: 12),
-                    _buildProgressCard(),
-                    const SizedBox(height: 12),
-                    Expanded(
-                      child: Column(
-                        children: [
-                          Expanded(child: _buildLearningCard()),
-                          const SizedBox(height: 12),
-                          _buildAnswerSection(),
-                          const SizedBox(height: 12),
-                          _buildNavigationControls(),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              },
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildTopBar(),
+                        const SizedBox(height: 12),
+                        _buildProgressCard(),
+                        const SizedBox(height: 12),
+                        Expanded(
+                          child: Column(
+                            children: [
+                              Expanded(child: _buildLearningCard()),
+                              const SizedBox(height: 12),
+                              _buildAnswerSection(),
+                              const SizedBox(height: 12),
+                              _buildNavigationControls(),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
             ),
-          ),
-          ),
-          if (_showCelebration) _buildCelebrationOverlay(),
-        ],
+            if (_showCelebration) _buildCelebrationOverlay(),
+          ],
+        ),
       ),
     );
   }

@@ -16,6 +16,7 @@ import '../../core/utils/audio_service.dart';
 import '../../core/utils/responsive_layout.dart';
 import 'math_operation_theme.dart';
 import 'math_operation_widgets.dart';
+import '../../shared/widgets/bottom_banner_layout.dart';
 
 class _AdditionRound {
   const _AdditionRound({
@@ -281,7 +282,8 @@ class _AdditionScreenState extends State<AdditionScreen>
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
+      body: ScreenBannerHost(
+        child: Stack(
         fit: StackFit.expand,
         children: [
           Positioned.fill(
@@ -375,6 +377,7 @@ class _AdditionScreenState extends State<AdditionScreen>
               },
             ),
         ],
+      ),
       ),
     );
   }

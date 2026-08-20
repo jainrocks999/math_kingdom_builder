@@ -16,6 +16,7 @@ import '../../core/utils/responsive_layout.dart';
 import '../../core/utils/tts_voice_helper.dart';
 import '../../shared/widgets/game_back_button.dart';
 import '../../shared/widgets/kid_loading_view.dart';
+import '../../shared/widgets/bottom_banner_layout.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
@@ -249,7 +250,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.parentBackground,
-      body: SafeArea(
+      body: ScreenBannerHost(
+        child: SafeArea(
         child: AdaptiveContentWidth(
           child: _isLoading
             ? KidLoadingView(
@@ -330,6 +332,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
         ),
+      ),
       ),
     );
   }

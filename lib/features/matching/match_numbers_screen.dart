@@ -17,6 +17,7 @@ import '../../core/utils/responsive_layout.dart';
 import '../StartLearning/start_learning_next_action_button.dart';
 import '../count_objects/counting_themes.dart';
 import '../../shared/widgets/celebration_bear.dart';
+import '../../shared/widgets/bottom_banner_layout.dart';
 
 class _MatchRound {
   const _MatchRound({
@@ -346,7 +347,8 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
+      body: ScreenBannerHost(
+        child: Stack(
         fit: StackFit.expand,
         children: [
           Positioned.fill(
@@ -422,6 +424,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
           ),
           if (_showCelebration) _buildCelebrationOverlay(),
         ],
+      ),
       ),
     );
   }

@@ -22,6 +22,7 @@ import 'package:math_kingdom_builder/onboarding_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/number_recognition/number_recognition_screen.dart';
 import '../../splash_screen.dart';
+import '../../ads/ad_navigator_observer.dart';
 import 'screen_music_observer.dart';
 
 final RouteObserver<ModalRoute<dynamic>> appRouteObserver =
@@ -55,11 +56,17 @@ class AppRoutes {
   static const startlearning = '/start-learning';
 }
 
+final AdNavigatorObserver adNavigatorObserver = AdNavigatorObserver();
+
 GoRouter get appRouter => _appRouter;
 
 final GoRouter _appRouter = GoRouter(
   initialLocation: AppRoutes.splash,
-  observers: [appRouteObserver, screenMusicNavigatorObserver],
+  observers: [
+    appRouteObserver,
+    screenMusicNavigatorObserver,
+    adNavigatorObserver,
+  ],
   routes: [
     GoRoute(
       path: AppRoutes.splash,

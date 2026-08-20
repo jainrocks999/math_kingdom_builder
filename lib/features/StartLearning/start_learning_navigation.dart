@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/reward_progress_service.dart';
+import '../../ads/ad_service.dart';
 
 class StartLearningModuleSpec {
   const StartLearningModuleSpec({
@@ -89,11 +90,15 @@ abstract final class StartLearningNavigation {
     final nextRoute = await resolveNextRoute(currentRoute);
     if (!context.mounted || nextRoute == null) return;
 
-    if (nextRoute == AppRoutes.startlearning) {
-      context.pop();
-      return;
-    }
+    await AdService.instance.showInterstitialAfterActivity(() {
+      if (!context.mounted) return;
 
-    context.pushReplacement(nextRoute);
+      if (nextRoute == AppRoutes.startlearning) {
+        context.pop();
+        return;
+      }
+
+      context.pushReplacement(nextRoute);
+    });
   }
 }
