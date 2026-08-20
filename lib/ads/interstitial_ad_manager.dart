@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
+import 'ad_request_config.dart';
 import 'ad_units_ids.dart';
 
 class InterstitialAdManager {
@@ -18,7 +19,7 @@ class InterstitialAdManager {
 
     InterstitialAd.load(
       adUnitId: AdUnitIds.interstitialAdId,
-      request: const AdRequest(),
+      request: AdRequestConfig.request,
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
           _isLoading = false;

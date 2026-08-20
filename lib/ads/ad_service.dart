@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../core/router/app_router.dart';
+import 'ad_request_config.dart';
 import 'interstitial_ad_manager.dart';
 
 /// Central ad API — same pattern most production apps use:
@@ -42,6 +43,7 @@ class AdService {
 
   Future<void> initialize() async {
     await MobileAds.instance.initialize();
+    await AdRequestConfig.applyGlobalSettings();
     loadInterstitial();
   }
 
