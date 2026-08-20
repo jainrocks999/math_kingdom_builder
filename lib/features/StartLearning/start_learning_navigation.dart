@@ -68,6 +68,9 @@ abstract final class StartLearningNavigation {
     String currentRoute,
   ) async {
     final nextRoute = await resolveNextRoute(currentRoute);
+    if (!context.mounted) {
+      return '';
+    }
     if (nextRoute == null || nextRoute == AppRoutes.startlearning) {
       return context.tr('learning.back_to_menu');
     }

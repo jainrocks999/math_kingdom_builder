@@ -9,8 +9,7 @@ class AdRequestConfig {
   static Future<void> applyGlobalSettings() async {
     await MobileAds.instance.updateRequestConfiguration(
       RequestConfiguration(
-        tagForChildDirectedTreatment: TagForChildDirectedTreatment.yes,
-        tagForUnderAgeOfConsent: TagForUnderAgeOfConsent.yes,
+        ageRestrictedTreatment: AgeRestrictedTreatment.child,
         maxAdContentRating: MaxAdContentRating.g,
       ),
     );

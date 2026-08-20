@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
@@ -18,6 +20,7 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
   bool _isLoaded = false;
   AdSize? _adSize;
   double? _requestedWidth;
+  Orientation? _requestedOrientation;
   int _retryAttempt = 0;
   Timer? _retryTimer;
 
@@ -28,23 +31,36 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final width = MediaQuery.sizeOf(context).width;
-    if (_requestedWidth != width) {
+    final orientation = MediaQuery.orientationOf(context);
+    if (_requestedWidth != width || _requestedOrientation != orientation) {
       _requestedWidth = width;
+      _requestedOrientation = orientation;
       _retryAttempt = 0;
-      _loadAd(width);
+      _loadAd(width, orientation);
     }
   }
 
-  Future<void> _loadAd(double width) async {
+  Future<AdSize?> _resolveBannerSize(double width, Orientation orientation) async {
+    final adWidth = width.truncate();
+    if (adWidth <= 0) return null;
+
+    // iOS "large" adaptive banners are 320x100 and cover too much UI.
+    // Use the standard anchored adaptive size (~50px tall) on Apple devices.
+    if (!kIsWeb && Platform.isIOS) {
+      // Standard ~50px banner; large adaptive is 100px and blocks UI on iPhone/iPad.
+      // ignore: deprecated_member_use
+      return AdSize.getAnchoredAdaptiveBannerAdSize(orientation, adWidth);
+    }
+
+    return AdSize.getLargeAnchoredAdaptiveBannerAdSize(adWidth);
+  }
+
+  Future<void> _loadAd(double width, Orientation orientation) async {
     _retryTimer?.cancel();
 
-    final adWidth = width.truncate();
-    if (adWidth <= 0) return;
-
-    final size =
-        await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(adWidth);
+    final size = await _resolveBannerSize(width, orientation);
     if (!mounted || size == null) {
-      _scheduleRetry(width);
+      _scheduleRetry(width, orientation);
       return;
     }
 
@@ -78,7 +94,7 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
               _bannerAd = null;
               _isLoaded = false;
             });
-            _scheduleRetry(width);
+            _scheduleRetry(width, orientation);
           }
         },
       ),
@@ -88,11 +104,11 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
     await banner.load();
   }
 
-  void _scheduleRetry(double width) {
+  void _scheduleRetry(double width, Orientation orientation) {
     if (_retryAttempt >= _maxRetries || !mounted) return;
     _retryAttempt += 1;
     _retryTimer = Timer(_retryDelay, () {
-      if (mounted) _loadAd(width);
+      if (mounted) _loadAd(width, orientation);
     });
   }
 

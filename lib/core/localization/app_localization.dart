@@ -115,11 +115,13 @@ abstract final class AppLocalization {
     double normalRate = 0.42,
     double slowRate = 0.3,
   }) async {
+    final locale = ttsLocale(context);
+    final fallbackLocales = ttsFallbackLocales(context);
     await TtsVoiceHelper.configureSharedAudio(tts);
     await TtsVoiceHelper.applyPreferredVoice(
       tts,
-      locale: ttsLocale(context),
-      fallbackLocales: ttsFallbackLocales(context),
+      locale: locale,
+      fallbackLocales: fallbackLocales,
     );
     await TtsVoiceHelper.applyPreferredSpeechRate(
       tts,
