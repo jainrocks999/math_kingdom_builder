@@ -9,9 +9,11 @@ import 'core/services/device_orientation_service.dart';
 import 'data/models/child_profile.dart';
 import 'data/models/kingdom_state.dart';
 import 'data/models/lesson_progress.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+    MobileAds.instance.initialize();
   await EasyLocalization.ensureInitialized();
   await AppLocaleConfig.ensureLoaded();
   await Hive.initFlutter();

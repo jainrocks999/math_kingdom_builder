@@ -2,6 +2,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:math_kingdom_builder/ads/mobile_banner_ads.dart';
+import 'package:math_kingdom_builder/ads/interstitial_ad_manager.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
@@ -28,6 +30,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
   static const int _dailyGoal = 3;
   int _musicRequestToken = 0;
+  final InterstitialAdManager _adManager = InterstitialAdManager();
 
   RewardProgressSnapshot _progressSnapshot = const RewardProgressSnapshot(
     totalStars: 0,
@@ -39,8 +42,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
   DailyChallengeSnapshot? _dailyChallengeSnapshot;
 
   @override
-  void initState() {
+   void initState()async {
     super.initState();
+ _adManager.loadAd();
+ _adManager.showAd();
     _playHomeMusic();
     _loadProgress();
   }
