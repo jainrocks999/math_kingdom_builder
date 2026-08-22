@@ -7,6 +7,7 @@ class AdRequestConfig {
   static const AdRequest request = AdRequest();
 
   static Future<void> applyGlobalSettings() async {
+    return;
     await MobileAds.instance.updateRequestConfiguration(
       RequestConfiguration(
         ageRestrictedTreatment: AgeRestrictedTreatment.child,

@@ -56,6 +56,7 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
   }
 
   Future<void> _loadAd(double width, Orientation orientation) async {
+    return;
     _retryTimer?.cancel();
 
     final size = await _resolveBannerSize(width, orientation);
@@ -126,9 +127,9 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
     }
 
     return SizedBox(
-      width: _adSize!.width.toDouble(),
-      height: _adSize!.height.toDouble(),
-      child: AdWidget(ad: _bannerAd!),
+      width:0,// _adSize!.width.toDouble(),
+      height:0 //_adSize!.height.toDouble(),
+      // child: AdWidget(ad: _bannerAd!),
     );
   }
 }

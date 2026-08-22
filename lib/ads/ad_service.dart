@@ -63,6 +63,7 @@ class AdService {
   }
 
   void loadInterstitial() {
+    return;
     InterstitialAdManager.instance.preload();
   }
 
