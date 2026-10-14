@@ -15,10 +15,10 @@ class AdUnitIds {
   static const String _iosInterstitialId =
       'ca-app-pub-6121378252341914/3297333865';
 
-  static const String _testBannerId = 'ca-app-pub-3940256099942544/6300978111';
+  static const String _testBannerId = 'ca-app-pub-3940256099942544/6300978111testing';
 
   static const String _testInterstitialId =
-      'ca-app-pub-3940256099942544/1033173712';
+      'ca-app-pub-3940256099942544/1033173712testing';
 
   static String get bannerAdId {
     if (kDebugMode) {

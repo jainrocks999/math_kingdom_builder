@@ -293,19 +293,19 @@ class _MultiplicationScreenState extends State<MultiplicationScreen>
             child:
                 Image.asset('assets/images/backround.png', fit: BoxFit.cover),
           ),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.white.withValues(alpha: 0.26),
-                  _theme.softColor.withValues(alpha: 0.36),
-                  AppColors.background.withValues(alpha: 0.76),
-                ],
-              ),
-            ),
-          ),
+          // DecoratedBox(
+          //   decoration: BoxDecoration(
+          //     gradient: LinearGradient(
+          //       begin: Alignment.topCenter,
+          //       end: Alignment.bottomCenter,
+          //       colors: [
+          //         Colors.white.withValues(alpha: 0.26),
+          //         _theme.softColor.withValues(alpha: 0.36),
+          //         AppColors.background.withValues(alpha: 0.76),
+          //       ],
+          //     ),
+          //   ),
+          // ),
           SafeArea(
             child: AdaptiveGameFrame(
               child: Column(

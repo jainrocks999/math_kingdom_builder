@@ -416,88 +416,88 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
       backgroundColor: AppColors.background,
       body: ScreenBannerHost(
         child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Background image
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/backround.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-          // Animated tinted overlay that follows theme colour
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 500),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  _theme.color.withValues(alpha: 0.08),
-                  const Color(0xFFB8E4FF).withValues(alpha: 0.22),
-                  AppColors.background.withValues(alpha: 0.55),
-                  _theme.softColor.withValues(alpha: 0.35),
-                ],
+          fit: StackFit.expand,
+          children: [
+            // Background image
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/backround.png',
+                fit: BoxFit.cover,
               ),
             ),
-          ),
-          // Floating ambient bubbles
-          _AmbientBubbles(
-            controller: _backgroundController,
-            theme: _theme,
-          ),
-          // Main content
-          Positioned.fill(
-            child: SafeArea(
-              child: AdaptiveGameFrame(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isCompact = ResponsiveLayout.isCompactHeight(
-                      context,
-                      800,
-                      constraints: constraints,
-                    );
-                    final isVeryCompact = ResponsiveLayout.isCompactHeight(
-                      context,
-                      710,
-                      constraints: constraints,
-                    );
-                    final isNarrow = ResponsiveLayout.isCompactWidth(
-                      context,
-                      360,
-                      constraints: constraints,
-                    );
+            // Animated tinted overlay that follows theme colour
+            // AnimatedContainer(
+            //   duration: const Duration(milliseconds: 500),
+            //   decoration: BoxDecoration(
+            //     gradient: LinearGradient(
+            //       begin: Alignment.topLeft,
+            //       end: Alignment.bottomRight,
+            //       colors: [
+            //         _theme.color.withValues(alpha: 0.08),
+            //         const Color(0xFFB8E4FF).withValues(alpha: 0.22),
+            //         AppColors.background.withValues(alpha: 0.55),
+            //         _theme.softColor.withValues(alpha: 0.35),
+            //       ],
+            //     ),
+            //   ),
+            // ),
+            // Floating ambient bubbles
+            _AmbientBubbles(
+              controller: _backgroundController,
+              theme: _theme,
+            ),
+            // Main content
+            Positioned.fill(
+              child: SafeArea(
+                child: AdaptiveGameFrame(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isCompact = ResponsiveLayout.isCompactHeight(
+                        context,
+                        800,
+                        constraints: constraints,
+                      );
+                      final isVeryCompact = ResponsiveLayout.isCompactHeight(
+                        context,
+                        710,
+                        constraints: constraints,
+                      );
+                      final isNarrow = ResponsiveLayout.isCompactWidth(
+                        context,
+                        360,
+                        constraints: constraints,
+                      );
 
-                    return Column(
-                      children: [
-                        _buildHeader(isCompact: isCompact),
-                        SizedBox(height: isVeryCompact ? 8 : 12),
-                        _buildMainCard(
-                          isCompact: isCompact,
-                          isVeryCompact: isVeryCompact,
-                          isNarrow: isNarrow,
-                        ),
-                        SizedBox(height: isVeryCompact ? 8 : 10),
-                        Expanded(
-                          child: _buildCountCard(
+                      return Column(
+                        children: [
+                          _buildHeader(isCompact: isCompact),
+                          SizedBox(height: isVeryCompact ? 8 : 12),
+                          _buildMainCard(
                             isCompact: isCompact,
                             isVeryCompact: isVeryCompact,
+                            isNarrow: isNarrow,
                           ),
-                        ),
-                        SizedBox(height: isVeryCompact ? 8 : 10),
-                        _buildSelectorBar(isCompact: isCompact),
-                        SizedBox(height: isVeryCompact ? 6 : 8),
-                        _buildNavRow(isCompact: isCompact),
-                      ],
-                    );
-                  },
+                          SizedBox(height: isVeryCompact ? 8 : 10),
+                          Expanded(
+                            child: _buildCountCard(
+                              isCompact: isCompact,
+                              isVeryCompact: isVeryCompact,
+                            ),
+                          ),
+                          SizedBox(height: isVeryCompact ? 8 : 10),
+                          _buildSelectorBar(isCompact: isCompact),
+                          SizedBox(height: isVeryCompact ? 6 : 8),
+                          _buildNavRow(isCompact: isCompact),
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
-          ),
-          if (_showCompletionCelebration) _buildCompletionOverlay(),
-        ],
-      ),
+            if (_showCompletionCelebration) _buildCompletionOverlay(),
+          ],
+        ),
       ),
     );
   }
@@ -736,33 +736,35 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
   }) {
     return SizedBox(
       width: double.infinity,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            flex: isVeryCompact ? 7 : 8,
-            child: _buildNumberInfoCard(
-              isVeryCompact: isVeryCompact,
-              isCompact: isCompact,
-              isNarrow: isNarrow,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              flex: isVeryCompact ? 7 : 8,
+              child: _buildNumberInfoCard(
+                isVeryCompact: isVeryCompact,
+                isCompact: isCompact,
+                isNarrow: isNarrow,
+              ),
             ),
-          ),
-          SizedBox(width: isVeryCompact ? 8 : 12),
-          Expanded(
-            flex: isVeryCompact ? 5 : 4,
-            child: _BearBuddy(
-              assetPath: _bearAssetPath,
-              message: _bearMessage(context),
-              visualToken: _bearVisualToken,
-              color: _theme.color,
-              softColor: _theme.softColor,
-              floatController: _bearFloatController,
-              bounceController: _bearBounceController,
-              isCompact: isCompact,
-              isVeryCompact: isVeryCompact,
+            SizedBox(width: isVeryCompact ? 8 : 12),
+            Expanded(
+              flex: isVeryCompact ? 5 : 4,
+              child: _BearBuddy(
+                assetPath: _bearAssetPath,
+                message: _bearMessage(context),
+                visualToken: _bearVisualToken,
+                color: _theme.color,
+                softColor: _theme.softColor,
+                floatController: _bearFloatController,
+                bounceController: _bearBounceController,
+                isCompact: isCompact,
+                isVeryCompact: isVeryCompact,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -916,29 +918,35 @@ class _LearnNumbersScreenState extends State<LearnNumbersScreen>
         // Status hint
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 250),
-          child: Row(
-            key: ValueKey('speaking-$_isSpeaking'),
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (_isSpeaking) ...[
-                _PulsingDot(color: _theme.color),
-                const SizedBox(width: 5),
-              ],
-              Flexible(
-                child: Text(
-                  _isSpeaking
-                      ? context.tr('learning.listen')
-                      : context.tr('learning.learn_swipe_hint'),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: _isSpeaking ? _theme.color : const Color(0xFF8E9BAD),
-                    fontSize: isVeryCompact ? 10 : 11,
-                    fontWeight: FontWeight.w700,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: 30,
+            ),
+            child: Row(
+              key: ValueKey('speaking-$_isSpeaking'),
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_isSpeaking) ...[
+                  _PulsingDot(color: _theme.color),
+                  const SizedBox(width: 5),
+                ],
+                Flexible(
+                  child: Text(
+                    _isSpeaking
+                        ? context.tr('learning.listen')
+                        : context.tr('learning.learn_swipe_hint'),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.bodySmall.copyWith(
+                      color:
+                          _isSpeaking ? _theme.color : const Color(0xFF8E9BAD),
+                      fontSize: isVeryCompact ? 10 : 11,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],

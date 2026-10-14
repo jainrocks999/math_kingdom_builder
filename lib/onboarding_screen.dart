@@ -50,7 +50,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       description:
           'Solve cute math missions, win coins, and unlock castle parts one by one.',
       imageUrl: 'assets/images/onboarding/first.png',
-      emoji: '🏰',
+      emoji: '🔢',
       color: AppColors.primary,
       softColor: AppColors.primaryLight,
       shadowColor: Color(0xFFC94A18),
@@ -61,7 +61,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       description:
           'Count, trace, and listen through playful lessons made for little learners.',
       imageUrl: 'assets/images/onboarding/second.png',
-      emoji: '🎈',
+      emoji: '🃏',
       color: AppColors.secondary,
       softColor: AppColors.secondaryLight,
       shadowColor: Color(0xFF2AADA4),
@@ -135,172 +135,137 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       backgroundColor: AppColors.background,
       body: ScreenBannerHost(
         child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/backround.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  const Color(0xFF87CEEB).withValues(alpha: 0.55),
-                  const Color(0xFFB8E4FF).withValues(alpha: 0.30),
-                  AppColors.background.withValues(alpha: 0.25),
-                  AppColors.restBackground.withValues(alpha: 0.15),
-                ],
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/backround.png',
+                fit: BoxFit.cover,
               ),
             ),
-          ),
-          SafeArea(
-            child: AdaptiveContentWidth(
-              child: LayoutBuilder(
-              builder: (context, constraints) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                      Row(
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    const Color(0xFF87CEEB).withValues(alpha: 0.55),
+                    const Color(0xFFB8E4FF).withValues(alpha: 0.30),
+                    AppColors.background.withValues(alpha: 0.25),
+                    AppColors.restBackground.withValues(alpha: 0.15),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16,
+               vertical: 12,),
+              child: SafeArea(
+                child: AdaptiveContentWidth(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const _SunnyBadge(),
-                          const Spacer(),
-                          _SkipButton(
-                            onTap: _onSkipTap,
+                          Row(
+                            children: [
+                              const _SunnyBadge(),
+                              const Spacer(),
+                              _SkipButton(
+                                onTap: _onSkipTap,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 18),
+                          Text(
+                            context.tr('onboarding.hero_title'),
+                            style: AppTypography.hero.copyWith(
+                              fontSize: _heroTitleSize(constraints.maxWidth),
+                              color: const Color(0xFF1A1060),
+                              fontWeight: FontWeight.w800,
+                              shadows: [
+                                const Shadow(
+                                  color: Colors.white,
+                                  blurRadius: 0,
+                                  offset: Offset(0, 2),
+                                ),
+                                Shadow(
+                                  color: AppColors.parentAccent
+                                      .withValues(alpha: 0.3),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 6),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            context.tr('onboarding.hero_subtitle'),
+                            style: AppTypography.body.copyWith(
+                              color: const Color(0xFF4A5568),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              height: 1.4,
+                            ),
+                          ),
+                          // if (_currentPage == 0) ...[
+                          //   const _SwipeHintBanner(),
+                          //   const SizedBox(height: 10),
+                          // ],
+                          const SizedBox(height: 8),
+                          Expanded(
+                            child: PageView.builder(
+                              controller: _pageController,
+                              onPageChanged: (index) {
+                                setState(() {
+                                  _currentPage = index;
+                                });
+                              },
+                              itemCount: _pages.length,
+                              itemBuilder: (context, index) {
+                                return _OnboardingCard(
+                                  page: _pages[index],
+                                  step: index + 1,
+                                  maxContentWidth: constraints.maxWidth,
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          _OnboardingCtaButton(
+                            label: _currentPage == _pages.length - 1
+                                ? context.tr('onboarding.cta.start_learning')
+                                : context.tr('onboarding.cta.next_adventure'),
+                            subtitle: _currentPage == _pages.length - 1
+                                ? context.tr('onboarding.cta.start_subtitle')
+                                : context.tr('onboarding.cta.next_subtitle'),
+                            color: currentPage.color,
+                            shadowColor: currentPage.shadowColor,
+                            emoji: currentPage.emoji,
+                            onTap: _onNextTap,
+                          ),
+                          const SizedBox(height: 18),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(_pages.length, (index) {
+                              final page = _pages[index];
+                              final isActive = _currentPage == index;
+                              return _PageIndicatorDot(
+                                page: page,
+                                isActive: isActive,
+                                onTap: () => _goToPage(index),
+                              );
+                            }),
                           ),
                         ],
-                      ),
-                      const SizedBox(height: 18),
-                      Text(
-                        context.tr('onboarding.hero_title'),
-                        style: AppTypography.hero.copyWith(
-                          fontSize: _heroTitleSize(constraints.maxWidth),
-                          color: const Color(0xFF1A1060),
-                          fontWeight: FontWeight.w800,
-                          shadows: [
-                            const Shadow(
-                              color: Colors.white,
-                              blurRadius: 0,
-                              offset: Offset(0, 2),
-                            ),
-                            Shadow(
-                              color:
-                                  AppColors.parentAccent.withValues(alpha: 0.3),
-                              blurRadius: 20,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        context.tr('onboarding.hero_subtitle'),
-                        style: AppTypography.body.copyWith(
-                          color: const Color(0xFF4A5568),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          height: 1.4,
-                        ),
-                      ),
-                      if (_currentPage == 0) ...[
-                        const _SwipeHintBanner(),
-                        const SizedBox(height: 10),
-                      ],
-                      const SizedBox(height: 8),
-                      Expanded(
-                        child: PageView.builder(
-                          controller: _pageController,
-                          onPageChanged: (index) {
-                            setState(() {
-                              _currentPage = index;
-                            });
-                          },
-                          itemCount: _pages.length,
-                          itemBuilder: (context, index) {
-                            return _OnboardingCard(
-                              page: _pages[index],
-                              step: index + 1,
-                              maxContentWidth: constraints.maxWidth,
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      _OnboardingCtaButton(
-                        label: _currentPage == _pages.length - 1
-                            ? context.tr('onboarding.cta.start_learning')
-                            : context.tr('onboarding.cta.next_adventure'),
-                        subtitle: _currentPage == _pages.length - 1
-                            ? context.tr('onboarding.cta.start_subtitle')
-                            : context.tr('onboarding.cta.next_subtitle'),
-                        color: currentPage.color,
-                        shadowColor: currentPage.shadowColor,
-                        emoji: currentPage.emoji,
-                        onTap: _onNextTap,
-                      ),
-                      const SizedBox(height: 18),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(_pages.length, (index) {
-                          final page = _pages[index];
-                          final isActive = _currentPage == index;
-                          return _PageIndicatorDot(
-                            page: page,
-                            isActive: isActive,
-                            onTap: () => _goToPage(index),
-                          );
-                        }),
-                      ),
-                    ],
-                );
-              },
-            ),
-            ),
-          ),
-        ],
-      ),
-      ),
-    );
-  }
-}
-
-class _SwipeHintBanner extends StatelessWidget {
-  const _SwipeHintBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.88),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.secondary.withValues(alpha: 0.35),
-          width: 2,
-        ),
-      ),
-      child: Row(
-        children: [
-          Text(
-            '👉',
-            style: AppTypography.bodyStrong.copyWith(fontSize: 18),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              context.tr('onboarding.swipe_hint'),
-              style: AppTypography.bodySmall.copyWith(
-                color: const Color(0xFF4A5568),
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -330,14 +295,14 @@ class _PageIndicatorDot extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(999),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
             child: SizedBox(
-              width: 48,
-              height: 48,
+              width: 30,
+              height: 30,
               child: Center(
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 260),
-                  width: isActive ? 34 : 16,
+                  width: isActive ? 30 : 16,
                   height: 16,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -405,6 +370,7 @@ class _OnboardingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      margin: const EdgeInsets.all(7),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.surface.withValues(alpha: 0.96),
@@ -565,14 +531,14 @@ class _OnboardingCtaButton extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: 54,
-                height: 54,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.22),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
-                  child: Text(emoji, style: const TextStyle(fontSize: 26)),
+                  child: Text(emoji, style: const TextStyle(fontSize: 20)),
                 ),
               ),
               const SizedBox(width: 16),
@@ -630,7 +596,7 @@ class _SunnyBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.75),
         borderRadius: BorderRadius.circular(999),
@@ -642,14 +608,11 @@ class _SunnyBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 22,
-            height: 22,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFD700),
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFFFB800), width: 2),
-            ),
+          Image.asset(
+            'assets/images/e_logo.png',
+            width: 30,
+            height: 30,
+            fit: BoxFit.contain,
           ),
           const SizedBox(width: 8),
           Text(
@@ -683,12 +646,12 @@ class _SkipButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(999),
           child: Container(
             constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.82),
               borderRadius: BorderRadius.circular(999),
               border: Border.all(
-                color: const Color(0xFFFFC83C).withValues(alpha: 0.45),
+                color: const Color(0xFF4790E0).withValues(alpha: 0.45),
                 width: 2,
               ),
             ),

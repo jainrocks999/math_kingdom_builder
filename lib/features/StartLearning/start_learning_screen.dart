@@ -506,7 +506,8 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                   context.tr(
                     'learning.module_locked',
                     namedArgs: {
-                      'title': AppLocalization.moduleTitle(context, module.route),
+                      'title':
+                          AppLocalization.moduleTitle(context, module.route),
                     },
                   ),
                   textAlign: TextAlign.center,
@@ -805,536 +806,188 @@ class _StartLearningScreenState extends State<StartLearningScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-                  // Top Bar
-                  Row(
+            // Top Bar
+            Row(
+              children: [
+                _BackButton(
+                  onTap: _goBack,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _BackButton(
-                        onTap: _goBack,
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${context.tr('start_learning.title')} ${context.tr('start_learning.quest_emoji')}',
-                              style: AppTypography.hero.copyWith(
-                                fontSize: AppTypography.responsiveSize(
-                                  MediaQuery.sizeOf(context).width,
-                                  min: 27,
-                                  max: 32,
-                                ),
-                                color: const Color(0xFF1A1060),
-                                fontWeight: FontWeight.w800,
-                                shadows: [
-                                  const Shadow(
-                                    color: Colors.white,
-                                    blurRadius: 0,
-                                    offset: Offset(0, 2),
-                                  ),
-                                  Shadow(
-                                    color: AppColors.parentAccent
-                                        .withValues(alpha: 0.25),
-                                    blurRadius: 18,
-                                    offset: const Offset(0, 6),
-                                  ),
-                                ],
-                              ),
+                      Text(
+                        '${context.tr('start_learning.title')} ${context.tr('start_learning.quest_emoji')}',
+                        style: AppTypography.hero.copyWith(
+                          fontSize: AppTypography.responsiveSize(
+                            MediaQuery.sizeOf(context).width,
+                            min: 27,
+                            max: 32,
+                          ),
+                          color: const Color(0xFF1A1060),
+                          fontWeight: FontWeight.w800,
+                          shadows: [
+                            const Shadow(
+                              color: Colors.white,
+                              blurRadius: 0,
+                              offset: Offset(0, 2),
                             ),
-                            Text(
-                              activeProfile == null
-                                  ? context.tr('learning.choose_activity')
-                                  : context.tr(
-                                      'learning.playing_as',
-                                      namedArgs: {'name': activeProfile.name},
-                                    ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTypography.bodySmall.copyWith(
-                                color: const Color(0xFF5A6B7A),
-                                fontWeight: FontWeight.w700,
-                              ),
+                            Shadow(
+                              color: AppColors.parentAccent
+                                  .withValues(alpha: 0.25),
+                              blurRadius: 18,
+                              offset: const Offset(0, 6),
                             ),
                           ],
                         ),
                       ),
-                      if (activeProfile != null) ...[
-                        const SizedBox(width: 12),
-                        _ProfileButton(
-                          emoji: activeProfile.avatarPath,
-                          onTap: _showProfilePicker,
+                      Text(
+                        activeProfile == null
+                            ? context.tr('learning.choose_activity')
+                            : context.tr(
+                                'learning.playing_as',
+                                namedArgs: {'name': activeProfile.name},
+                              ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: const Color(0xFF5A6B7A),
+                          fontWeight: FontWeight.w700,
                         ),
-                      ],
+                      ),
                     ],
                   ),
-
-                  const SizedBox(height: 22),
-
-                  // Hero Banner
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          AppColors.parentAccent,
-                          AppColors.bridgeBlue,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(30),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.35),
-                        width: 2.5,
-                      ),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0xFF2A4AB8),
-                          offset: Offset(0, 6),
-                          blurRadius: 0,
-                        ),
-                        BoxShadow(
-                          color: Color(0x6650A0FF),
-                          offset: Offset(0, 12),
-                          blurRadius: 22,
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(20),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 72,
-                          height: 72,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.18),
-                            borderRadius: BorderRadius.circular(22),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.3),
-                              width: 2,
-                            ),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              '🌟',
-                              style: TextStyle(fontSize: 34),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFFE664)
-                                      .withValues(alpha: 0.92),
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                                child: Text(
-                                  context.tr('learning.today_mission'),
-                                  style: AppTypography.bodySmall.copyWith(
-                                    color: const Color(0xFF8A6000),
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: 0.4,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                context.tr(
-                                  'learning.stars_collected',
-                                  namedArgs: {
-                                    'count': '${_progressSnapshot.totalStars}',
-                                  },
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTypography.cardTitle.copyWith(
-                                  color: AppColors.surface,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                nextLockedModule == null
-                                    ? context.tr(
-                                        'learning.all_unlocked',
-                                        namedArgs: {
-                                          'count': '$completedActivities',
-                                        },
-                                      )
-                                    : context.tr(
-                                        'learning.unlock_next',
-                                        namedArgs: {
-                                          'count': '$completedActivities',
-                                          'title': AppLocalization.moduleTitle(
-                                            context,
-                                            nextLockedModule.route,
-                                          ),
-                                          'stars':
-                                              '${nextLockedModule.unlockStars}',
-                                        },
-                                      ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTypography.bodySmall.copyWith(
-                                  color:
-                                      AppColors.surface.withValues(alpha: 0.88),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                ),
+                if (activeProfile != null) ...[
+                  const SizedBox(width: 12),
+                  _ProfileButton(
+                    emoji: activeProfile.avatarPath,
+                    onTap: _showProfilePicker,
                   ),
+                ],
+              ],
+            ),
 
-                  const SizedBox(height: 26),
+            const SizedBox(height: 22),
 
+            // Hero Banner
+            Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [
+                    AppColors.parentAccent,
+                    AppColors.bridgeBlue,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.35),
+                  width: 2.5,
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0xFF2A4AB8),
+                    offset: Offset(0, 6),
+                    blurRadius: 0,
+                  ),
+                  BoxShadow(
+                    color: Color(0x6650A0FF),
+                    offset: Offset(0, 12),
+                    blurRadius: 22,
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
                   Container(
+                    width: 72,
+                    height: 72,
                     decoration: BoxDecoration(
-                      color: AppColors.surface.withValues(alpha: 0.95),
-                      borderRadius: BorderRadius.circular(26),
+                      color: Colors.white.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(22),
                       border: Border.all(
-                        color: AppColors.secondary.withValues(alpha: 0.3),
+                        color: Colors.white.withValues(alpha: 0.3),
                         width: 2,
                       ),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: AppColors.shadow,
-                          blurRadius: 16,
-                          offset: Offset(0, 8),
-                        ),
-                      ],
                     ),
-                    padding: const EdgeInsets.all(18),
+                    child: const Center(
+                      child: Text(
+                        '🌟',
+                        style: TextStyle(fontSize: 34),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
                     child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _MomentumStat(
-                                emoji: '🔥',
-                                label: context.tr(
-                                  'learning.streak_days',
-                                  namedArgs: {'count': '1'},
-                                ).replaceFirst('1 ', ''),
-                                value: _progressSnapshot.streakDays == 0
-                                    ? context.tr('learning.streak_start')
-                                    : context.tr(
-                                        'learning.streak_days',
-                                        namedArgs: {
-                                          'count':
-                                              '${_progressSnapshot.streakDays}',
-                                        },
-                                      ),
-                                color: AppColors.primary,
-                                softColor: AppColors.primaryLight,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _MomentumStat(
-                                emoji: '🎯',
-                                label: context.tr('common.today'),
-                                value: context.tr(
-                                  'learning.today_adventures',
-                                  namedArgs: {
-                                    'count':
-                                        '${_progressSnapshot.todayCompletions}',
-                                  },
-                                ),
-                                color: AppColors.secondary,
-                                softColor: AppColors.secondaryLight,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 14),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            context.tr('learning.daily_goal_progress'),
-                            style: AppTypography.bodyStrong.copyWith(
-                              color: const Color(0xFF1E1060),
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(999),
-                          child: LinearProgressIndicator(
-                            value: todayProgress,
-                            minHeight: 10,
-                            backgroundColor: AppColors.surfaceMuted,
-                            valueColor: const AlwaysStoppedAnimation<Color>(
-                              AppColors.secondary,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            _progressSnapshot.todayCompletions >= dailyGoal
-                                ? context.tr('learning.daily_goal_done')
-                                : context.plural(
-                                    'learning.daily_goal_remaining',
-                                    dailyGoal -
-                                        _progressSnapshot.todayCompletions,
-                                    namedArgs: {
-                                      'count': '${dailyGoal - _progressSnapshot.todayCompletions}',
-                                    },
-                                  ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTypography.bodySmall.copyWith(
-                              color: const Color(0xFF5A6B7A),
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 22),
-
-                  Text(
-                    context.tr('learning.learning_adventures'),
-                    style: AppTypography.h2.copyWith(
-                      color: const Color(0xFF2D1B69),
-                      fontWeight: FontWeight.w800,
-                      fontSize: 22,
-                    ),
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  Text(
-                    context.tr('learning.tap_activity_hint'),
-                    style: AppTypography.bodySmall.copyWith(
-                      color: const Color(0xFF5A6B7A),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-
-                  const SizedBox(height: 18),
-
-                  // Learning Cards
-                  ...StartLearningScreen._modules.map(
-                    (module) => Padding(
-                      padding: const EdgeInsets.only(bottom: 18),
-                      child: _LearningCard(
-                        module: module,
-                        isUnlocked: _isUnlocked(module),
-                        isRecommended:
-                            recommendedModule?.route == module.route,
-                        starsRemainingToUnlock: math.max(
-                          0,
-                          module.unlockStars - _progressSnapshot.totalStars,
-                        ),
-                        completionCount: module.progressId == null
-                            ? _progressSnapshot.claimedRewardIds.length
-                            : _progressSnapshot.completionCountFor(
-                                module.progressId!,
-                              ),
-                        earnedStars: module.progressId == null
-                            ? _progressSnapshot.totalStars
-                            : (_progressSnapshot.completionCountFor(
-                                  module.progressId!,
-                                ) *
-                                RewardProgressService.instance
-                                    .starsForModule(module.progressId!)),
-                        customProgressValue: module.progressId == null
-                            ? (_unlockedRewardsCount /
-                                    StartLearningScreen
-                                        ._rewardUnlockThresholds.length)
-                                .clamp(0, 1)
-                                .toDouble()
-                            : null,
-                        customStatusLabel: module.progressId == null
-                            ? _claimableRewardsCount > 0
-                                ? context.tr('learning.open_rewards')
-                                : claimedRewards == 0
-                                    ? context.tr('learning.open_rewards')
-                                    : context.tr(
-                                        'learning.claimed_rewards',
-                                        namedArgs: {
-                                          'count': '$claimedRewards',
-                                        },
-                                      )
-                            : null,
-                        metricLabel: module.progressId == null
-                            ? '$_unlockedRewardsCount/${StartLearningScreen._rewardUnlockThresholds.length}'
-                            : null,
-                        onTap: () => _handleModuleTap(module),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  Text(
-                    context.tr('learning.more_adventures'),
-                    style: AppTypography.h2.copyWith(
-                      color: const Color(0xFF2D1B69),
-                      fontWeight: FontWeight.w800,
-                      fontSize: 22,
-                    ),
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  Text(
-                    context.tr('learning.more_adventures_subtitle'),
-                    style: AppTypography.bodySmall.copyWith(
-                      color: const Color(0xFF5A6B7A),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    clipBehavior: Clip.none,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      children: [
-                        for (var i = 0;
-                            i < StartLearningScreen._moreAdventures.length;
-                            i++)
-                          Padding(
-                            padding: EdgeInsets.only(
-                              right: i ==
-                                      StartLearningScreen
-                                              ._moreAdventures.length -
-                                          1
-                                  ? 0
-                                  : 12,
-                            ),
-                            child: SizedBox(
-                              width: 170,
-                              child: _AdventureShortcutCard(
-                                adventure:
-                                    StartLearningScreen._moreAdventures[i],
-                                onTap: () => _openModule(
-                                  StartLearningScreen._moreAdventures[i].route,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  // Bottom Rewards Banner
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(28),
-                      border: Border.all(
-                        color: AppColors.premiumGold.withValues(alpha: 0.4),
-                        width: 2.5,
-                      ),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0xFFD4A000),
-                          offset: Offset(0, 6),
-                          blurRadius: 0,
-                        ),
-                        BoxShadow(
-                          color: Color(0x66FFD54F),
-                          offset: Offset(0, 10),
-                          blurRadius: 18,
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(20),
-                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          width: 64,
-                          height: 64,
-                          decoration: BoxDecoration(
-                            color: AppColors.premiumGoldLight,
-                            borderRadius: BorderRadius.circular(20),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
                           ),
-                          child: const Center(
-                            child: Text(
-                              '🏆',
-                              style: TextStyle(fontSize: 32),
+                          decoration: BoxDecoration(
+                            color:
+                                const Color(0xFFFFE664).withValues(alpha: 0.92),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            context.tr('learning.today_mission'),
+                            style: AppTypography.bodySmall.copyWith(
+                              color: const Color(0xFF8A6000),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.4,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                context.tr(
-                                  'learning.rewards_banner_stars',
+                        const SizedBox(height: 8),
+                        Text(
+                          context.tr(
+                            'learning.stars_collected',
+                            namedArgs: {
+                              'count': '${_progressSnapshot.totalStars}',
+                            },
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.cardTitle.copyWith(
+                            color: AppColors.surface,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          nextLockedModule == null
+                              ? context.tr(
+                                  'learning.all_unlocked',
                                   namedArgs: {
-                                    'count': '${_progressSnapshot.totalStars}',
+                                    'count': '$completedActivities',
+                                  },
+                                )
+                              : context.tr(
+                                  'learning.unlock_next',
+                                  namedArgs: {
+                                    'count': '$completedActivities',
+                                    'title': AppLocalization.moduleTitle(
+                                      context,
+                                      nextLockedModule.route,
+                                    ),
+                                    'stars': '${nextLockedModule.unlockStars}',
                                   },
                                 ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTypography.cardTitle.copyWith(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w800,
-                                  color: const Color(0xFF1E1060),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                _claimableRewardsCount > 0
-                                    ? context.tr('learning.open_rewards')
-                                    : context.tr(
-                                        'learning.rewards_banner_claimed',
-                                        namedArgs: {
-                                          'count': '$claimedRewards',
-                                        },
-                                      ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: const Color(0xFF7A849A),
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: List.generate(
-                                  math.min(5, _progressSnapshot.totalStars),
-                                  (index) => const Padding(
-                                    padding: EdgeInsets.only(right: 4),
-                                    child: Icon(
-                                      Icons.star_rounded,
-                                      color: AppColors.premiumGold,
-                                      size: 20,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.surface.withValues(alpha: 0.88),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
@@ -1343,6 +996,347 @@ class _StartLearningScreenState extends State<StartLearningScreen>
                 ],
               ),
             ),
+
+            const SizedBox(height: 26),
+
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface.withValues(alpha: 0.95),
+                borderRadius: BorderRadius.circular(26),
+                border: Border.all(
+                  color: AppColors.secondary.withValues(alpha: 0.3),
+                  width: 2,
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: AppColors.shadow,
+                    blurRadius: 16,
+                    offset: Offset(0, 8),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _MomentumStat(
+                          emoji: '🔥',
+                          label: context.tr(
+                            'learning.streak_days',
+                            namedArgs: {'count': '1'},
+                          ).replaceFirst('1 ', ''),
+                          value: _progressSnapshot.streakDays == 0
+                              ? context.tr('learning.streak_start')
+                              : context.tr(
+                                  'learning.streak_days',
+                                  namedArgs: {
+                                    'count': '${_progressSnapshot.streakDays}',
+                                  },
+                                ),
+                          color: AppColors.primary,
+                          softColor: AppColors.primaryLight,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _MomentumStat(
+                          emoji: '🎯',
+                          label: context.tr('common.today'),
+                          value: context.tr(
+                            'learning.today_adventures',
+                            namedArgs: {
+                              'count': '${_progressSnapshot.todayCompletions}',
+                            },
+                          ),
+                          color: AppColors.secondary,
+                          softColor: AppColors.secondaryLight,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      context.tr('learning.daily_goal_progress'),
+                      style: AppTypography.bodyStrong.copyWith(
+                        color: const Color(0xFF1E1060),
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: LinearProgressIndicator(
+                      value: todayProgress,
+                      minHeight: 10,
+                      backgroundColor: AppColors.surfaceMuted,
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppColors.secondary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      _progressSnapshot.todayCompletions >= dailyGoal
+                          ? context.tr('learning.daily_goal_done')
+                          : context.plural(
+                              'learning.daily_goal_remaining',
+                              dailyGoal - _progressSnapshot.todayCompletions,
+                              namedArgs: {
+                                'count':
+                                    '${dailyGoal - _progressSnapshot.todayCompletions}',
+                              },
+                            ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: const Color(0xFF5A6B7A),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 22),
+
+            Text(
+              context.tr('learning.learning_adventures'),
+              style: AppTypography.h2.copyWith(
+                color: const Color(0xFF2D1B69),
+                fontWeight: FontWeight.w800,
+                fontSize: 22,
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            Text(
+              context.tr('learning.tap_activity_hint'),
+              style: AppTypography.bodySmall.copyWith(
+                color: const Color(0xFF5A6B7A),
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+
+            const SizedBox(height: 18),
+
+            // Learning Cards
+            ...StartLearningScreen._modules.map(
+              (module) => Padding(
+                padding: const EdgeInsets.only(bottom: 18),
+                child: _LearningCard(
+                  module: module,
+                  isUnlocked: _isUnlocked(module),
+                  isRecommended: recommendedModule?.route == module.route,
+                  starsRemainingToUnlock: math.max(
+                    0,
+                    module.unlockStars - _progressSnapshot.totalStars,
+                  ),
+                  completionCount: module.progressId == null
+                      ? _progressSnapshot.claimedRewardIds.length
+                      : _progressSnapshot.completionCountFor(
+                          module.progressId!,
+                        ),
+                  earnedStars: module.progressId == null
+                      ? _progressSnapshot.totalStars
+                      : (_progressSnapshot.completionCountFor(
+                            module.progressId!,
+                          ) *
+                          RewardProgressService.instance
+                              .starsForModule(module.progressId!)),
+                  customProgressValue: module.progressId == null
+                      ? (_unlockedRewardsCount /
+                              StartLearningScreen
+                                  ._rewardUnlockThresholds.length)
+                          .clamp(0, 1)
+                          .toDouble()
+                      : null,
+                  customStatusLabel: module.progressId == null
+                      ? _claimableRewardsCount > 0
+                          ? context.tr('learning.open_rewards')
+                          : claimedRewards == 0
+                              ? context.tr('learning.open_rewards')
+                              : context.tr(
+                                  'learning.claimed_rewards',
+                                  namedArgs: {
+                                    'count': '$claimedRewards',
+                                  },
+                                )
+                      : null,
+                  metricLabel: module.progressId == null
+                      ? '$_unlockedRewardsCount/${StartLearningScreen._rewardUnlockThresholds.length}'
+                      : null,
+                  onTap: () => _handleModuleTap(module),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 4),
+
+            Text(
+              context.tr('learning.more_adventures'),
+              style: AppTypography.h2.copyWith(
+                color: const Color(0xFF2D1B69),
+                fontWeight: FontWeight.w800,
+                fontSize: 22,
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            Text(
+              context.tr('learning.more_adventures_subtitle'),
+              style: AppTypography.bodySmall.copyWith(
+                color: const Color(0xFF5A6B7A),
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              clipBehavior: Clip.none,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  for (var i = 0;
+                      i < StartLearningScreen._moreAdventures.length;
+                      i++)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        right:
+                            i == StartLearningScreen._moreAdventures.length - 1
+                                ? 0
+                                : 12,
+                      ),
+                      child: SizedBox(
+                        width: 170,
+                        child: _AdventureShortcutCard(
+                          adventure: StartLearningScreen._moreAdventures[i],
+                          onTap: () => _openModule(
+                            StartLearningScreen._moreAdventures[i].route,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // Bottom Rewards Banner
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(
+                  color: AppColors.premiumGold.withValues(alpha: 0.4),
+                  width: 2.5,
+                ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0xFFD4A000),
+                    offset: Offset(0, 6),
+                    blurRadius: 0,
+                  ),
+                  BoxShadow(
+                    color: Color(0x66FFD54F),
+                    offset: Offset(0, 10),
+                    blurRadius: 18,
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: AppColors.premiumGoldLight,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        '🏆',
+                        style: TextStyle(fontSize: 32),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.tr(
+                            'learning.rewards_banner_stars',
+                            namedArgs: {
+                              'count': '${_progressSnapshot.totalStars}',
+                            },
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.cardTitle.copyWith(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF1E1060),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _claimableRewardsCount > 0
+                              ? context.tr('learning.open_rewards')
+                              : context.tr(
+                                  'learning.rewards_banner_claimed',
+                                  namedArgs: {
+                                    'count': '$claimedRewards',
+                                  },
+                                ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: const Color(0xFF7A849A),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: List.generate(
+                            math.min(5, _progressSnapshot.totalStars),
+                            (index) => const Padding(
+                              padding: EdgeInsets.only(right: 4),
+                              child: Icon(
+                                Icons.star_rounded,
+                                color: AppColors.premiumGold,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -1557,7 +1551,8 @@ class _LearningCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 5),
                           Text(
-                            AppLocalization.moduleSubtitle(context, module.route),
+                            AppLocalization.moduleSubtitle(
+                                context, module.route),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.bodySmall.copyWith(

@@ -160,21 +160,22 @@ class _MathOperationsScreenState extends State<MathOperationsScreen>
               fit: BoxFit.cover,
             ),
           ),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  const Color(0xFF87CEEB).withValues(alpha: 0.55),
-                  AppColors.background.withValues(alpha: 0.35),
-                ],
-              ),
-            ),
-          ),
+          // DecoratedBox(
+          //   decoration: BoxDecoration(
+          //     gradient: LinearGradient(
+          //       begin: Alignment.topCenter,
+          //       end: Alignment.bottomCenter,
+          //       colors: [
+          //         const Color(0xFF87CEEB).withValues(alpha: 0.55),
+          //         AppColors.background.withValues(alpha: 0.35),
+          //       ],
+          //     ),
+          //   ),
+          // ),
           SafeArea(
             child: AdaptiveContentWidth(
               child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

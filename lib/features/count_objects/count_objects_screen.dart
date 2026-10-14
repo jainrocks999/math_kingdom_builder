@@ -447,19 +447,19 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
               fit: BoxFit.cover,
             ),
           ),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.white.withValues(alpha: 0.25),
-                  _theme.softColor.withValues(alpha: 0.35),
-                  AppColors.background.withValues(alpha: 0.72),
-                ],
-              ),
-            ),
-          ),
+          // DecoratedBox(
+          //   decoration: BoxDecoration(
+          //     gradient: LinearGradient(
+          //       begin: Alignment.topCenter,
+          //       end: Alignment.bottomCenter,
+          //       colors: [
+          //         Colors.white.withValues(alpha: 0.25),
+          //         _theme.softColor.withValues(alpha: 0.35),
+          //         AppColors.background.withValues(alpha: 0.72),
+          //       ],
+          //     ),
+          //   ),
+          // ),
           SafeArea(
             child: AdaptiveGameFrame(
               child: Column(
@@ -657,7 +657,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
-                    vertical: 7,
+                    vertical: 8,
                   ),
                   decoration: BoxDecoration(
                     color: _theme.softColor.withValues(alpha: 0.72),

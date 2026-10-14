@@ -261,7 +261,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 compact: true,
               )
             : SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.only(bottom: 8,right: 20,left: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

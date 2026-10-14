@@ -4,8 +4,8 @@
     "native_language_name": "English"
   },
   "app": {
-    "title": "Math Kingdom Builder",
-    "name": "Math Kingdom"
+    "title": "Eflash Apps Math Fun",
+    "name": "eflash Math Fun"
   },
   "common": {
     "skip": "Skip",
@@ -22,8 +22,8 @@
       "other": "{} stars"
     },
     "adventures": {
-      "one": "{} adventure",
-      "other": "{} adventures"
+      "one": "{} activity",
+      "other": "{} activities"
     },
     "seconds": {
       "one": "{} second",
@@ -32,46 +32,46 @@
   },
   "splash": {
     "skip": "Skip",
-    "title": "Math Kingdom"
+    "title": "Math Fun"
   },
   "onboarding": {
-    "hero_title": "Math Kingdom ✨",
-    "hero_subtitle": "Count, add, explore & grow your candy castle!",
-    "sunny_badge": "Sunny adventures!",
-    "swipe_hint": "Swipe the card to see more surprises!",
+    "hero_title": "Math Fun 🌈",
+    "hero_subtitle": "Count, trace & play with numbers!",
+    "sunny_badge": "FLASH APPS",
+    "swipe_hint": "Count, trace & play with numbers!",
     "current_step": "Current step",
     "go_to_step": "Go to step",
-    "magic_step": "Magic Step {step}",
+    "magic_step": "Card Step {step}",
     "skip_onboarding": "Skip onboarding",
     "cta": {
-      "start_learning": "Start Learning",
-      "next_adventure": "Next Adventure",
-      "start_subtitle": "Enter the home castle and begin",
-      "next_subtitle": "See the next magical surprise"
+      "start_learning": "Let's Play!",
+      "next_adventure": "Next",
+      "start_subtitle": "Start learning with us",
+      "next_subtitle": "Flip to the next card"
     },
     "pages": {
       "1": {
-        "title": "Build Your Dream Kingdom",
-        "description": "Solve cute math missions, win coins, and unlock castle parts one by one."
+        "title": "Say Hi and let’s explore together!",
+        "description": "Your number buddy is here to learn and play with you."
       },
       "2": {
-        "title": "Math Made Fun",
-        "description": "Count, trace, and listen through playful lessons made for little learners."
+        "title": "Flip, Listen & Learn",
+        "description": "Tap the flash cards to hear numbers and count fun objects."
       },
       "3": {
-        "title": "Collect Bright Rewards",
-        "description": "Earn stars, celebrate small wins, and show everyone your growing math kingdom."
+        "title": "Collect Star Cards",
+        "description": "Trace numbers, add, subtract and solve playful puzzles. Earn stars and fill your card collection!"
       }
     }
   },
   "home": {
-    "hero_title": "Math Kingdom ✨",
-    "hero_subtitle": "Count, add, explore & grow your candy castle!",
-    "sunny_badge": "Sunny adventures!",
+    "hero_title": "eMATH APP",
+    "hero_subtitle": "Count, trace & play with numbers!",
+    "sunny_badge": "FLASH APPS",
     "start_learning_title": "Start Learning!",
-    "start_learning_subtitle": "All math adventures in one place",
+    "start_learning_subtitle": "Flip cards & learn numbers",
     "choose_quest_title": "Choose a Quest 🗺️",
-    "choose_quest_subtitle": "Pick a mini adventure and keep the fun going!",
+    "choose_quest_subtitle": "Pick a deck and start flipping!",
     "coming_soon": "Soon",
     "featured_actions": {
       "start_learning": {
@@ -79,8 +79,8 @@
         "subtitle": "Number magic & playful counting"
       },
       "kingdom_map": {
-        "title": "Kingdom Map",
-        "subtitle": "Visit the castle & unlock places"
+        "title": "Journey Map",
+        "subtitle": "Every level takes you one step further"
       },
       "sticker_album": {
         "title": "Sticker Album",
@@ -164,8 +164,8 @@
       "start_today_challenge": "Start today's challenge",
       "play_challenge": "Play {title}",
       "adventures_done": {
-        "one": "{} adventure done",
-        "other": "{} adventures done"
+        "one": "{} activity done",
+        "other": "{} activities done"
       },
       "reward_added_today": "+{stars} stars have been added to today's adventure.",
       "reward_added_for_challenge": "+{stars} stars added for {title}.",

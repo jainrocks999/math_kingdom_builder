@@ -22,6 +22,7 @@ import '../count_objects/counting_themes.dart';
 import '../../shared/widgets/activity_completion_card.dart';
 import '../../shared/widgets/kid_loading_view.dart';
 import '../../shared/widgets/bottom_banner_layout.dart';
+import '../../shared/widgets/top_snackbar.dart';
 
 enum _QuizMode {
   tapNumber,
@@ -329,8 +330,27 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && _rounds.isNotEmpty) {
         _speakPrompt();
+        _updateDragHint();
       }
     });
+  }
+
+  /// Shows the "drag a card" hint as a top snackbar on drag rounds until the
+  /// child has dragged at least once; hides it on every other round.
+  void _updateDragHint() {
+    if (!mounted ||
+        _hasShownDragHint ||
+        _roundSolved ||
+        _currentRound.mode != _QuizMode.dragMatch) {
+      TopSnackbar.hide();
+      return;
+    }
+    TopSnackbar.show(
+      context,
+      message: context.tr('learning.quiz_drag_card_hint'),
+      color: _theme.color,
+      softColor: _theme.softColor,
+    );
   }
 
   Future<Map<String, dynamic>?> _loadQuizProgress() async {
@@ -503,6 +523,7 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
   void _markCorrect() {
     if (_answerLocked || _showCelebration) return;
 
+    TopSnackbar.hide();
     setState(() {
       _answerLocked = true;
       _roundSolved = true;
@@ -643,6 +664,7 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
       _prepareRound();
     });
     _speakPrompt();
+    _updateDragHint();
   }
 
   void _showFinalCelebration() {
@@ -663,6 +685,7 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
   }
 
   void _goBack() {
+    TopSnackbar.hide(immediate: true);
     _autoAdvanceToken++;
     _stopAllAudioAndSpeech(stopBackgroundMusic: false);
     context.pop();
@@ -704,11 +727,13 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
 
   @override
   void didPushNext() {
+    TopSnackbar.hide(immediate: true);
     _stopAllAudioAndSpeech();
   }
 
   @override
   void dispose() {
+    TopSnackbar.hide(immediate: true);
     appRouteObserver.unsubscribe(this);
     _autoAdvanceToken++;
     _stopAllAudioAndSpeech(stopBackgroundMusic: false);
@@ -732,19 +757,19 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
                 fit: BoxFit.cover,
               ),
             ),
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Color(0x40FFFFFF),
-                    Color(0x40FFF2D9),
-                    Color(0xB8F5F7FB),
-                  ],
-                ),
-              ),
-            ),
+            // const DecoratedBox(
+            //   decoration: BoxDecoration(
+            //     gradient: LinearGradient(
+            //       begin: Alignment.topCenter,
+            //       end: Alignment.bottomCenter,
+            //       colors: [
+            //         Color(0x40FFFFFF),
+            //         Color(0x40FFF2D9),
+            //         Color(0xB8F5F7FB),
+            //       ],
+            //     ),
+            //   ),
+            // ),
             KidLoadingView(
               title: context.tr('modules.mini_quiz.title'),
               subtitle: context.tr('learning.loading_subtitle'),
@@ -770,19 +795,19 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
               fit: BoxFit.cover,
             ),
           ),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.white.withValues(alpha: 0.25),
-                  _theme.softColor.withValues(alpha: 0.35),
-                  AppColors.background.withValues(alpha: 0.72),
-                ],
-              ),
-            ),
-          ),
+          // DecoratedBox(
+          //   decoration: BoxDecoration(
+          //     gradient: LinearGradient(
+          //       begin: Alignment.topCenter,
+          //       end: Alignment.bottomCenter,
+          //       colors: [
+          //         Colors.white.withValues(alpha: 0.25),
+          //         _theme.softColor.withValues(alpha: 0.35),
+          //         AppColors.background.withValues(alpha: 0.72),
+          //       ],
+          //     ),
+          //   ),
+          // ),
           SafeArea(
             child: AdaptiveGameFrame(
               child: LayoutBuilder(
@@ -1121,31 +1146,6 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
             ? (veryCompactHeight ? 110.0 : 128.0)
             : double.infinity;
 
-        final prompt = !_hasShownDragHint && !_roundSolved
-            ? Container(
-                width: double.infinity,
-                margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: _theme.softColor.withValues(alpha: 0.34),
-                  borderRadius: BorderRadius.circular(18),
-                  border:
-                      Border.all(color: _theme.color.withValues(alpha: 0.18)),
-                ),
-                child: Text(
-                  context.tr('learning.quiz_drag_card_hint'),
-                  textAlign: TextAlign.center,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: _theme.color,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              )
-            : const SizedBox.shrink();
-
         final upperSection = stackVertically
             ? Column(
                 children: [
@@ -1178,7 +1178,6 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
 
         return Column(
           children: [
-            prompt,
             if (stackVertically)
               Expanded(
                 child: Column(
@@ -1416,6 +1415,7 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
       ),
       onDragStarted: () {
         if (!_hasShownDragHint) {
+          TopSnackbar.hide();
           setState(() {
             _hasShownDragHint = true;
           });

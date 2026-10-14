@@ -155,10 +155,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
     );
   }
 
-  double _heroTitleSize(double maxWidth) {
-    return AppTypography.responsiveSize(maxWidth, min: 29, max: 36);
-  }
-
   double _featuredAspectRatio(BuildContext context) {
     return ResponsiveLayout.featuredCardAspectRatio(context);
   }
@@ -202,7 +198,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
     final header = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Expanded(child: _SunBadge()),
+        Expanded(
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: _RewardsButton(
+              onTap: () => _navigateWithoutHomeMusic(
+                AppRoutes.stickers,
+              ),
+            ),
+          ),
+        ),
         const SizedBox(width: 12),
         _HeaderActions(
           totalStars: _progressSnapshot.totalStars,
@@ -212,9 +217,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
           onSettingsTap: () => _navigateWithoutHomeMusic(
             AppRoutes.settings,
           ),
-          onRewardsTap: () => _navigateWithoutHomeMusic(
-            AppRoutes.stickers,
-          ),
         ),
       ],
     );
@@ -222,26 +224,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
     final heroSection = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          context.tr('home.hero_title'),
-          style: AppTypography.hero.copyWith(
-            fontSize: _heroTitleSize(constraints.maxWidth),
-            color: const Color(0xFF1A1060),
-            fontWeight: FontWeight.w800,
-            shadows: [
-              const Shadow(
-                color: Colors.white,
-                blurRadius: 0,
-                offset: Offset(0, 2),
-              ),
-              Shadow(
-                color: AppColors.parentAccent.withValues(alpha: 0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-        ),
+        _LogoSection(),
         const SizedBox(height: 5),
         Text(
           context.tr('home.hero_subtitle'),
@@ -253,11 +236,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
           ),
         ),
         const SizedBox(height: 20),
-        _PrimaryPlayButton(
-          onPressed: () => _navigateWithoutHomeMusic(
-            AppRoutes.startlearning,
-          ),
-        ),
       ],
     );
 
@@ -363,14 +341,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             header,
-            const SizedBox(height: 12),
+            const SizedBox(height: 15),
             heroSection,
-            const SizedBox(height: 20),
-            featuredGrid,
-            const SizedBox(height: 26),
-            questsSection,
-            const SizedBox(height: 24),
+            const SizedBox(height: 10),
             dailyBanner,
+            const SizedBox(height: 28),
+            featuredGrid,
+            const SizedBox(height: 20),
+            questsSection,
           ],
         ),
       ),
@@ -399,57 +377,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with RouteAware {
 
 // ─── Top Bar Widgets ──────────────────────────────────────────────────────────
 
-class _SunBadge extends StatelessWidget {
-  const _SunBadge();
+class _LogoSection extends StatelessWidget {
+  const _LogoSection();
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 170;
-        return Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: compact ? 10 : 14,
-            vertical: 8,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.75),
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: const Color(0xFFFFC83C).withValues(alpha: 0.6),
-              width: 2,
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/images/e_logo.png',
+              width: 30,
+              height: 30,
+              fit: BoxFit.contain,
             ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: compact ? 18 : 22,
-                height: compact ? 18 : 22,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFD700),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: const Color(0xFFFFB800),
-                    width: compact ? 1.6 : 2,
-                  ),
+            SizedBox(width: compact ? 6 : 8),
+            Flexible(
+              child: Text(
+                context.tr('home.hero_title'),
+                style: AppTypography.hero.copyWith(
+                  // fontSize: _heroTitleSize(constraints.maxWidth),
+                  fontSize: AppTypography.responsiveSize(constraints.maxWidth, min: 29, max: 36),
+                  color: const Color(0xFF1A1060),
+                  fontWeight: FontWeight.w800,
+                  shadows: [
+                    const Shadow(
+                      color: Colors.white,
+                      blurRadius: 0,
+                      offset: Offset(0, 2),
+                    ),
+                    Shadow(
+                      color: AppColors.parentAccent.withValues(alpha: 0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
               ),
-              SizedBox(width: compact ? 6 : 8),
-              Flexible(
-                child: Text(
-                  context.tr('home.sunny_badge'),
-                  style: AppTypography.bodyStrong.copyWith(
-                    color: const Color(0xFFC17A00),
-                    fontSize: compact ? 11 : 12,
-                    fontWeight: FontWeight.w800,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );
@@ -461,13 +430,11 @@ class _HeaderActions extends StatelessWidget {
     required this.totalStars,
     required this.onParentTap,
     required this.onSettingsTap,
-    required this.onRewardsTap,
   });
 
   final int totalStars;
   final VoidCallback onParentTap;
   final VoidCallback onSettingsTap;
-  final VoidCallback onRewardsTap;
 
   @override
   Widget build(BuildContext context) {
@@ -479,8 +446,6 @@ class _HeaderActions extends StatelessWidget {
         _SettingsButton(onTap: onSettingsTap),
         const SizedBox(width: 8),
         _ParentZoneButton(onTap: onParentTap),
-        const SizedBox(width: 8),
-        _RewardsButton(onTap: onRewardsTap),
       ],
     );
   }
@@ -639,114 +604,14 @@ class _RewardsButton extends StatelessWidget {
             color: Colors.white.withValues(alpha: 0.8),
             shape: BoxShape.circle,
             border: Border.all(
-              color: const Color(0xFFFFC83C).withValues(alpha: 0.5),
+              color: const Color(0xFFf6d843),
               width: 2,
             ),
           ),
           child: const Icon(
-            Icons.auto_awesome_rounded,
-            color: Color(0xFFD4A000),
-            size: 19,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Primary Play Button ──────────────────────────────────────────────────────
-
-class _PrimaryPlayButton extends StatelessWidget {
-  const _PrimaryPlayButton({required this.onPressed});
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(26),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppColors.primary, AppColors.pathwayPeach],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(26),
-            border: Border.all(
-              color: const Color(0xFFFF8C4A),
-              width: 3,
-            ),
-            boxShadow: const [
-              // "3D press" bottom shadow
-              BoxShadow(
-                color: Color(0xFFC94A18),
-                offset: Offset(0, 6),
-                blurRadius: 0,
-              ),
-              BoxShadow(
-                color: Color(0x66FF6B35),
-                offset: Offset(0, 10),
-                blurRadius: 18,
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-          child: Row(
-            children: [
-              Container(
-                width: 54,
-                height: 54,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.22),
-                  shape: BoxShape.circle,
-                ),
-                child: const Center(
-                  child: Text('🎮', style: TextStyle(fontSize: 26)),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      context.tr('home.start_learning_title'),
-                      style: AppTypography.buttonLarge.copyWith(
-                        color: AppColors.surface,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 22,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      context.tr('home.start_learning_subtitle'),
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.surface.withValues(alpha: 0.9),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.22),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 16,
-                  color: AppColors.surface,
-                ),
-              ),
-            ],
+            Icons.emoji_events,
+            color: Color(0xFFf6d843),
+            size: 26,
           ),
         ),
       ),
@@ -818,6 +683,8 @@ class _FeatureCard extends StatelessWidget {
               final subtitleFontSize = compactHeight ? 11.5 : 12.0;
               final topGap = compactHeight ? 8.0 : 10.0;
               final textGap = compactHeight ? 3.0 : 4.0;
+              final isOddCard =
+                  action.id == "start_learning" || action.id == 'sticker_album';
 
               return Padding(
                 padding: EdgeInsets.all(tilePadding),
@@ -830,6 +697,7 @@ class _FeatureCard extends StatelessWidget {
                         Container(
                           width: artworkSize,
                           height: artworkSize,
+                          padding: EdgeInsets.all(isOddCard ? 3 : 0),
                           decoration: BoxDecoration(
                             color: softColor.withValues(alpha: 0.6),
                             borderRadius: BorderRadius.circular(artworkRadius),
@@ -844,7 +712,7 @@ class _FeatureCard extends StatelessWidget {
                             ),
                             child: Image.asset(
                               action.imagePath,
-                              fit: BoxFit.cover,
+                              fit: BoxFit.contain,
                               errorBuilder: (context, error, stackTrace) {
                                 return Center(
                                   child: Icon(

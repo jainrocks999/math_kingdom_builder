@@ -20,13 +20,13 @@ class ScreenBannerHost extends StatelessWidget {
     return Column(
       children: [
         Expanded(child: child),
-        const SafeArea(
-          top: false,
-          minimum: EdgeInsets.zero,
-          child: Center(
-            child: BannerAdWidget(),
-          ),
-        ),
+        // const SafeArea(
+        //   top: false,
+        //   minimum: EdgeInsets.zero,
+        //   child: Center(
+        //     child: BannerAdWidget(),
+        //   ),
+        // ),
       ],
     );
   }

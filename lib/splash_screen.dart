@@ -31,7 +31,7 @@ class _SplashScreenState extends State<SplashScreen> {
     _prepareSessionState();
 
     _videoController = VideoPlayerController.asset(
-      'assets/videos/splash_video.mp4',
+      'assets/videos/splash.mp4',
     )..initialize().then((_) {
         if (!mounted) return;
         setState(() {});
@@ -121,7 +121,6 @@ class _SplashScreenState extends State<SplashScreen> {
               _buildVideo(),
             ] else
               Container(color: const Color(0xFF120D31)),
-            _buildFallbackLogo(initialized: initialized),
             if (_showSkip)
               Positioned(
                 top: 16,
@@ -135,49 +134,6 @@ class _SplashScreenState extends State<SplashScreen> {
                   child: Text(context.tr('splash.skip')),
                 ),
               ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFallbackLogo({required bool initialized}) {
-    return IgnorePointer(
-      ignoring: initialized,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 132,
-              height: 132,
-              decoration: BoxDecoration(
-                color:
-                    Colors.white.withValues(alpha: initialized ? 0.14 : 0.96),
-                borderRadius: BorderRadius.circular(32),
-              ),
-              padding: const EdgeInsets.all(18),
-              child: Image.asset(
-                'assets/logo/math_kingdom_app_logo (1).png',
-                fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => const Icon(
-                  Icons.castle_rounded,
-                  size: 72,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              context.tr('splash.title'),
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                  ),
-            ),
-            const SizedBox(height: 10),
-            if (!initialized)
-              const CircularProgressIndicator(color: Colors.white),
           ],
         ),
       ),

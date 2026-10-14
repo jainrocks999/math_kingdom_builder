@@ -1,7 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
 import '../../core/constants/app_colors.dart';
@@ -397,58 +396,42 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
         child: Stack(
           fit: StackFit.expand,
           children: [
-            _buildBackground(),
+            // _buildBackground(),
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/backround.png',
+                fit: BoxFit.cover,
+              ),
+            ),
             SafeArea(
               child: AdaptiveGameFrame(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    final compactLayout = ResponsiveLayout.isCompactHeight(
-                      context,
-                      860,
-                      constraints: constraints,
-                    );
-
-                    if (compactLayout) {
-                      return SingleChildScrollView(
-                        child: ConstrainedBox(
-                          constraints:
-                              BoxConstraints(minHeight: constraints.maxHeight),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildTopBar(),
-                              const SizedBox(height: 12),
-                              _buildProgressCard(),
-                              const SizedBox(height: 12),
-                              _buildLearningCard(),
-                              const SizedBox(height: 12),
-                              _buildAnswerSection(),
-                              const SizedBox(height: 12),
-                              _buildNavigationControls(),
-                            ],
-                          ),
-                        ),
-                      );
-                    }
+                    // Everything fits in the available height on every
+                    // device: fixed sections shrink on short screens and the
+                    // learning card takes whatever space is left.
+                    final height = constraints.maxHeight;
+                    final compact = height < 720;
+                    final tight = height < 600;
+                    final gap = tight ? 6.0 : (compact ? 8.0 : 12.0);
+                    final answerHeight =
+                        (height * (tight ? 0.30 : 0.32)).clamp(150.0, 300.0);
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildTopBar(),
-                        const SizedBox(height: 12),
-                        _buildProgressCard(),
-                        const SizedBox(height: 12),
-                        Expanded(
-                          child: Column(
-                            children: [
-                              Expanded(child: _buildLearningCard()),
-                              const SizedBox(height: 12),
-                              _buildAnswerSection(),
-                              const SizedBox(height: 12),
-                              _buildNavigationControls(),
-                            ],
-                          ),
+                        _buildTopBar(compact: compact),
+                        SizedBox(height: gap),
+                        _buildProgressCard(compact: compact),
+                        SizedBox(height: gap),
+                        Expanded(child: _buildLearningCard()),
+                        SizedBox(height: gap),
+                        SizedBox(
+                          height: answerHeight,
+                          child: _buildAnswerSection(compact: compact),
                         ),
+                        SizedBox(height: gap),
+                        _buildNavigationControls(compact: compact),
                       ],
                     );
                   },
@@ -462,39 +445,13 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
     );
   }
 
-  Widget _buildBackground() {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        SvgPicture.asset(
-          'assets/images/svg/math_kingdom_bg.svg',
-          fit: BoxFit.cover,
-          alignment: Alignment.topCenter,
-        ),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                AppColors.surface.withValues(alpha: 0.18),
-                _currentSystem.softColor.withValues(alpha: 0.24),
-                AppColors.overlayScrim.withValues(alpha: 0.14),
-                AppColors.restBackground.withValues(alpha: 0.2),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTopBar() {
+  Widget _buildTopBar({required bool compact}) {
     return Row(
       children: [
         _CircleButton(
           icon: Icons.arrow_back_ios_new_rounded,
           onTap: _goBackToLearningMenu,
+          size: compact ? 44 : 52,
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -508,18 +465,21 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
                 style: AppTypography.h2.copyWith(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w800,
-                  fontSize: 23,
+                  fontSize: compact ? 20 : 23,
                 ),
               ),
-              Text(
-                context.tr('learning.find_prompt'),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTypography.bodySmall.copyWith(
-                  color: _currentSystem.color,
-                  fontWeight: FontWeight.w700,
+              // The learning card already shows this prompt, so drop the
+              // duplicate on short screens.
+              if (!compact)
+                Text(
+                  context.tr('learning.find_prompt'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: _currentSystem.color,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
             ],
           ),
         ),
@@ -560,14 +520,17 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
     );
   }
 
-  Widget _buildProgressCard() {
+  Widget _buildProgressCard({required bool compact}) {
     final total = _numbers.length;
     final progress =
         (_currentRoundIndex + (_hasAnsweredCorrectly ? 1 : 0)) / total;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: compact ? 10 : 16,
+      ),
       decoration: BoxDecoration(
         color: AppColors.surface.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(24),
@@ -601,27 +564,30 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
-                _hasAnsweredCorrectly
-                    ? context.tr('learning.great_job')
-                    : context.tr('learning.find_prompt'),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTypography.bodySmall.copyWith(
-                  color: _hasAnsweredCorrectly
-                      ? AppColors.gardenGreen
-                      : AppColors.textSecondary,
-                  fontWeight: FontWeight.w700,
+              Flexible(
+                child: Text(
+                  _hasAnsweredCorrectly
+                      ? context.tr('learning.great_job')
+                      : context.tr('learning.find_prompt'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: _hasAnsweredCorrectly
+                        ? AppColors.gardenGreen
+                        : AppColors.textSecondary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: compact ? 6 : 10),
           ClipRRect(
             borderRadius: BorderRadius.circular(999),
             child: LinearProgressIndicator(
               value: progress,
-              minHeight: 10,
+              minHeight: compact ? 8 : 10,
               backgroundColor: AppColors.surfaceMuted,
               valueColor: AlwaysStoppedAnimation<Color>(_currentSystem.color),
             ),
@@ -958,16 +924,20 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
                     ],
                   ),
                   SizedBox(height: topSectionGap),
-                  Text(
-                    context.tr('learning.find_prompt'),
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w700,
-                      fontSize: instructionFontSize,
+                  // The badge above already shows this prompt; skip the
+                  // repeat when the card is short.
+                  if (!veryTightLayout) ...[
+                    Text(
+                      context.tr('learning.find_prompt'),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: instructionFontSize,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: helperGap),
+                    SizedBox(height: helperGap),
+                  ],
                   Text(
                     _isSpeaking
                         ? context.tr('learning.listen')
@@ -980,17 +950,17 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
                   SizedBox(height: resultGap),
                   if (hasBoundedHeight)
                     Expanded(
-                      child: Center(child: resultWidget),
+                      child: Center(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: resultWidget,
+                        ),
+                      ),
                     )
                   else
                     Center(child: resultWidget),
                   SizedBox(height: footerGap),
-                  if (hasBoundedHeight)
-                    Flexible(
-                      child: Center(child: footerWidget),
-                    )
-                  else
-                    footerWidget,
+                  footerWidget,
                 ],
               ),
             );
@@ -1002,10 +972,32 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
     );
   }
 
-  Widget _buildAnswerSection() {
+  Widget _buildAnswerSection({required bool compact}) {
+    final spacing = compact ? 8.0 : 12.0;
+    final rows = <Widget>[];
+    for (var i = 0; i < _currentOptions.length; i += 2) {
+      if (i > 0) rows.add(SizedBox(height: spacing));
+      rows.add(
+        Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: _buildAnswerCard(i)),
+              SizedBox(width: spacing),
+              Expanded(
+                child: i + 1 < _currentOptions.length
+                    ? _buildAnswerCard(i + 1)
+                    : const SizedBox.shrink(),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(compact ? 10 : 16),
       decoration: BoxDecoration(
         color: AppColors.surface.withValues(alpha: 0.94),
         borderRadius: BorderRadius.circular(28),
@@ -1020,37 +1012,17 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            context.tr('learning.find_prompt'),
-            style: AppTypography.bodyStrong.copyWith(
-              color: AppColors.textPrimary,
-              fontSize: 16,
+          if (!compact) ...[
+            Text(
+              context.tr('learning.find_prompt'),
+              style: AppTypography.bodyStrong.copyWith(
+                color: AppColors.textPrimary,
+                fontSize: 16,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isNarrow = ResponsiveLayout.isCompactWidth(
-                context,
-                360,
-                constraints: constraints,
-              );
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _currentOptions.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  mainAxisExtent: isNarrow ? 92 : 104,
-                ),
-                itemBuilder: (context, index) {
-                  return _buildAnswerCard(index);
-                },
-              );
-            },
-          ),
+            const SizedBox(height: 12),
+          ],
+          Expanded(child: Column(children: rows)),
         ],
       ),
     );
@@ -1092,7 +1064,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
         borderRadius: BorderRadius.circular(24),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          constraints: const BoxConstraints(minHeight: 72),
+          padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
             color: backgroundColor,
             borderRadius: BorderRadius.circular(24),
@@ -1107,34 +1079,38 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
               ),
             ],
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                number.digit,
-                style: AppTypography.h1.copyWith(
-                  color: textColor,
-                  fontSize: 34,
-                  fontWeight: FontWeight.w800,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  number.digit,
+                  style: AppTypography.h1.copyWith(
+                    color: textColor,
+                    fontSize: 34,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                number.word,
-                style: AppTypography.bodySmall.copyWith(
-                  color: textColor.withValues(alpha: 0.8),
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
+                const SizedBox(height: 4),
+                Text(
+                  number.word,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: textColor.withValues(alpha: 0.8),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildNavigationControls() {
+  Widget _buildNavigationControls({required bool compact}) {
+    final verticalPadding = compact ? 11.0 : 16.0;
     return Row(
       children: [
         Expanded(
@@ -1145,6 +1121,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
             backgroundColor: AppColors.surface.withValues(alpha: 0.92),
             foregroundColor: AppColors.textSecondary,
             borderColor: AppColors.outlineStrong,
+            verticalPadding: verticalPadding,
           ),
         ),
         const SizedBox(width: 12),
@@ -1156,6 +1133,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
             backgroundColor: _currentSystem.color,
             foregroundColor: AppColors.surface,
             borderColor: _currentSystem.shadowColor,
+            verticalPadding: verticalPadding,
           ),
         ),
       ],
@@ -1311,10 +1289,15 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
 }
 
 class _CircleButton extends StatelessWidget {
-  const _CircleButton({required this.icon, required this.onTap});
+  const _CircleButton({
+    required this.icon,
+    required this.onTap,
+    this.size = 52,
+  });
 
   final IconData icon;
   final VoidCallback onTap;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
@@ -1324,8 +1307,8 @@ class _CircleButton extends StatelessWidget {
         onTap: onTap,
         customBorder: const CircleBorder(),
         child: Container(
-          width: 52,
-          height: 52,
+          width: size,
+          height: size,
           decoration: BoxDecoration(
             color: AppColors.surface.withValues(alpha: 0.92),
             shape: BoxShape.circle,
@@ -1353,6 +1336,7 @@ class _ActionButton extends StatelessWidget {
     required this.backgroundColor,
     required this.foregroundColor,
     required this.borderColor,
+    this.verticalPadding = 16,
   });
 
   final String label;
@@ -1361,6 +1345,7 @@ class _ActionButton extends StatelessWidget {
   final Color backgroundColor;
   final Color foregroundColor;
   final Color borderColor;
+  final double verticalPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -1373,7 +1358,10 @@ class _ActionButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+          padding: EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: verticalPadding,
+          ),
           decoration: BoxDecoration(
             color: backgroundColor,
             borderRadius: BorderRadius.circular(999),

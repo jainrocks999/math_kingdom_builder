@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
-import 'package:math_kingdom_builder/app.dart';
-import 'package:math_kingdom_builder/data/models/child_profile.dart';
-import 'package:math_kingdom_builder/data/models/kingdom_state.dart';
-import 'package:math_kingdom_builder/data/models/lesson_progress.dart';
+import 'package:emath_app/app.dart';
+import 'package:emath_app/data/models/child_profile.dart';
+import 'package:emath_app/data/models/kingdom_state.dart';
+import 'package:emath_app/data/models/lesson_progress.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

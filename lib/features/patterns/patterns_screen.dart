@@ -17,6 +17,7 @@ import '../../core/utils/responsive_layout.dart';
 import '../math_operations/math_operation_theme.dart';
 import '../math_operations/math_operation_widgets.dart';
 import '../../shared/widgets/bottom_banner_layout.dart';
+import '../../shared/widgets/top_snackbar.dart';
 
 enum _PatternKind { ab, abb }
 
@@ -78,7 +79,7 @@ class _PatternsScreenState extends State<PatternsScreen>
     ),
     _PatternPiece(
       name: 'gold triangle',
-      color: AppColors.warning,
+      color: AppColors.premiumGold,
       shape: _PatternShape.triangle,
     ),
   ];
@@ -103,7 +104,6 @@ class _PatternsScreenState extends State<PatternsScreen>
   _PatternRound get _round => _rounds[_roundIndex];
   MathOperationTheme get _theme => mathOperationThemes[_round.themeIndex];
   int get _correctIndex => _round.correctIndex;
-  bool get _showHint => _wrongAttempts >= 2;
 
   String get _spokenPatternPrompt {
     final spokenPieces = _round.sequence
@@ -263,7 +263,18 @@ class _PatternsScreenState extends State<PatternsScreen>
     _feedbackAudio.playWrongFeedback();
     if (mounted) {
       setState(() => _wrongAttempts++);
+      if (_wrongAttempts >= 2) _showHint();
     }
+  }
+
+  void _showHint() {
+    TopSnackbar.show(
+      context,
+      message: context.tr('learning.patterns_prompt'),
+      color: const Color(0xFF6E5600),
+      softColor: const Color(0xFFFFF7D6),
+      icon: Icons.lightbulb_rounded,
+    );
   }
 
   void _placePiece(int pieceIndex) {
@@ -275,6 +286,7 @@ class _PatternsScreenState extends State<PatternsScreen>
     }
 
     HapticFeedback.mediumImpact();
+    TopSnackbar.hide();
     setState(() {
       _filledIndex = pieceIndex;
       _roundSolved = true;
@@ -312,6 +324,7 @@ class _PatternsScreenState extends State<PatternsScreen>
   }
 
   void _goBack() {
+    TopSnackbar.hide(immediate: true);
     _autoAdvanceToken++;
     AppAudioService.instance.stopCelebrationMusic();
     _musicRequestToken++;
@@ -341,10 +354,14 @@ class _PatternsScreenState extends State<PatternsScreen>
   }
 
   @override
-  void didPushNext() => _stopScreenMusic();
+  void didPushNext() {
+    TopSnackbar.hide(immediate: true);
+    _stopScreenMusic();
+  }
 
   @override
   void dispose() {
+    TopSnackbar.hide(immediate: true);
     appRouteObserver.unsubscribe(this);
     _musicRequestToken++;
     _autoAdvanceToken++;
@@ -368,19 +385,19 @@ class _PatternsScreenState extends State<PatternsScreen>
             child:
                 Image.asset('assets/images/backround.png', fit: BoxFit.cover),
           ),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.white.withValues(alpha: 0.26),
-                  _theme.softColor.withValues(alpha: 0.36),
-                  AppColors.background.withValues(alpha: 0.76),
-                ],
-              ),
-            ),
-          ),
+          // DecoratedBox(
+          //   decoration: BoxDecoration(
+          //     gradient: LinearGradient(
+          //       begin: Alignment.topCenter,
+          //       end: Alignment.bottomCenter,
+          //       colors: [
+          //         Colors.white.withValues(alpha: 0.26),
+          //         _theme.softColor.withValues(alpha: 0.36),
+          //         AppColors.background.withValues(alpha: 0.76),
+          //       ],
+          //     ),
+          //   ),
+          // ),
           SafeArea(
             child: AdaptiveGameFrame(
               child: Column(
@@ -482,10 +499,6 @@ class _PatternsScreenState extends State<PatternsScreen>
                   ),
                 ),
               ),
-              if (_showHint) ...[
-                const SizedBox(height: 10),
-                _buildHintCard(),
-              ],
               const SizedBox(height: 14),
               _optionsTray(),
             ],
@@ -592,44 +605,6 @@ class _PatternsScreenState extends State<PatternsScreen>
                   ),
                 ),
               ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHintCard() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF7D6),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFF2D468), width: 2),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x26F2D468),
-            offset: Offset(0, 5),
-            blurRadius: 0,
-          ),
-          BoxShadow(
-            color: Color(0x14F2D468),
-            offset: Offset(0, 10),
-            blurRadius: 14,
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Text('💡', style: TextStyle(fontSize: 20)),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              context.tr('learning.patterns_prompt'),
-              style: AppTypography.body.copyWith(
-                color: const Color(0xFF6E5600),
-                fontWeight: FontWeight.w600,
-              ),
             ),
           ),
         ],

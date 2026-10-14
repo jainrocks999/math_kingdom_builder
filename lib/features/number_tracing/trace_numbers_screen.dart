@@ -447,7 +447,8 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
     final strokeHint = includeStrokeHint
         ? ' ${context.tr('trace_strokes.${_lesson.strokes[_currentStrokeIndex].promptKey}')}'
         : '';
-    await _speakText('${context.tr('learning.trace_prompt')} $word.$strokeHint');
+    await _speakText(
+        '${context.tr('learning.trace_prompt')} $word.$strokeHint');
   }
 
   Future<void> _speakSuccess() async {
@@ -810,68 +811,55 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
       backgroundColor: AppColors.background,
       body: ScreenBannerHost(
         child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/backround.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.white.withValues(alpha: 0.30),
-                  _lesson.softColor.withValues(alpha: 0.28),
-                  AppColors.background.withValues(alpha: 0.72),
-                ],
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/backround.png',
+                fit: BoxFit.cover,
               ),
             ),
-          ),
-          SafeArea(
-            child: AdaptiveGameFrame(
-              child: LayoutBuilder(
-              builder: (context, constraints) {
-                final isCompact = ResponsiveLayout.isCompactHeight(
-                  context,
-                  780,
-                  constraints: constraints,
-                );
-                final boardSize = math.min(
-                  constraints.maxWidth,
-                  math.max(
-                    isCompact ? 308.0 : 340.0,
-                    constraints.maxHeight * (isCompact ? 0.52 : 0.58),
-                  ),
-                );
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildTopBar(
+            SafeArea(
+              child: AdaptiveGameFrame(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isCompact = ResponsiveLayout.isCompactHeight(
                       context,
-                      isCompact: isCompact,
-                      lessonProgress: lessonProgress,
-                      earnedStars: earnedStars,
-                    ),
-                    SizedBox(height: isCompact ? 6 : 8),
-                    Expanded(
-                      child: _buildTracingCard(
-                        boardSize,
-                        isCompact: isCompact,
+                      780,
+                      constraints: constraints,
+                    );
+                    final boardSize = math.min(
+                      constraints.maxWidth,
+                      math.max(
+                        isCompact ? 308.0 : 340.0,
+                        constraints.maxHeight * (isCompact ? 0.52 : 0.58),
                       ),
-                    ),
-                  ],
-                );
-              },
+                    );
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildTopBar(
+                          context,
+                          isCompact: isCompact,
+                          lessonProgress: lessonProgress,
+                          earnedStars: earnedStars,
+                        ),
+                        SizedBox(height: isCompact ? 6 : 8),
+                        Expanded(
+                          child: _buildTracingCard(
+                            boardSize,
+                            isCompact: isCompact,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
             ),
-          ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -1115,6 +1103,40 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
                   ],
                 ),
               ),
+              SizedBox(height: isCompact ? 8 : 10),
+              Expanded(
+                child: Center(
+                  child: SizedBox(
+                    width: visualBoardSize,
+                    height: visualBoardSize,
+                    child: _buildTracingBoard(Size.square(visualBoardSize)),
+                  ),
+                ),
+              ),
+              SizedBox(height: isCompact ? 8 : 10),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 240),
+                child: Container(
+                  key: ValueKey(_statusText),
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _lesson.softColor.withValues(alpha: 0.75),
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Text(
+                    _statusText,
+                    style: AppTypography.body.copyWith(
+                      color: const Color(0xFF4E5868),
+                      fontSize: isCompact ? 13 : 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
               if (_showGhostHint) ...[
                 SizedBox(height: isCompact ? 8 : 10),
                 Container(
@@ -1152,40 +1174,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
                   ),
                 ),
               ],
-              SizedBox(height: isCompact ? 8 : 10),
-              Expanded(
-                child: Center(
-                  child: SizedBox(
-                    width: visualBoardSize,
-                    height: visualBoardSize,
-                    child: _buildTracingBoard(Size.square(visualBoardSize)),
-                  ),
-                ),
-              ),
-              SizedBox(height: isCompact ? 8 : 10),
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 240),
-                child: Container(
-                  key: ValueKey(_statusText),
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _lesson.softColor.withValues(alpha: 0.75),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Text(
-                    _statusText,
-                    style: AppTypography.body.copyWith(
-                      color: const Color(0xFF4E5868),
-                      fontSize: isCompact ? 13 : 15,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
+              
             ],
           );
         },
