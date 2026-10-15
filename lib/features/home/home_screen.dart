@@ -396,31 +396,138 @@ class _LogoSection extends StatelessWidget {
             ),
             SizedBox(width: compact ? 6 : 8),
             Flexible(
-              child: Text(
-                context.tr('home.hero_title'),
-                style: AppTypography.hero.copyWith(
-                  // fontSize: _heroTitleSize(constraints.maxWidth),
-                  fontSize: AppTypography.responsiveSize(constraints.maxWidth, min: 29, max: 36),
-                  color: const Color(0xFF1A1060),
-                  fontWeight: FontWeight.w800,
-                  shadows: [
-                    const Shadow(
-                      color: Colors.white,
-                      blurRadius: 0,
-                      offset: Offset(0, 2),
-                    ),
-                    Shadow(
-                      color: AppColors.parentAccent.withValues(alpha: 0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
+              child: _HeroTitle(
+                title: context.tr('home.hero_title'),
+                fontSize: AppTypography.responsiveSize(
+                  constraints.maxWidth,
+                  min: 29,
+                  max: 36,
                 ),
               ),
             ),
           ],
         );
       },
+    );
+  }
+}
+
+class _HeroTitle extends StatelessWidget {
+  const _HeroTitle({required this.title, required this.fontSize});
+
+  final String title;
+  final double fontSize;
+
+  static const _mathGradient = [Color(0xFFF6FE48), Color(0xFFF28B04)];
+  static const _appGradient = [Color(0xFF57C0FF), Color(0xFF3066A0)];
+
+  @override
+  Widget build(BuildContext context) {
+    final spaceIndex = title.indexOf(' ');
+    var first = spaceIndex == -1 ? title : title.substring(0, spaceIndex);
+    final rest = spaceIndex == -1 ? '' : title.substring(spaceIndex);
+
+    var prefix = '';
+    if (first.length > 1 &&
+        first[0] == 'e' &&
+        first[1] == first[1].toUpperCase() &&
+        first[1] != first[1].toLowerCase()) {
+      prefix = 'e';
+      first = first.substring(1);
+    }
+
+    final style = AppTypography.hero.copyWith(
+      fontSize: fontSize,
+      fontWeight: FontWeight.w800,
+    );
+
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (prefix.isNotEmpty)
+            // Text(
+            //   prefix,
+            //   style: style.copyWith(
+            //     color: _ink,
+            //     shadows: const [
+            //       Shadow(color: Colors.white, offset: Offset(0, 2)),
+            //     ],
+            //   ),
+             _OutlinedGradientText(
+              text: prefix,
+              style: style,
+              colors: _appGradient,
+              outline: Color(0xFF26597E),
+            ),
+          _OutlinedGradientText(
+            text: first,
+            style: style,
+            colors: _mathGradient,
+            outline: Color(0xFF8C5000),
+          ),
+          if (rest.isNotEmpty)
+            _OutlinedGradientText(
+              text: rest,
+              style: style,
+              colors: _appGradient,
+              // outline: _ink,
+              outline: Color(0xFF26597E),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OutlinedGradientText extends StatelessWidget {
+  const _OutlinedGradientText({
+    required this.text,
+    required this.style,
+    required this.colors,
+    required this.outline,
+  });
+
+  final String text;
+  final TextStyle style;
+  final List<Color> colors;
+  final Color outline;
+
+  @override
+  Widget build(BuildContext context) {
+    final strokeWidth = (style.fontSize ?? 32) * 0.11;
+
+    return Stack(
+      children: [
+        Text(
+          text,
+          style: style.copyWith(
+            foreground: Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = strokeWidth
+              ..strokeJoin = StrokeJoin.round
+              ..color = outline,
+            shadows: [
+              Shadow(
+                color: AppColors.parentAccent.withValues(alpha: 0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+        ),
+        ShaderMask(
+          blendMode: BlendMode.srcIn,
+          shaderCallback: (bounds) => LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: colors,
+          ).createShader(bounds),
+          child: Text(text, style: style.copyWith(color: Colors.white)),
+        ),
+      ],
     );
   }
 }

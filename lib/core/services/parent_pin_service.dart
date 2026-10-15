@@ -64,8 +64,7 @@ class ParentPinService {
     final prefs = await SharedPreferences.getInstance();
     final untilMs = prefs.getInt(_cooldownUntilKey);
     if (untilMs == null) return 0;
-    final remainingMs =
-        untilMs - DateTime.now().millisecondsSinceEpoch;
+    final remainingMs = untilMs - DateTime.now().millisecondsSinceEpoch;
     return (remainingMs / 1000).ceil().clamp(0, 30);
   }
 

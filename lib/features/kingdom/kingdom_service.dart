@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/services/reward_progress_service.dart';
 import '../../data/models/kingdom_state.dart';
+import 'kingdom_zone_data.dart';
 
 class KingdomSyncResult {
   const KingdomSyncResult({
@@ -191,45 +192,15 @@ class KingdomService {
     return decorations;
   }
 
+  /// Same serial unlock chain the journey map shows.
   Set<String> _unlockedZoneIds(
     KingdomState state,
     RewardProgressSnapshot progress,
   ) {
-    final learnProgress =
-        progress.completionCountFor(RewardModuleIds.learnNumbers) +
-            progress.completionCountFor(RewardModuleIds.findNumber);
-    final countingProgress =
-        progress.completionCountFor(RewardModuleIds.countObjects);
-    final tracingProgress =
-        progress.completionCountFor(RewardModuleIds.traceNumbers);
-    final matchingProgress =
-        progress.completionCountFor(RewardModuleIds.matchNumbers);
-    final additionProgress =
-        progress.completionCountFor(RewardModuleIds.addition);
-    final subtractionProgress =
-        progress.completionCountFor(RewardModuleIds.subtraction);
-
-    final unlocked = <String>{'garden'};
-
-    if (state.gardenItems.isNotEmpty || learnProgress > 0) {
-      unlocked.add('meadow');
-    }
-    if (state.meadowItems.isNotEmpty || countingProgress > 0) {
-      unlocked.add('castle');
-    }
-    if (state.castleItems.isNotEmpty || tracingProgress > 0) {
-      unlocked.add('path');
-    }
-    if (state.patternDecorations.isNotEmpty || matchingProgress > 0) {
-      unlocked.add('bridge');
-    }
-    if (state.bridgeLength > 0 ||
-        additionProgress > 0 ||
-        subtractionProgress > 0) {
-      unlocked.add('stairs');
-    }
-
-    return unlocked;
+    return buildKingdomZones(state, progress)
+        .where((zone) => zone.unlocked)
+        .map((zone) => zone.id)
+        .toSet();
   }
 
   bool _stateChanged(KingdomState before, KingdomState after) {

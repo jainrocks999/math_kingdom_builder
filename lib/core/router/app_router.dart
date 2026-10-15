@@ -13,6 +13,7 @@ import 'package:emath_app/features/matching/match_numbers_screen.dart';
 import 'package:emath_app/features/mini_quiz/mini_quiz_screen.dart';
 import 'package:emath_app/features/number_tracing/trace_numbers_screen.dart';
 import 'package:emath_app/features/parent_dashboard/parent_dashboard_screen.dart';
+import 'package:emath_app/features/parent_dashboard/play_break_screen.dart';
 import 'package:emath_app/features/patterns/patterns_screen.dart';
 import 'package:emath_app/features/rewards/rewards_screen.dart';
 import 'package:emath_app/features/sequencing/sequencing_screen.dart';
@@ -22,6 +23,7 @@ import 'package:emath_app/onboarding_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/number_recognition/number_recognition_screen.dart';
 import '../../splash_screen.dart';
+import '../services/parent_controls_service.dart';
 import '../../ads/ad_navigator_observer.dart';
 import 'screen_music_observer.dart';
 
@@ -54,6 +56,7 @@ class AppRoutes {
   static const parentDashboard = '/parent-dashboard';
   static const settings = '/settings';
   static const startlearning = '/start-learning';
+  static const playBreak = '/play-break';
 }
 
 final AdNavigatorObserver adNavigatorObserver = AdNavigatorObserver();
@@ -67,7 +70,28 @@ final GoRouter _appRouter = GoRouter(
     screenMusicNavigatorObserver,
     adNavigatorObserver,
   ],
+  // Parent controls: block games that are switched off or once today's
+  // play time is used up.
+  redirect: (context, state) {
+    final path = state.uri.path;
+    final controls = ParentControlsService.instance;
+    if (controls.isRouteDisabled(path)) {
+      return '${AppRoutes.playBreak}?reason=off';
+    }
+    if (ParentControlsService.playRoutes.contains(path) && controls.isTimeUp) {
+      return '${AppRoutes.playBreak}?reason=time';
+    }
+    return null;
+  },
   routes: [
+    GoRoute(
+      path: AppRoutes.playBreak,
+      builder: (context, state) => PlayBreakScreen(
+        reason: PlayBreakScreen.reasonFromQuery(
+          state.uri.queryParameters['reason'],
+        ),
+      ),
+    ),
     GoRoute(
       path: AppRoutes.splash,
       builder: (context, state) => const SplashScreen(),

@@ -8,6 +8,7 @@ import '../../core/constants/app_typography.dart';
 import '../../core/localization/app_localization.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
+import '../../core/services/performance_service.dart';
 import '../../core/router/app_router.dart';
 import '../../core/utils/audio_service.dart';
 import '../../core/utils/responsive_layout.dart';
@@ -72,6 +73,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
   bool _showCelebration = false;
   int _correctAnswersCount = 0;
   int _wrongAttemptsThisRound = 0;
+  final _attempts = RoundAttemptTracker(RewardModuleIds.findNumber);
 
   NumberSystem get _currentSystem => _numberSystem;
   List<NumberData> get _numbers => _numbersFor(context);
@@ -164,6 +166,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
       _hasAnsweredCorrectly = false;
       _wrongAttemptsThisRound = 0;
     });
+    _attempts.start();
 
     if (autoSpeak) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -251,6 +254,7 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
     });
 
     if (isCorrect) {
+      _attempts.finish(_currentNumber.digit);
       HapticFeedback.mediumImpact();
       _cardBounceController.forward(from: 0);
       _feedbackAudio.playSfx('sfx/correct.mp3');
@@ -262,7 +266,9 @@ class _FindCorrectNumberScreenState extends State<FindCorrectNumberScreen>
       setState(() {
         _wrongAttemptsThisRound = wrongAttempts;
       });
+      _attempts.miss();
       if (wrongAttempts >= _maxWrongAttemptsBeforeAdvance) {
+        _attempts.finish(_currentNumber.digit, solved: false);
         _advanceAfterTooManyWrongAnswers();
       } else {
         final requestToken = ++_autoAdvanceToken;

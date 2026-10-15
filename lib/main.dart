@@ -7,6 +7,7 @@ import 'ads/ad_service.dart';
 import 'app.dart';
 import 'core/localization/app_locale_config.dart';
 import 'core/services/device_orientation_service.dart';
+import 'core/services/parent_controls_service.dart';
 import 'data/models/child_profile.dart';
 import 'data/models/kingdom_state.dart';
 import 'data/models/lesson_progress.dart';
@@ -33,6 +34,7 @@ void main() async {
   await Hive.openBox<LessonProgress>('progress');
 
   await DeviceOrientationService.initialize();
+  await ParentControlsService.instance.startSession();
 
   runApp(
     EasyLocalization(

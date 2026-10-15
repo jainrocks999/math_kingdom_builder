@@ -152,238 +152,245 @@ class _MathOperationsScreenState extends State<MathOperationsScreen>
       backgroundColor: AppColors.background,
       body: ScreenBannerHost(
         child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/backround.png',
-              fit: BoxFit.cover,
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/backround.png',
+                fit: BoxFit.cover,
+              ),
             ),
-          ),
-          // DecoratedBox(
-          //   decoration: BoxDecoration(
-          //     gradient: LinearGradient(
-          //       begin: Alignment.topCenter,
-          //       end: Alignment.bottomCenter,
-          //       colors: [
-          //         const Color(0xFF87CEEB).withValues(alpha: 0.55),
-          //         AppColors.background.withValues(alpha: 0.35),
-          //       ],
-          //     ),
-          //   ),
-          // ),
-          SafeArea(
-            child: AdaptiveContentWidth(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+            // DecoratedBox(
+            //   decoration: BoxDecoration(
+            //     gradient: LinearGradient(
+            //       begin: Alignment.topCenter,
+            //       end: Alignment.bottomCenter,
+            //       colors: [
+            //         const Color(0xFF87CEEB).withValues(alpha: 0.55),
+            //         AppColors.background.withValues(alpha: 0.35),
+            //       ],
+            //     ),
+            //   ),
+            // ),
+            SafeArea(
+              child: AdaptiveContentWidth(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Material(
-                        color: Colors.white.withValues(alpha: 0.88),
-                        borderRadius: BorderRadius.circular(18),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(18),
-                          onTap: () => _goBack(context),
-                          child: const SizedBox(
-                            width: 52,
-                            height: 52,
-                            child: Icon(
-                              Icons.arrow_back_rounded,
-                              color: Color(0xFF2D1B69),
+                      Row(
+                        children: [
+                          Material(
+                            color: Colors.white.withValues(alpha: 0.88),
+                            borderRadius: BorderRadius.circular(18),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(18),
+                              onTap: () => _goBack(context),
+                              child: const SizedBox(
+                                width: 52,
+                                height: 52,
+                                child: Icon(
+                                  Icons.arrow_back_rounded,
+                                  color: Color(0xFF2D1B69),
+                                ),
+                              ),
                             ),
                           ),
+                          const SizedBox(width: 14),
+                          Text(
+                            context.tr('math_operations.title'),
+                            style: AppTypography.hero.copyWith(
+                              fontSize: AppTypography.responsiveSize(
+                                MediaQuery.sizeOf(context).width,
+                                min: 26,
+                                max: 31,
+                              ),
+                              color: const Color(0xFF1A1060),
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 22),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.92),
+                          borderRadius: BorderRadius.circular(28),
+                          border: Border.all(
+                            color: AppColors.warning.withValues(alpha: 0.28),
+                            width: 2,
+                          ),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x33FFB800),
+                              offset: Offset(0, 10),
+                              blurRadius: 22,
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.all(18),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 56,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.premiumGoldLight,
+                                    borderRadius: BorderRadius.circular(18),
+                                  ),
+                                  child: const Center(
+                                    child: Text(
+                                      '🧮',
+                                      style: TextStyle(fontSize: 30),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        context
+                                            .tr('math_operations.hero_title'),
+                                        style: AppTypography.cardTitle.copyWith(
+                                          color: const Color(0xFF1E1060),
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        context.tr(
+                                            'math_operations.hero_subtitle'),
+                                        style: AppTypography.bodySmall.copyWith(
+                                          color: const Color(0xFF64748B),
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _HubMetricCard(
+                                    emoji: '⭐',
+                                    label: context
+                                        .tr('math_operations.math_stars'),
+                                    value: '$_mathStars',
+                                    color: AppColors.warning,
+                                    softColor: AppColors.premiumGoldLight,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _HubMetricCard(
+                                    emoji: '🎯',
+                                    label: context.tr('math_operations.played'),
+                                    value:
+                                        '$_completedOperations/${MathOperationsScreen._operations.length}',
+                                    color: AppColors.secondary,
+                                    softColor: AppColors.secondaryLight,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 14),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(999),
+                              child: LinearProgressIndicator(
+                                value: _completedOperations /
+                                    MathOperationsScreen._operations.length,
+                                minHeight: 10,
+                                backgroundColor: AppColors.surfaceMuted,
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                  AppColors.warning,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _completedOperations ==
+                                      MathOperationsScreen._operations.length
+                                  ? context.tr('math_operations.all_progress')
+                                  : context.tr(
+                                      'math_operations.next_milestone',
+                                      namedArgs: {
+                                        'current': '$nextPracticeGoal',
+                                        'total':
+                                            '${MathOperationsScreen._operations.length}',
+                                      },
+                                    ),
+                              style: AppTypography.bodySmall.copyWith(
+                                color: const Color(0xFF5A6B7A),
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: const Color(0xFF2D1B69),
+                                  foregroundColor: Colors.white,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                ),
+                                onPressed: () => _goBack(context),
+                                child:
+                                    Text(context.tr('learning.back_to_menu')),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 14),
+                      const SizedBox(height: 18),
                       Text(
-                        context.tr('math_operations.title'),
-                        style: AppTypography.hero.copyWith(
-                          fontSize: AppTypography.responsiveSize(
-                            MediaQuery.sizeOf(context).width,
-                            min: 26,
-                            max: 31,
+                        context.tr('math_operations.intro'),
+                        style: AppTypography.body.copyWith(
+                          color: const Color(0xFF5A6B7A),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ...MathOperationsScreen._operations.map(
+                        (operation) => Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: _OperationPlayCard(
+                            data: operation,
+                            completionCount:
+                                _progressSnapshot.completionCountFor(
+                              operation.progressId,
+                            ),
+                            earnedStars: _progressSnapshot.completionCountFor(
+                                  operation.progressId,
+                                ) *
+                                RewardProgressService.instance.starsForModule(
+                                  operation.progressId,
+                                ),
+                            onTap: () => context.push(operation.route),
                           ),
-                          color: const Color(0xFF1A1060),
-                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 22),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.92),
-                      borderRadius: BorderRadius.circular(28),
-                      border: Border.all(
-                        color: AppColors.warning.withValues(alpha: 0.28),
-                        width: 2,
-                      ),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x33FFB800),
-                          offset: Offset(0, 10),
-                          blurRadius: 22,
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(18),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: AppColors.premiumGoldLight,
-                                borderRadius: BorderRadius.circular(18),
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  '🧮',
-                                  style: TextStyle(fontSize: 30),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    context.tr('math_operations.hero_title'),
-                                    style: AppTypography.cardTitle.copyWith(
-                                      color: const Color(0xFF1E1060),
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    context.tr('math_operations.hero_subtitle'),
-                                    style: AppTypography.bodySmall.copyWith(
-                                      color: const Color(0xFF64748B),
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _HubMetricCard(
-                                emoji: '⭐',
-                                label: context.tr('math_operations.math_stars'),
-                                value: '$_mathStars',
-                                color: AppColors.warning,
-                                softColor: AppColors.premiumGoldLight,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _HubMetricCard(
-                                emoji: '🎯',
-                                label: context.tr('math_operations.played'),
-                                value:
-                                    '$_completedOperations/${MathOperationsScreen._operations.length}',
-                                color: AppColors.secondary,
-                                softColor: AppColors.secondaryLight,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 14),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(999),
-                          child: LinearProgressIndicator(
-                            value: _completedOperations /
-                                MathOperationsScreen._operations.length,
-                            minHeight: 10,
-                            backgroundColor: AppColors.surfaceMuted,
-                            valueColor: const AlwaysStoppedAnimation<Color>(
-                              AppColors.warning,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _completedOperations ==
-                                  MathOperationsScreen._operations.length
-                              ? context.tr('math_operations.all_progress')
-                              : context.tr(
-                                  'math_operations.next_milestone',
-                                  namedArgs: {
-                                    'current': '$nextPracticeGoal',
-                                    'total':
-                                        '${MathOperationsScreen._operations.length}',
-                                  },
-                                ),
-                          style: AppTypography.bodySmall.copyWith(
-                            color: const Color(0xFF5A6B7A),
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFF2D1B69),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                            ),
-                            onPressed: () => _goBack(context),
-                            child: Text(context.tr('learning.back_to_menu')),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Text(
-                    context.tr('math_operations.intro'),
-                    style: AppTypography.body.copyWith(
-                      color: const Color(0xFF5A6B7A),
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  ...MathOperationsScreen._operations.map(
-                    (operation) => Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: _OperationPlayCard(
-                        data: operation,
-                        completionCount: _progressSnapshot.completionCountFor(
-                          operation.progressId,
-                        ),
-                        earnedStars: _progressSnapshot.completionCountFor(
-                              operation.progressId,
-                            ) *
-                            RewardProgressService.instance.starsForModule(
-                              operation.progressId,
-                            ),
-                        onTap: () => context.push(operation.route),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-            ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }

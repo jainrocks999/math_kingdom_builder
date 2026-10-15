@@ -79,6 +79,20 @@ List<KingdomZoneData> buildKingdomZones(
     storedState.patternDecorations.length,
     math.max(matchingProgress, patternsProgress),
   );
+  final bridgeProgress = storedState.bridgeLength;
+  final stairsProgress =
+      math.max(storedState.staircaseSteps, sequencingProgress);
+
+  // Places unlock strictly in order: each one opens only after the place
+  // before it is unlocked and has been started. Progress made early in a
+  // later activity (e.g. tracing before counting) waits until its turn.
+  const gardenUnlocked = true;
+  final meadowUnlocked = gardenUnlocked && gardenProgress > 0;
+  final castleUnlocked = meadowUnlocked && meadowProgress > 0;
+  final pathUnlocked = castleUnlocked && castleProgress > 0;
+  final bridgeUnlocked = pathUnlocked && pathProgress > 0;
+  final stairsUnlocked =
+      bridgeUnlocked && (bridgeProgress > 0 || storedState.bridgeSunshine);
 
   return [
     KingdomZoneData(
@@ -95,7 +109,7 @@ List<KingdomZoneData> buildKingdomZones(
       rect: const Rect.fromLTWH(80, 360, 270, 180),
       progress: gardenProgress,
       goal: 8,
-      unlocked: true,
+      unlocked: gardenUnlocked,
       playable: true,
       itemCount: gardenProgress,
     ),
@@ -113,7 +127,7 @@ List<KingdomZoneData> buildKingdomZones(
       rect: const Rect.fromLTWH(395, 250, 285, 190),
       progress: meadowProgress,
       goal: 6,
-      unlocked: storedState.gardenItems.isNotEmpty || learnProgress > 0,
+      unlocked: meadowUnlocked,
       playable: true,
       itemCount: meadowProgress,
     ),
@@ -131,7 +145,7 @@ List<KingdomZoneData> buildKingdomZones(
       rect: const Rect.fromLTWH(760, 120, 270, 230),
       progress: castleProgress,
       goal: 6,
-      unlocked: storedState.meadowItems.isNotEmpty || countingProgress > 0,
+      unlocked: castleUnlocked,
       playable: true,
       itemCount: castleProgress,
     ),
@@ -149,7 +163,7 @@ List<KingdomZoneData> buildKingdomZones(
       rect: const Rect.fromLTWH(420, 540, 335, 120),
       progress: pathProgress,
       goal: 5,
-      unlocked: storedState.castleItems.isNotEmpty || tracingProgress > 0,
+      unlocked: pathUnlocked,
       playable: true,
       itemCount: pathProgress,
     ),
@@ -165,12 +179,11 @@ List<KingdomZoneData> buildKingdomZones(
       color: AppColors.bridgeBlue,
       softColor: const Color(0xFFD8F6F3),
       rect: const Rect.fromLTWH(780, 470, 250, 150),
-      progress: storedState.bridgeLength,
+      progress: bridgeProgress,
       goal: 6,
-      unlocked:
-          storedState.patternDecorations.isNotEmpty || matchingProgress > 0,
+      unlocked: bridgeUnlocked,
       playable: true,
-      itemCount: storedState.bridgeLength,
+      itemCount: bridgeProgress,
       sunshine: storedState.bridgeSunshine,
     ),
     KingdomZoneData(
@@ -185,11 +198,11 @@ List<KingdomZoneData> buildKingdomZones(
       color: AppColors.stairsLavender,
       softColor: const Color(0xFFF0E8FF),
       rect: const Rect.fromLTWH(105, 115, 220, 160),
-      progress: math.max(storedState.staircaseSteps, sequencingProgress),
+      progress: stairsProgress,
       goal: 6,
-      unlocked: storedState.bridgeLength > 0,
+      unlocked: stairsUnlocked,
       playable: true,
-      itemCount: math.max(storedState.staircaseSteps, sequencingProgress),
+      itemCount: stairsProgress,
     ),
   ];
 }

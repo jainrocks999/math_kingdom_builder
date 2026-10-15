@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -7,21 +5,24 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
-import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
-import '../../core/utils/responsive_layout.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../data/models/kingdom_state.dart';
+import '../../data/models/reward_catalog.dart';
+import '../../shared/widgets/bottom_banner_layout.dart';
+import '../../shared/widgets/game_back_button.dart';
+import '../../shared/widgets/kid_loading_view.dart';
+import '../../core/utils/responsive_layout.dart';
 import 'kingdom_service.dart';
 import 'kingdom_zone_data.dart';
-import 'widgets/kingdom_bottom_panel.dart';
-import 'widgets/kingdom_map_canvas.dart';
+import 'widgets/journey_path.dart';
+import 'widgets/journey_sections.dart';
 import 'widgets/kingdom_shared_widgets.dart';
-import 'widgets/kingdom_top_bar.dart';
 import 'widgets/kingdom_unlock_dialog.dart';
-import '../../shared/widgets/bottom_banner_layout.dart';
 
+/// "My Journey Map": the child's learning path, the activities they have
+/// performed and the badges they have earned.
 class KingdomScreen extends StatefulWidget {
   const KingdomScreen({super.key});
 
@@ -30,19 +31,18 @@ class KingdomScreen extends StatefulWidget {
 }
 
 class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
-  final TransformationController _mapController = TransformationController();
+  final Map<String, GlobalKey> _zoneKeys = {};
 
   RewardProgressSnapshot? _progressSnapshot;
   bool _isLoading = true;
-  String? _selectedZoneId;
-  Size _mapViewportSize = Size.zero;
+  bool _didAutoScroll = false;
   int _musicRequestToken = 0;
 
   @override
   void initState() {
     super.initState();
     _playAmbientMusic(delayed: true);
-    _refreshKingdom();
+    _refreshJourney();
   }
 
   @override
@@ -58,7 +58,7 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
   @override
   void didPopNext() {
     _playAmbientMusic(delayed: true);
-    _refreshKingdom();
+    _refreshJourney();
   }
 
   @override
@@ -75,7 +75,6 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
   void dispose() {
     _musicRequestToken++;
     appRouteObserver.unsubscribe(this);
-    _mapController.dispose();
     super.dispose();
   }
 
@@ -95,7 +94,10 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
     AppAudioService.instance.stopBackgroundMusic();
   }
 
-  Future<void> _refreshKingdom() async {
+  GlobalKey _keyForZone(String zoneId) =>
+      _zoneKeys.putIfAbsent(zoneId, GlobalKey.new);
+
+  Future<void> _refreshJourney() async {
     setState(() => _isLoading = true);
 
     final syncResult = await KingdomService.instance.loadSyncedState();
@@ -106,75 +108,78 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
       _isLoading = false;
     });
 
-    _showUnlockCelebrations(syncResult);
+    final zones = buildKingdomZones(syncResult.state, syncResult.progress);
+    if (!_didAutoScroll) {
+      _didAutoScroll = true;
+      _scrollToZone(recommendedKingdomZone(zones).id);
+    }
+    _showUnlockCelebrations(syncResult, zones);
   }
 
-  Future<void> _showUnlockCelebrations(KingdomSyncResult syncResult) async {
+  void _scrollToZone(String zoneId) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final targetContext = _zoneKeys[zoneId]?.currentContext;
+      if (targetContext == null) return;
+      Scrollable.ensureVisible(
+        targetContext,
+        alignment: 0.45,
+        duration: const Duration(milliseconds: 650),
+        curve: Curves.easeInOutCubic,
+      );
+    });
+  }
+
+  Future<void> _showUnlockCelebrations(
+    KingdomSyncResult syncResult,
+    List<KingdomZoneData> zones,
+  ) async {
     if (syncResult.newlyUnlockedZoneIds.isEmpty || !mounted) return;
 
-    final zones = buildKingdomZones(syncResult.state, syncResult.progress);
     final newlyUnlocked = zones
         .where((zone) => syncResult.newlyUnlockedZoneIds.contains(zone.id))
-        .toList()
-      ..sort((a, b) => a.rect.top.compareTo(b.rect.top));
+        .toList();
 
     for (final zone in newlyUnlocked) {
       if (!mounted) return;
-      setState(() => _selectedZoneId = zone.id);
-      _focusOnZone(zone);
+      _scrollToZone(zone.id);
       await showKingdomUnlockDialog(context, zone);
     }
   }
 
-  void _resetMapView() {
-    _mapController.value = Matrix4.identity();
-  }
-
-  void _focusOnZone(KingdomZoneData zone) {
-    if (_mapViewportSize == Size.zero) return;
-
-    final scale = math.min(
-      1.35,
-      math.max(
-        0.85,
-        (_mapViewportSize.width / zone.rect.width) * 0.92,
-      ),
-    );
-    final dx = -zone.rect.center.dx * scale + _mapViewportSize.width / 2;
-    final dy = -zone.rect.center.dy * scale + _mapViewportSize.height / 2;
-
-    _mapController.value = Matrix4.identity()
-      ..translateByDouble(dx, dy, 0, 1)
-      ..scaleByDouble(scale, scale, 1, 1);
-  }
-
-  void _handleZoneTap(KingdomZoneData zone) {
-    setState(() => _selectedZoneId = zone.id);
-    _focusOnZone(zone);
-  }
-
-  void _focusOnRecommended(List<KingdomZoneData> zones) {
-    final recommendedZone = recommendedKingdomZone(zones);
-    setState(() => _selectedZoneId = recommendedZone.id);
-    _focusOnZone(recommendedZone);
-  }
-
-  void _handleSelectZone(String zoneId, List<KingdomZoneData> zones) {
-    final zone = zones.firstWhere(
-      (entry) => entry.id == zoneId,
-      orElse: () => zones.first,
-    );
-    setState(() => _selectedZoneId = zoneId);
-    _focusOnZone(zone);
-  }
-
-  void _openQuest(KingdomZoneData zone) {
+  void _openZone(KingdomZoneData zone) {
     if (!zone.playable || !zone.unlocked) return;
-    if (_selectedZoneId != null && _selectedZoneId != zone.id) {
-      setState(() => _selectedZoneId = zone.id);
-    }
+    _openRoute(zone.route);
+  }
+
+  void _openRoute(String route) {
     _stopAmbientMusic();
-    context.push(zone.route);
+    context.push(route);
+  }
+
+  void _showStop(KingdomZoneData zone, KingdomZoneData recommendedZone) {
+    showJourneyStopSheet(
+      context,
+      zone: zone,
+      status: journeyStopStatus(zone, recommendedZone),
+      onPlay: () => _openZone(zone),
+    );
+  }
+
+  void _showFinish(bool journeyComplete) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          content: Text(
+            context.tr(
+              journeyComplete
+                  ? 'kingdom.journey_complete'
+                  : 'kingdom.finish_locked',
+            ),
+          ),
+        ),
+      );
   }
 
   void _goBack() {
@@ -193,329 +198,190 @@ class _KingdomScreenState extends State<KingdomScreen> with RouteAware {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: ScreenBannerHost(
-        child: SafeArea(
-        child: AdaptiveContentWidth(
-          child: Stack(
+        child: Stack(
           children: [
+            // Same background image and tint as the home hub screens.
             Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      const Color(0xFFBEE7FF),
-                      AppColors.background,
-                      const Color(0xFFFFF3D9),
-                    ],
-                    stops: const [0.0, 0.56, 1.0],
-                  ),
-                ),
+              child: Image.asset(
+                'assets/images/backround.png',
+                fit: BoxFit.cover,
               ),
             ),
-            const Positioned(
-              top: 80,
-              left: -30,
-              child: KingdomCloud(width: 120, height: 52),
-            ),
-            const Positioned(
-              top: 150,
-              right: 24,
-              child: KingdomCloud(width: 96, height: 42),
-            ),
-            Positioned.fill(
-              child: LayoutBuilder(
-                builder: (context, viewport) {
-                  return ValueListenableBuilder<Box<KingdomState>>(
-                    valueListenable:
-                        kingdomsBox.listenable(keys: const ['current']),
-                    builder: (context, box, _) {
-                      final storedState =
-                          box.get('current') ?? KingdomState.empty();
-                      final zones = buildKingdomZones(
-                        storedState,
-                        _progressSnapshot,
-                      );
-                      final recommendedZone = recommendedKingdomZone(zones);
-                      final activeZone = zones.firstWhere(
-                        (zone) =>
-                            zone.id == (_selectedZoneId ?? recommendedZone.id),
-                        orElse: () => recommendedZone,
-                      );
 
-                      final mapHeight = ResponsiveLayout.isTablet(context)
-                          ? math.min(520.0, viewport.maxHeight * 0.62)
-                          : viewport.maxHeight < 720
-                              ? math.max(300.0, viewport.maxHeight * 0.46)
-                              : math.min(540.0, viewport.maxHeight * 0.58);
-
-                      return SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minHeight: viewport.maxHeight,
-                          ),
-                          child: Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
-                                child: KingdomTopBar(
-                                  stars: _progressSnapshot?.totalStars ?? 0,
-                                  streakDays:
-                                      _progressSnapshot?.streakDays ?? 0,
-                                  onBack: _goBack,
-                                  onFindMe: () => _focusOnRecommended(zones),
-                                  onResetView: _resetMapView,
-                                ),
+            SafeArea(
+              child: AdaptiveContentWidth(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                      child: _JourneyHeader(
+                        onBack: _goBack,
+                        isRefreshing: _isLoading && _progressSnapshot != null,
+                      ),
+                    ),
+                    Expanded(
+                      child: _progressSnapshot == null
+                          ? KidLoadingView(
+                              title: context.tr('kingdom.loading'),
+                            )
+                          : ValueListenableBuilder<Box<KingdomState>>(
+                              valueListenable: kingdomsBox
+                                  .listenable(keys: const ['current']),
+                              builder: (context, box, _) => _buildJourney(
+                                box.get('current') ?? KingdomState.empty(),
+                                _progressSnapshot!,
                               ),
-                              SizedBox(
-                                height: mapHeight,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(28),
-                                  child: DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      color:
-                                          Colors.white.withValues(alpha: 0.55),
-                                      border: Border.all(
-                                        color: AppColors.outline,
-                                      ),
-                                      boxShadow: const [
-                                        BoxShadow(
-                                          color: AppColors.shadow,
-                                          blurRadius: 22,
-                                          offset: Offset(0, 10),
-                                        ),
-                                      ],
-                                    ),
-                                    child: LayoutBuilder(
-                                      builder: (context, mapConstraints) {
-                                        _mapViewportSize = Size(
-                                          mapConstraints.maxWidth,
-                                          mapConstraints.maxHeight,
-                                        );
-
-                                        return Stack(
-                                          children: [
-                                            Positioned.fill(
-                                              child: InteractiveViewer(
-                                                transformationController:
-                                                    _mapController,
-                                                boundaryMargin:
-                                                    const EdgeInsets.all(180),
-                                                minScale: 0.78,
-                                                maxScale: 2.2,
-                                                child: KingdomMapCanvas(
-                                                  zones: zones,
-                                                  activeZoneId: activeZone.id,
-                                                  recommendedZoneId:
-                                                      recommendedZone.id,
-                                                  onZoneTap: _handleZoneTap,
-                                                ),
-                                              ),
-                                            ),
-                                            Positioned(
-                                              top: 14,
-                                              left: 14,
-                                              right: 14,
-                                              child: Row(
-                                                children: [
-                                                  Expanded(
-                                                    child: DecoratedBox(
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.white
-                                                            .withValues(
-                                                          alpha: 0.92,
-                                                        ),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(999),
-                                                        border: Border.all(
-                                                          color:
-                                                              AppColors.outline,
-                                                        ),
-                                                      ),
-                                                      child: Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .symmetric(
-                                                          horizontal: 12,
-                                                          vertical: 8,
-                                                        ),
-                                                        child: Text(
-                                                          '${context.tr('kingdom.find_me')} • ${context.tr('kingdom.next_best_quest')}',
-                                                          style: AppTypography
-                                                              .caption,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  if (_isLoading) ...[
-                                                    const SizedBox(width: 10),
-                                                    _buildLoadingDot(),
-                                                  ],
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              _KingdomMascotHint(
-                                  recommendedZone: recommendedZone),
-                              const SizedBox(height: 10),
-                              _isLoading && _progressSnapshot == null
-                                  ? _buildBottomPanelSkeleton()
-                                  : KingdomBottomPanel(
-                                      activeZone: activeZone,
-                                      recommendedZone: recommendedZone,
-                                      totalStars:
-                                          _progressSnapshot?.totalStars ?? 0,
-                                      todayCompletions:
-                                          _progressSnapshot?.todayCompletions ??
-                                              0,
-                                      onSelectZone: (zoneId) =>
-                                          _handleSelectZone(zoneId, zones),
-                                      onPlayActiveZone: () =>
-                                          _openQuest(activeZone),
-                                      onPlayRecommended: () =>
-                                          _openQuest(recommendedZone),
-                                      zones: zones,
-                                    ),
-                              const SizedBox(height: 8),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
+                            ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
         ),
-        ),
-      ),
       ),
     );
   }
 
-  Widget _buildLoadingDot() {
-    return Container(
-      width: 28,
-      height: 28,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
-        shape: BoxShape.circle,
-      ),
-      alignment: Alignment.center,
-      child: const SizedBox(
-        width: 16,
-        height: 16,
-        child: CircularProgressIndicator(
-          strokeWidth: 2.2,
-          color: AppColors.primary,
-        ),
-      ),
-    );
-  }
+  Widget _buildJourney(
+    KingdomState storedState,
+    RewardProgressSnapshot progress,
+  ) {
+    final zones = buildKingdomZones(storedState, progress);
+    final recommendedZone = recommendedKingdomZone(zones);
+    final journeyComplete = zones.every((zone) => zone.isComplete);
+    final placesDone = zones.where((zone) => zone.isComplete).length;
+    final totalActivities = progress.completionCounts.values
+        .fold<int>(0, (total, count) => total + count);
+    final badgesUnlocked = rewardCatalog
+        .where((reward) => reward.unlockStars <= progress.totalStars)
+        .length;
 
-  Widget _buildBottomPanelSkeleton() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.outline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          _KingdomSkeletonBar(widthFactor: 0.42, height: 20),
-          SizedBox(height: 10),
-          _KingdomSkeletonBar(widthFactor: 0.8, height: 14),
-          SizedBox(height: 18),
-          _KingdomSkeletonBar(widthFactor: 1, height: 12),
-          SizedBox(height: 16),
-          _KingdomSkeletonBar(widthFactor: 0.68, height: 44),
-          SizedBox(height: 12),
-          _KingdomSkeletonBar(widthFactor: 1, height: 92),
-        ],
-      ),
-    );
-  }
-}
-
-class _KingdomSkeletonBar extends StatelessWidget {
-  const _KingdomSkeletonBar({
-    required this.widthFactor,
-    required this.height,
-  });
-
-  final double widthFactor;
-  final double height;
-
-  @override
-  Widget build(BuildContext context) {
-    return FractionallySizedBox(
-      widthFactor: widthFactor,
-      child: Container(
-        height: height,
-        decoration: BoxDecoration(
-          color: AppColors.surfaceMuted,
-          borderRadius: BorderRadius.circular(16),
-        ),
-      ),
-    );
-  }
-}
-
-class _KingdomMascotHint extends StatelessWidget {
-  const _KingdomMascotHint({required this.recommendedZone});
-
-  final KingdomZoneData recommendedZone;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: recommendedZone.softColor.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: recommendedZone.color.withValues(alpha: 0.35),
-        ),
-      ),
-      child: Row(
-        children: [
-          Text(recommendedZone.emoji, style: const TextStyle(fontSize: 24)),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              recommendedZone.isComplete
-                  ? AppLocalization.kingdomZone(
-                      context,
-                      recommendedZone.id,
-                      'subtitle',
-                    )
-                  : AppLocalization.kingdomZone(
-                      context,
-                      recommendedZone.id,
-                      'hint',
-                    ),
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: _refreshJourney,
+      // Not a lazy ListView: the path stops must be built for
+      // Scrollable.ensureVisible to reach them.
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            JourneyStatsRow(
+              stars: progress.totalStars,
+              activities: totalActivities,
+              badgesUnlocked: badgesUnlocked,
+              badgesTotal: rewardCatalog.length,
+              streakDays: progress.streakDays,
+            ),
+            const SizedBox(height: 14),
+            JourneyContinueCard(
+              recommendedZone: recommendedZone,
+              journeyComplete: journeyComplete,
+              todayCompletions: progress.todayCompletions,
+              onContinue: () => _openZone(recommendedZone),
+            ),
+            const SizedBox(height: 22),
+            JourneySectionHeader(
+              title: '🗺️ ${context.tr('kingdom.path_title')}',
+              trailing: KingdomMiniBadge(
+                label: context.tr(
+                  'kingdom.places_done',
+                  namedArgs: {
+                    'done': '$placesDone',
+                    'total': '${zones.length}',
+                  },
+                ),
+                color: AppColors.gardenGreen,
               ),
             ),
-          ),
-        ],
+            JourneyCard(
+              color: Colors.white.withValues(alpha: 0.6),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+              child: JourneyPath(
+                zones: zones,
+                recommendedZone: recommendedZone,
+                zoneKeys: {
+                  for (final zone in zones) zone.id: _keyForZone(zone.id)
+                },
+                onZoneTap: (zone) => _showStop(zone, recommendedZone),
+                onFinishTap: () => _showFinish(journeyComplete),
+              ),
+            ),
+            const SizedBox(height: 22),
+            JourneySectionHeader(
+              title: '🏅 ${context.tr('kingdom.badges_title')}',
+              trailing: TextButton(
+                onPressed: () => _openRoute(AppRoutes.stickers),
+                child: Text(
+                  context.tr('kingdom.see_all'),
+                  style: AppTypography.button.copyWith(
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ),
+            JourneyBadgesStrip(
+              stars: progress.totalStars,
+              onOpenAlbum: () => _openRoute(AppRoutes.stickers),
+            ),
+            const SizedBox(height: 22),
+            JourneySectionHeader(
+              title: '🎯 ${context.tr('kingdom.activities_title')}',
+            ),
+            JourneyActivityLog(
+              completionCounts: progress.completionCounts,
+              onPlay: (activity) => _openRoute(activity.route),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+class _JourneyHeader extends StatelessWidget {
+  const _JourneyHeader({required this.onBack, required this.isRefreshing});
+
+  final VoidCallback onBack;
+  final bool isRefreshing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        GameBackButton(onTap: onBack),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                context.tr('kingdom.title'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.h2,
+              ),
+              Text(
+                context.tr('kingdom.subtitle'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.bodySmall,
+              ),
+            ],
+          ),
+        ),
+        if (isRefreshing)
+          const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.2,
+              color: AppColors.primary,
+            ),
+          ),
+      ],
     );
   }
 }

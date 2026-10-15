@@ -12,6 +12,7 @@ import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
+import '../../core/services/performance_service.dart';
 import '../../core/utils/audio_service.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../math_operations/math_operation_theme.dart';
@@ -78,6 +79,7 @@ class _SequencingScreenState extends State<SequencingScreen>
   int _wrongAttempts = 0;
   int? _filledAnswer;
   bool _roundSolved = false;
+  final _attempts = RoundAttemptTracker(RewardModuleIds.sequencing);
   bool _showCelebration = false;
   bool _isDragging = false;
 
@@ -285,6 +287,7 @@ class _SequencingScreenState extends State<SequencingScreen>
   }
 
   void _registerWrongAttempt() {
+    _attempts.miss();
     HapticFeedback.lightImpact();
     _feedbackAudio.playWrongFeedback();
     if (mounted) {
@@ -311,6 +314,13 @@ class _SequencingScreenState extends State<SequencingScreen>
       return;
     }
 
+    // e.g. "2, 4, _, 8" so parents see which gap was asked.
+    _attempts.finish(
+      [
+        for (var i = 0; i < _round.sequence.length; i++)
+          i == _round.missingIndex ? '_' : '${_round.sequence[i]}',
+      ].join(', '),
+    );
     HapticFeedback.mediumImpact();
     TopSnackbar.hide();
     setState(() {

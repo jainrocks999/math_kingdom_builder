@@ -10,6 +10,7 @@ import 'core/constants/app_typography.dart';
 import 'core/router/app_router.dart';
 import 'core/services/audio_service.dart';
 import 'core/services/device_orientation_service.dart';
+import 'core/services/parent_controls_service.dart';
 import 'core/utils/audio_service.dart';
 import 'core/utils/responsive_layout.dart';
 
@@ -32,6 +33,7 @@ class _MathKingdomAppState extends ConsumerState<MathKingdomApp> {
         unawaited(_handleAppLifecycleState(state));
       },
     );
+    ParentControlsService.instance.timeUp.addListener(_handleTimeUp);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       unawaited(
@@ -42,9 +44,20 @@ class _MathKingdomAppState extends ConsumerState<MathKingdomApp> {
     });
   }
 
+  /// Daily play time ran out while a game is open: send the child to the
+  /// break screen.
+  void _handleTimeUp() {
+    if (!ParentControlsService.instance.timeUp.value) return;
+    final path = appRouter.state.uri.path;
+    if (ParentControlsService.playRoutes.contains(path)) {
+      appRouter.go('${AppRoutes.playBreak}?reason=time');
+    }
+  }
+
   Future<void> _handleAppLifecycleState(AppLifecycleState state) async {
     switch (state) {
       case AppLifecycleState.resumed:
+        await ParentControlsService.instance.startSession();
         await DeviceOrientationService.applyLock();
         await AppAudioService.instance.handleAppResumed();
         await AudioService().handleAppResumed();
@@ -53,6 +66,7 @@ class _MathKingdomAppState extends ConsumerState<MathKingdomApp> {
       case AppLifecycleState.hidden:
       case AppLifecycleState.paused:
       case AppLifecycleState.detached:
+        await ParentControlsService.instance.stopSession();
         await _lifecycleTts.stop();
         await AudioService().handleAppBackgrounded();
         await AppAudioService.instance.handleAppBackgrounded();
@@ -62,6 +76,7 @@ class _MathKingdomAppState extends ConsumerState<MathKingdomApp> {
 
   @override
   void dispose() {
+    ParentControlsService.instance.timeUp.removeListener(_handleTimeUp);
     _appLifecycleListener.dispose();
     _lifecycleTts.stop();
     super.dispose();

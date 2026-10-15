@@ -39,7 +39,8 @@ Future<void> showKingdomUnlockDialog(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: zone.softColor,
                   borderRadius: BorderRadius.circular(999),

@@ -157,14 +157,13 @@ class AppAudioService {
 
   Future<void> playHomeMusic() async {
     await _playLoopingBackgroundMusic(
-      'assets/audio/bg/home_music.mp3',
+      'assets/audio/bg/home_music(1).mp3',
       volume: 0.35,
     );
   }
-
   Future<void> playKingdomMusic() async {
     await _playLoopingBackgroundMusic(
-      'assets/audio/bg/home_music.mp3',
+      'assets/audio/bg/home_music(1).mp3',
       volume: 0.18,
     );
   }

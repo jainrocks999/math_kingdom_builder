@@ -12,6 +12,7 @@ import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
+import '../../core/services/performance_service.dart';
 import '../../core/utils/audio_service.dart';
 import '../../core/utils/responsive_layout.dart';
 import 'math_operation_theme.dart';
@@ -62,6 +63,7 @@ class _DivisionScreenState extends State<DivisionScreen>
   int _roundIndex = 0;
   int _failedDragCount = 0;
   bool _roundSolved = false;
+  final _attempts = RoundAttemptTracker(RewardModuleIds.division);
   bool _showCelebration = false;
   bool _isDragging = false;
 
@@ -227,6 +229,7 @@ class _DivisionScreenState extends State<DivisionScreen>
   Future<void> _completeRound() async {
     if (_roundSolved || _showCelebration) return;
     setState(() => _roundSolved = true);
+    _attempts.finish('${_round.total} ÷ ${_round.groups}');
     HapticFeedback.mediumImpact();
     _successPulseController.forward(from: 0);
     _feedbackAudio.playSfx('sfx/correct.mp3');
@@ -250,6 +253,7 @@ class _DivisionScreenState extends State<DivisionScreen>
 
   void _handleFailedDrag() {
     if (_roundSolved || _showCelebration) return;
+    _attempts.miss();
     setState(() {
       _failedDragCount++;
       _isDragging = false;
@@ -258,6 +262,7 @@ class _DivisionScreenState extends State<DivisionScreen>
 
   void _shareAllRemaining() {
     if (_roundSolved || _showCelebration) return;
+    _attempts.usedHelp();
     HapticFeedback.mediumImpact();
     setState(() {
       for (final id in _pileIds()) {

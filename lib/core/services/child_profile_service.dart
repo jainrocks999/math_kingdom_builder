@@ -47,13 +47,39 @@ class ChildProfileService {
     await prefs.setInt(_activeProfileIndexKey, safeIndex);
   }
 
+  Future<void> addProfile(ChildProfile profile, {bool makeActive = true}) async {
+    await _profilesBox.add(profile);
+    if (makeActive) {
+      await setActiveProfileIndex(_profilesBox.length - 1);
+    }
+  }
+
+  Future<void> updateProfile(int index, ChildProfile profile) async {
+    if (index < 0 || index >= _profilesBox.length) return;
+    await _profilesBox.putAt(index, profile);
+  }
+
+  /// Keeps at least one profile, and keeps the same child active when an
+  /// earlier one is removed.
+  Future<void> deleteProfile(int index) async {
+    if (_profilesBox.length <= 1 || index < 0 || index >= _profilesBox.length) {
+      return;
+    }
+    final prefs = await _prefs;
+    final activeIndex = prefs.getInt(_activeProfileIndexKey) ?? 0;
+    await _profilesBox.deleteAt(index);
+    final newActive = activeIndex > index
+        ? activeIndex - 1
+        : activeIndex.clamp(0, _profilesBox.length - 1);
+    await prefs.setInt(_activeProfileIndexKey, newActive);
+  }
+
   Future<void> _ensureSeededProfiles() async {
     if (_profilesBox.isNotEmpty) return;
 
-    await _profilesBox.addAll([
-      ChildProfile(name: 'Aarav', avatarPath: '🦁'),
-      ChildProfile(name: 'Mia', avatarPath: '🐻'),
-      ChildProfile(name: 'Zoya', avatarPath: '🦊'),
-    ]);
+    // One friendly starter profile; parents rename it in the Parent Zone.
+    await _profilesBox.add(
+      ChildProfile(name: 'Little Star', avatarPath: '🦁', age: 5),
+    );
   }
 }

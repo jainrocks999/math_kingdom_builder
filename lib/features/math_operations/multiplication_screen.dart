@@ -12,6 +12,7 @@ import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
+import '../../core/services/performance_service.dart';
 import '../../core/utils/audio_service.dart';
 import '../../core/utils/responsive_layout.dart';
 import 'math_operation_theme.dart';
@@ -60,6 +61,7 @@ class _MultiplicationScreenState extends State<MultiplicationScreen>
   int _roundIndex = 0;
   int _failedDragCount = 0;
   bool _roundSolved = false;
+  final _attempts = RoundAttemptTracker(RewardModuleIds.multiplication);
   bool _showCelebration = false;
   bool _isDragging = false;
 
@@ -185,6 +187,7 @@ class _MultiplicationScreenState extends State<MultiplicationScreen>
   Future<void> _completeRound() async {
     if (_roundSolved || _showCelebration) return;
     setState(() => _roundSolved = true);
+    _attempts.finish('${_round.groups} × ${_round.perGroup}');
     HapticFeedback.mediumImpact();
     _successPulseController.forward(from: 0);
     _feedbackAudio.playSfx('sfx/correct.mp3');
@@ -208,6 +211,7 @@ class _MultiplicationScreenState extends State<MultiplicationScreen>
 
   void _handleFailedDrag() {
     if (_roundSolved || _showCelebration) return;
+    _attempts.miss();
     setState(() {
       _failedDragCount++;
       _isDragging = false;
@@ -216,6 +220,7 @@ class _MultiplicationScreenState extends State<MultiplicationScreen>
 
   void _moveAllRemaining() {
     if (_roundSolved || _showCelebration) return;
+    _attempts.usedHelp();
     HapticFeedback.mediumImpact();
     setState(() {
       _movedObjectIds.addAll(_allIds);
@@ -287,100 +292,100 @@ class _MultiplicationScreenState extends State<MultiplicationScreen>
       backgroundColor: AppColors.background,
       body: ScreenBannerHost(
         child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned.fill(
-            child:
-                Image.asset('assets/images/backround.png', fit: BoxFit.cover),
-          ),
-          // DecoratedBox(
-          //   decoration: BoxDecoration(
-          //     gradient: LinearGradient(
-          //       begin: Alignment.topCenter,
-          //       end: Alignment.bottomCenter,
-          //       colors: [
-          //         Colors.white.withValues(alpha: 0.26),
-          //         _theme.softColor.withValues(alpha: 0.36),
-          //         AppColors.background.withValues(alpha: 0.76),
-          //       ],
-          //     ),
-          //   ),
-          // ),
-          SafeArea(
-            child: AdaptiveGameFrame(
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      MathOpCircleButton(
-                        icon: Icons.arrow_back_rounded,
-                        color: _theme.color,
-                        onTap: _goBack,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          '✖️ ${_roundIndex + 1}/$_totalRounds',
-                          style: AppTypography.h2.copyWith(
-                            color: const Color(0xFF1A1060),
-                            fontWeight: FontWeight.w900,
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child:
+                  Image.asset('assets/images/backround.png', fit: BoxFit.cover),
+            ),
+            // DecoratedBox(
+            //   decoration: BoxDecoration(
+            //     gradient: LinearGradient(
+            //       begin: Alignment.topCenter,
+            //       end: Alignment.bottomCenter,
+            //       colors: [
+            //         Colors.white.withValues(alpha: 0.26),
+            //         _theme.softColor.withValues(alpha: 0.36),
+            //         AppColors.background.withValues(alpha: 0.76),
+            //       ],
+            //     ),
+            //   ),
+            // ),
+            SafeArea(
+              child: AdaptiveGameFrame(
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        MathOpCircleButton(
+                          icon: Icons.arrow_back_rounded,
+                          color: _theme.color,
+                          onTap: _goBack,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            '✖️ ${_roundIndex + 1}/$_totalRounds',
+                            style: AppTypography.h2.copyWith(
+                              color: const Color(0xFF1A1060),
+                              fontWeight: FontWeight.w900,
+                            ),
                           ),
                         ),
-                      ),
-                      MathOpCircleButton(
-                        icon: Icons.volume_up_rounded,
-                        color: _theme.color,
-                        onTap: _speakPrompt,
-                      ),
-                      const SizedBox(width: 8),
-                      MathOpProgressPill(
-                        color: _theme.color,
-                        softColor: _theme.softColor,
-                        progress: progress,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  MathOpEquationBanner(
-                    left: _round.groups,
-                    operator: '×',
-                    right: _round.perGroup,
-                    result: _round.product,
-                    solved: _roundSolved,
-                    color: _theme.color,
-                    softColor: _theme.softColor,
-                  ),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: AnimatedBuilder(
-                      animation: _successPulseController,
-                      builder: (context, child) {
-                        final scale =
-                            1 + ((_successPulseController.value - 1) * 0.03);
-                        return Transform.scale(scale: scale, child: child);
-                      },
-                      child: _buildPlayArea(),
+                        MathOpCircleButton(
+                          icon: Icons.volume_up_rounded,
+                          color: _theme.color,
+                          onTap: _speakPrompt,
+                        ),
+                        const SizedBox(width: 8),
+                        MathOpProgressPill(
+                          color: _theme.color,
+                          softColor: _theme.softColor,
+                          progress: progress,
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    MathOpEquationBanner(
+                      left: _round.groups,
+                      operator: '×',
+                      right: _round.perGroup,
+                      result: _round.product,
+                      solved: _roundSolved,
+                      color: _theme.color,
+                      softColor: _theme.softColor,
+                    ),
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: AnimatedBuilder(
+                        animation: _successPulseController,
+                        builder: (context, child) {
+                          final scale =
+                              1 + ((_successPulseController.value - 1) * 0.03);
+                          return Transform.scale(scale: scale, child: child);
+                        },
+                        child: _buildPlayArea(),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          if (_showCelebration)
-            MathOpCelebrationOverlay(
-              title: context.tr('learning.multiplication_complete'),
-              emoji: '🎉',
-              color: _theme.color,
-              softColor: _theme.softColor,
-              buttonLabel:
-                  AppLocalization.moduleTitle(context, AppRoutes.division),
-              onButtonTap: () {
-                AppAudioService.instance.stopCelebrationMusic();
-                context.pushReplacement(AppRoutes.division);
-              },
-            ),
-        ],
-      ),
+            if (_showCelebration)
+              MathOpCelebrationOverlay(
+                title: context.tr('learning.multiplication_complete'),
+                emoji: '🎉',
+                color: _theme.color,
+                softColor: _theme.softColor,
+                buttonLabel:
+                    AppLocalization.moduleTitle(context, AppRoutes.division),
+                onButtonTap: () {
+                  AppAudioService.instance.stopCelebrationMusic();
+                  context.pushReplacement(AppRoutes.division);
+                },
+              ),
+          ],
+        ),
       ),
     );
   }

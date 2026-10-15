@@ -46,9 +46,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<OnboardingPageData> _pages = const [
     OnboardingPageData(
       translationKey: '1',
-      title: 'Build Your Dream Kingdom',
+      title: 'Say Hi and let’s explore together!',
       description:
-          'Solve cute math missions, win coins, and unlock castle parts one by one.',
+          'Your number buddy is here to learn and play with you.',
       imageUrl: 'assets/images/onboarding/first.png',
       emoji: '🔢',
       color: AppColors.primary,
@@ -57,9 +57,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     ),
     OnboardingPageData(
       translationKey: '2',
-      title: 'Math Made Fun',
+      title: 'Flip, Listen & Learn',
       description:
-          'Count, trace, and listen through playful lessons made for little learners.',
+          'Tap the flash cards to hear numbers and count fun objects.',
       imageUrl: 'assets/images/onboarding/second.png',
       emoji: '🃏',
       color: AppColors.secondary,
@@ -68,9 +68,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     ),
     OnboardingPageData(
       translationKey: '3',
-      title: 'Collect Bright Rewards',
+      title: 'Collect Star Cards',
       description:
-          'Earn stars, celebrate small wins, and show everyone your growing math kingdom.',
+          'Trace numbers, add, subtract and solve playful puzzles. Earn stars and fill your card collection!',
       imageUrl: 'assets/images/onboarding/third.png',
       emoji: '⭐',
       color: AppColors.premiumGold,

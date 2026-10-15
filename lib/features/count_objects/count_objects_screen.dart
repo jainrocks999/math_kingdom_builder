@@ -12,6 +12,7 @@ import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
+import '../../core/services/performance_service.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../shared/helpers/feedback_helper.dart';
 import '../../shared/widgets/celebration_bear.dart';
@@ -67,6 +68,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
   bool _roundSolved = false;
   bool _showCelebration = false;
   List<int> _options = const [];
+  final _attempts = RoundAttemptTracker(RewardModuleIds.countObjects);
 
   _RoundConfig get _currentRound => _rounds[_roundIndex];
   CountingTheme get _theme => countingThemes[_currentRound.themeIndex];
@@ -179,6 +181,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
   }
 
   void _prepareRound() {
+    _attempts.start();
     final correct = _correctCount;
     final options = <int>{correct};
     while (options.length < 4) {
@@ -274,6 +277,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
 
     final isCorrect = answer == _correctCount;
     if (isCorrect) {
+      _attempts.finish('$_correctCount');
       _cardPopController.forward(from: 0);
       await FeedbackHelper.playCorrect(
         speak: _roundIndex == _totalRounds - 1 ? null : _speakCorrectAnswer,
@@ -295,6 +299,7 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
         _roundSolved = true;
       });
     } else {
+      _attempts.miss();
       await FeedbackHelper.playWrong(speak: _speakWrongAnswer);
       if (!mounted) return;
       setState(() {
@@ -439,47 +444,47 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
       backgroundColor: AppColors.background,
       body: ScreenBannerHost(
         child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/backround.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-          // DecoratedBox(
-          //   decoration: BoxDecoration(
-          //     gradient: LinearGradient(
-          //       begin: Alignment.topCenter,
-          //       end: Alignment.bottomCenter,
-          //       colors: [
-          //         Colors.white.withValues(alpha: 0.25),
-          //         _theme.softColor.withValues(alpha: 0.35),
-          //         AppColors.background.withValues(alpha: 0.72),
-          //       ],
-          //     ),
-          //   ),
-          // ),
-          SafeArea(
-            child: AdaptiveGameFrame(
-              child: Column(
-                children: [
-                  _buildTopBar(progress),
-                  const SizedBox(height: 16),
-                  _buildPromptCard(),
-                  const SizedBox(height: 16),
-                  Expanded(child: _buildObjectsCard()),
-                  const SizedBox(height: 16),
-                  _buildAnswerGrid(),
-                  const SizedBox(height: 14),
-                  _buildBottomAction(),
-                ],
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/backround.png',
+                fit: BoxFit.cover,
               ),
             ),
-          ),
-          if (_showCelebration) _buildCelebrationOverlay(),
-        ],
-      ),
+            // DecoratedBox(
+            //   decoration: BoxDecoration(
+            //     gradient: LinearGradient(
+            //       begin: Alignment.topCenter,
+            //       end: Alignment.bottomCenter,
+            //       colors: [
+            //         Colors.white.withValues(alpha: 0.25),
+            //         _theme.softColor.withValues(alpha: 0.35),
+            //         AppColors.background.withValues(alpha: 0.72),
+            //       ],
+            //     ),
+            //   ),
+            // ),
+            SafeArea(
+              child: AdaptiveGameFrame(
+                child: Column(
+                  children: [
+                    _buildTopBar(progress),
+                    const SizedBox(height: 16),
+                    _buildPromptCard(),
+                    const SizedBox(height: 16),
+                    Expanded(child: _buildObjectsCard()),
+                    const SizedBox(height: 16),
+                    _buildAnswerGrid(),
+                    const SizedBox(height: 14),
+                    _buildBottomAction(),
+                  ],
+                ),
+              ),
+            ),
+            if (_showCelebration) _buildCelebrationOverlay(),
+          ],
+        ),
       ),
     );
   }
@@ -811,7 +816,8 @@ class _CountObjectsScreenState extends State<CountObjectsScreen>
   Widget _buildAnswerGrid() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isNarrow = ResponsiveLayout.isCompactWidth(context, 360, constraints: constraints);
+        final isNarrow = ResponsiveLayout.isCompactWidth(context, 360,
+            constraints: constraints);
         final buttonHeight = isNarrow ? 74.0 : 82.0;
 
         return GridView.builder(

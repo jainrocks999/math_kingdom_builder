@@ -12,6 +12,7 @@ import '../../core/localization/app_localization.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
+import '../../core/services/performance_service.dart';
 import '../../core/utils/audio_service.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../StartLearning/start_learning_next_action_button.dart';
@@ -61,6 +62,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
   bool _roundSolved = false;
   bool _showCelebration = false;
   List<int> _options = const [];
+  final _attempts = RoundAttemptTracker(RewardModuleIds.matchNumbers);
 
   _MatchRound get _currentRound => _rounds[_roundIndex];
   CountingTheme get _theme => countingThemes[_currentRound.themeIndex];
@@ -89,7 +91,8 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
   }
 
   Future<void> _configureTts() async {
-    await AppLocalization.configureTts(_tts, context, normalRate: 0.4, slowRate: 0.3);
+    await AppLocalization.configureTts(_tts, context,
+        normalRate: 0.4, slowRate: 0.3);
     await _tts.awaitSpeakCompletion(true);
     await _tts.setPitch(1.04);
     await _tts.setVolume(1.0);
@@ -138,6 +141,7 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
   }
 
   void _prepareRound() {
+    _attempts.start();
     final correct = _correctCount;
     final options = <int>{correct};
     while (options.length < 4) {
@@ -239,11 +243,13 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
     });
 
     if (isCorrect) {
+      _attempts.finish('$_correctCount');
       HapticFeedback.mediumImpact();
       _numberPulseController.forward(from: 0);
       _feedbackAudio.playSfx('sfx/correct.mp3');
       _advanceAfterCorrectAnswer();
     } else {
+      _attempts.miss();
       HapticFeedback.heavyImpact();
       _feedbackAudio.playWrongFeedback();
       final requestToken = ++_autoAdvanceToken;
@@ -349,82 +355,83 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
       backgroundColor: AppColors.background,
       body: ScreenBannerHost(
         child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/backround.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-          // DecoratedBox(
-          //   decoration: BoxDecoration(
-          //     gradient: LinearGradient(
-          //       begin: Alignment.topCenter,
-          //       end: Alignment.bottomCenter,
-          //       colors: [
-          //         Colors.white.withValues(alpha: 0.25),
-          //         _theme.softColor.withValues(alpha: 0.35),
-          //         AppColors.background.withValues(alpha: 0.72),
-          //       ],
-          //     ),
-          //   ),
-          // ),
-          SafeArea(
-            child: AdaptiveGameFrame(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final isNarrowWidth = ResponsiveLayout.isCompactWidth(
-                    context,
-                    360,
-                    constraints: constraints,
-                  );
-                  final isVeryCompactHeight = ResponsiveLayout.isCompactHeight(
-                    context,
-                    700,
-                    constraints: constraints,
-                  );
-                  final isCompactHeight = ResponsiveLayout.isCompactHeight(
-                    context,
-                    760,
-                    constraints: constraints,
-                  );
-                  final gap = isVeryCompactHeight
-                      ? 8.0
-                      : (isCompactHeight ? 10.0 : 14.0);
-
-                  return Column(
-                    children: [
-                      _buildTopBar(
-                        progress,
-                        compact: isCompactHeight,
-                        narrowWidth: isNarrowWidth,
-                      ),
-                      SizedBox(height: gap),
-                      _buildPromptCard(
-                        compact: isCompactHeight,
-                        veryCompact: isVeryCompactHeight,
-                        narrowWidth: isNarrowWidth,
-                      ),
-                      SizedBox(height: gap),
-                      Expanded(
-                        child: _buildGameBoard(
-                          isCompactHeight: isCompactHeight,
-                          isVeryCompactHeight: isVeryCompactHeight,
-                          isNarrowWidth: isNarrowWidth,
-                        ),
-                      ),
-                      SizedBox(height: isVeryCompactHeight ? 8 : 12),
-                      _buildBottomBar(compact: isVeryCompactHeight),
-                    ],
-                  );
-                },
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/backround.png',
+                fit: BoxFit.cover,
               ),
             ),
-          ),
-          if (_showCelebration) _buildCelebrationOverlay(),
-        ],
-      ),
+            // DecoratedBox(
+            //   decoration: BoxDecoration(
+            //     gradient: LinearGradient(
+            //       begin: Alignment.topCenter,
+            //       end: Alignment.bottomCenter,
+            //       colors: [
+            //         Colors.white.withValues(alpha: 0.25),
+            //         _theme.softColor.withValues(alpha: 0.35),
+            //         AppColors.background.withValues(alpha: 0.72),
+            //       ],
+            //     ),
+            //   ),
+            // ),
+            SafeArea(
+              child: AdaptiveGameFrame(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isNarrowWidth = ResponsiveLayout.isCompactWidth(
+                      context,
+                      360,
+                      constraints: constraints,
+                    );
+                    final isVeryCompactHeight =
+                        ResponsiveLayout.isCompactHeight(
+                      context,
+                      700,
+                      constraints: constraints,
+                    );
+                    final isCompactHeight = ResponsiveLayout.isCompactHeight(
+                      context,
+                      760,
+                      constraints: constraints,
+                    );
+                    final gap = isVeryCompactHeight
+                        ? 8.0
+                        : (isCompactHeight ? 10.0 : 14.0);
+
+                    return Column(
+                      children: [
+                        _buildTopBar(
+                          progress,
+                          compact: isCompactHeight,
+                          narrowWidth: isNarrowWidth,
+                        ),
+                        SizedBox(height: gap),
+                        _buildPromptCard(
+                          compact: isCompactHeight,
+                          veryCompact: isVeryCompactHeight,
+                          narrowWidth: isNarrowWidth,
+                        ),
+                        SizedBox(height: gap),
+                        Expanded(
+                          child: _buildGameBoard(
+                            isCompactHeight: isCompactHeight,
+                            isVeryCompactHeight: isVeryCompactHeight,
+                            isNarrowWidth: isNarrowWidth,
+                          ),
+                        ),
+                        SizedBox(height: isVeryCompactHeight ? 8 : 12),
+                        _buildBottomBar(compact: isVeryCompactHeight),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+            if (_showCelebration) _buildCelebrationOverlay(),
+          ],
+        ),
       ),
     );
   }
@@ -707,11 +714,11 @@ class _MatchNumbersScreenState extends State<MatchNumbersScreen>
                       SizedBox(height: veryCompact ? 4 : 6),
                       Text(
                         context.tr(
-                    'learning.how_many',
-                    namedArgs: {
-                      'label': _objectLabel(context, _correctCount),
-                    },
-                  ),
+                          'learning.how_many',
+                          namedArgs: {
+                            'label': _objectLabel(context, _correctCount),
+                          },
+                        ),
                         maxLines: veryCompact ? 2 : 3,
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.bodySmall.copyWith(

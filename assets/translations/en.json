@@ -4,8 +4,8 @@
     "native_language_name": "English"
   },
   "app": {
-    "title": "Eflash Apps Math Fun",
-    "name": "eflash Math Fun"
+    "title": "eMath App - by eFlash apps",
+    "name": "eMath App"
   },
   "common": {
     "skip": "Skip",
@@ -35,7 +35,7 @@
     "title": "Math Fun"
   },
   "onboarding": {
-    "hero_title": "Math Fun 🌈",
+    "hero_title": "Math Fun ",
     "hero_subtitle": "Count, trace & play with numbers!",
     "sunny_badge": "FLASH APPS",
     "swipe_hint": "Count, trace & play with numbers!",
@@ -200,7 +200,7 @@
     "sfx_subtitle": "Correct, wrong, and reward feedback sounds",
     "voice_preview": "Hear Voice Preview",
     "voice_preview_stop": "Stop Voice Preview",
-    "voice_preview_message": "Hello grown ups. Math Kingdom is ready for today's adventure.",
+    "voice_preview_message": "Hello grown ups. eMath App is ready for today's adventure.",
     "success_sound_preview": "Play Success Sound",
     "reset_defaults": "Reset To Defaults",
     "resetting": "Resetting...",
@@ -237,7 +237,7 @@
     "family_progress": "Family Progress",
     "child_progress": "{name}'s Progress",
     "child_profile_title": "Child Profile",
-    "child_profile_subtitle": "Choose which child is active for the next learning session.",
+    "child_profile_subtitle": "Add, edit or switch the child who is playing.",
     "audio_title": "Audio Settings",
     "audio_subtitle": "These controls apply to music, sound effects, and spoken prompts.",
     "summary_title": "Family Summary",
@@ -251,7 +251,8 @@
     "mastery": {
       "exploring": "Exploring",
       "practicing": "Practicing",
-      "confident": "Confident"
+      "confident": "Confident",
+      "notStarted": "Not started"
     },
     "modules": {
       "addition": "Addition",
@@ -267,7 +268,155 @@
       "match_numbers": "Match Numbers",
       "mini_quiz": "Mini Quiz"
     },
-    "open_full_settings": "Open Full Settings"
+    "open_full_settings": "Open Full Settings",
+    "your_child": "your child",
+    "header_subtitle": "See how your child plays, what's tricky, and set limits.",
+    "refresh": "Refresh",
+    "tabs": {
+      "overview": "Overview",
+      "reports": "Reports",
+      "tips": "Tips",
+      "controls": "Controls"
+    },
+    "minutes_short": "{count} min",
+    "hours_short": "{hours} h {minutes} min",
+    "stat": {
+      "stars": "Stars earned",
+      "streak": "Day streak",
+      "rounds_week": "Rounds this week",
+      "first_try": "Right on first try"
+    },
+    "week_title": "This Week",
+    "week_subtitle": "{time} of play in the last 7 days",
+    "week_chart_caption": "Minutes played each day",
+    "highlights_title": "Highlights",
+    "strengths": "Strengths",
+    "strengths_empty": "Keep playing — strengths show up after a few rounds.",
+    "needs_practice": "Needs practice",
+    "needs_practice_empty": "Nothing tricky so far. Great going!",
+    "see_full_report": "See full report →",
+    "avg_tries": "{count} tries",
+    "recent_title": "Recent Activity",
+    "recent_subtitle": "Every number and question, and how many tries it took.",
+    "no_data": "No rounds recorded yet. Reports fill in as your child plays.",
+    "today_of_limit": "played today of {limit} min",
+    "today_played": "played today",
+    "result": {
+      "skipped": "Skipped",
+      "helped": "With help",
+      "first_try": "First try",
+      "tries": "{count} tries"
+    },
+    "report": {
+      "intro": "Each item shows the average number of tries it took. Tap an activity to see every number or question.",
+      "summary": "{rounds} rounds · {percent}% first try · avg {tries} tries",
+      "viewed": "Viewed {count} times (no tries to count)",
+      "sessions_only": "{count} sessions finished — tries are recorded from now on",
+      "not_started": "Not tried yet",
+      "items_title": "Every item",
+      "tricky_line": "{item}: played {rounds}×, avg {tries} tries (most {worst})",
+      "rounds": "Rounds",
+      "first_try": "First try",
+      "avg_tries": "Avg tries",
+      "time": "Time",
+      "pattern_item": "{kind} pattern"
+    },
+    "legend": {
+      "easy": "1 try — easy",
+      "some_help": "2 tries — getting there",
+      "tricky": "3+ tries — practice"
+    },
+    "practice_now": "Practice now",
+    "quiz_modes": {
+      "tapNumber": "Count & tap",
+      "dragMatch": "Drag & match",
+      "writeNumber": "Write the number",
+      "missingNumber": "Missing number",
+      "compareGroups": "Compare groups"
+    },
+    "tips_intro": "Suggestions based on how your child actually played. Short, playful practice works best.",
+    "tips": {
+      "start_title": "Start the first adventure together",
+      "start_body": "Sit with {name} for the first few rounds. Tips here will become personal once they play.",
+      "practice_items_title": "Practise {items} in {activity}",
+      "practice_items_body": "{name} needed about {tries} tries on {items}.",
+      "helper_title": "Encourage trying first in {activity}",
+      "helper_body": "{name} used the helper button {count} times. Before tapping it, ask them to try one more time — praise the effort, not just the answer.",
+      "slow_down_title": "Slow down in {activity}",
+      "slow_down_body": "{name} is answering very quickly but often wrong — this usually means guessing. Ask them to say the answer out loud before tapping.",
+      "ready_next_title": "Doing great in {activity}!",
+      "ready_next_body": "{name} gets {percent}% right on the first try. Ready for a new challenge: try {next}.",
+      "ready_praise_body": "{name} gets {percent}% right on the first try. Celebrate this — a big hug or a sticker goes a long way!",
+      "try_new_title": "Try {activity}",
+      "try_new_body": "{name} hasn't tried this yet. A new kind of game keeps learning fresh.",
+      "routine_title": "Build a small daily habit",
+      "routine_body": "{name} played on only a few days this week. 10 minutes every day helps more than one long session.",
+      "limit_title": "Consider a daily time limit",
+      "limit_body": "Average play is about {minutes} minutes a day. You can set a limit in Controls.",
+      "howto_trace": "Away from the screen, trace {items} together with a finger in the air, on sand or on paper — always starting from the top dot.",
+      "howto_find": "Spot {items} together on clocks, number plates and house numbers.",
+      "howto_count": "Count real things up to {items} — spoons, toys, steps — touching each one as you say the number.",
+      "howto_math": "Act out {items} with fingers or small toys before playing again.",
+      "howto_sequence": "Count aloud together, forwards and backwards, and skip-count by 2s and 5s while walking.",
+      "howto_pattern": "Make {items}s with spoons and forks or coloured blocks, then let your child continue them.",
+      "howto_general": "Practise {items} together in a short, playful way."
+    },
+    "controls": {
+      "time_title": "Daily Play Time",
+      "time_subtitle": "When time is up, games show a friendly break screen until tomorrow.",
+      "no_limit": "No limit",
+      "used_today": "Played today: {time}",
+      "used_of_limit": "Played today: {time} of {limit} min",
+      "bonus_today": "Includes {count} extra minutes for today",
+      "add_15": "+15 min today",
+      "reset_timer": "Reset today's timer",
+      "bonus_added": "Added 15 extra minutes for today.",
+      "timer_reset": "Today's play timer was reset.",
+      "activities_title": "Activities",
+      "activities_subtitle": "Turn games off to help your child focus on others.",
+      "privacy_title": "Data",
+      "change_pin": "Change parent PIN",
+      "new_pin": "New 4-digit PIN",
+      "pin_changed": "Parent PIN updated.",
+      "clear_title": "Clear performance report",
+      "clear_subtitle": "Removes recorded tries. Stars and badges are kept.",
+      "clear_body": "This deletes all recorded rounds and tries. Stars, badges and the journey map are not affected.",
+      "clear_confirm": "Clear",
+      "cleared": "Performance report cleared.",
+      "cancel": "Cancel"
+    },
+    "profile": {
+      "add_title": "Add a child",
+      "edit_title": "Edit profile",
+      "name": "Name",
+      "name_ideas": "Suggested names (tap to use)",
+      "name_idea_1": "Little Star",
+      "name_idea_2": "Champ",
+      "name_idea_3": "Superstar",
+      "name_idea_4": "Buddy",
+      "name_idea_5": "Hero",
+      "name_idea_6": "Sunshine",
+      "avatar": "Avatar",
+      "age": "Age",
+      "age_years": "{count} yrs",
+      "suggested_title": "Suggested for age {age}",
+      "focus": {
+        "early": "Focus on recognising, counting and tracing numbers, with simple patterns. Short sessions keep it fun.",
+        "middle": "Build on counting with ordering numbers, first additions and take-aways, and mixed quizzes.",
+        "older": "All games on, including multiplication and division, for a full maths workout."
+      },
+      "suggested_time": "Daily play time: {minutes} min",
+      "apply_suggested": "Apply this time limit and game list",
+      "add_button": "Add child",
+      "save_button": "Save",
+      "add_child": "Add another child",
+      "saved": "{name}'s profile saved.",
+      "saved_with_suggestion": "{name}'s profile saved with the suggested settings.",
+      "delete_title": "Remove {name}?",
+      "delete_body": "This removes the profile from this device. Stars and reports are shared and are not deleted.",
+      "delete": "Remove",
+      "playing_now": "Playing now"
+    }
   },
   "learning": {
     "loading_title": "Loading...",
@@ -479,8 +628,8 @@
       "subtitle": "Spot and complete magical patterns"
     },
     "kingdom_map": {
-      "title": "Kingdom Map",
-      "subtitle": "Visit the castle & unlock places"
+      "title": "Journey Map",
+      "subtitle": "See your path, activities & badges"
     },
     "start_learning": {
       "title": "Start Learning",
@@ -525,15 +674,15 @@
     "quest_emoji": "🎮"
   },
   "kingdom": {
-    "title": "My Kingdom",
-    "subtitle": "Every quest adds something magical to this map.",
+    "title": "My Journey Map",
+    "subtitle": "Every activity moves you one step further!",
     "reset_map": "Reset map",
     "find_me": "Find me",
-    "loading": "Loading your kingdom...",
-    "new_place_unlocked": "New Kingdom Place Unlocked",
+    "loading": "Loading your journey map...",
+    "new_place_unlocked": "New Place Unlocked on Your Journey",
     "new_place_message": "Your learning adventures opened a magical new place on the map.",
     "explore_map": "Explore the Map",
-    "zone_locked_clouds": "This area is still hidden behind kingdom clouds.",
+    "zone_locked_clouds": "This place is still hidden behind the clouds.",
     "next_best_quest": "Next best quest",
     "today_completed": "Today completed: {count} quest",
     "today_completed_other": "Today completed: {count} quests",
@@ -546,11 +695,11 @@
         "hint": "Practice number recognition to grow brighter flowers.",
         "cta": "Play Number Quest"
       },
-      "meadow": {
-        "title": "Counting Meadow",
-        "subtitle": "Animals gather here after counting adventures.",
-        "hint": "Count objects to invite more meadow friends.",
-        "cta": "Play Counting Quest"
+      "path": {
+        "title": "Pattern Pathway",
+        "subtitle": "Pattern quests add shining tiles to the walkway.",
+        "hint": "Complete pattern adventures to decorate the path.",
+        "cta": "Play Patterns"
       },
       "castle": {
         "title": "Shape Castle",
@@ -558,11 +707,11 @@
         "hint": "Tracing numbers builds stronger walls and towers.",
         "cta": "Play Tracing Quest"
       },
-      "path": {
-        "title": "Pattern Pathway",
-        "subtitle": "Pattern quests add shining tiles to the walkway.",
-        "hint": "Complete pattern adventures to decorate the path.",
-        "cta": "Play Patterns"
+      "meadow": {
+        "title": "Counting Meadow",
+        "subtitle": "Animals gather here after counting adventures.",
+        "hint": "Count objects to invite more meadow friends.",
+        "cta": "Play Counting Quest"
       },
       "bridge": {
         "title": "Math Bridge",
@@ -577,7 +726,33 @@
         "cta": "Open Sequencing"
       }
     },
-    "rewards_progress": "{progress}/{goal} kingdom rewards"
+    "rewards_progress": "{progress}/{goal} journey rewards",
+    "stat_stars": "Stars",
+    "stat_activities": "Activities",
+    "stat_badges": "Badges",
+    "stat_streak": "Day streak",
+    "continue_journey": "Continue Journey",
+    "you_are_here": "You are here",
+    "path_title": "My Path",
+    "places_done": "{done}/{total} places done",
+    "start": "Start",
+    "finish": "Royal Finish",
+    "finish_locked": "Finish every place to reach the crown!",
+    "journey_complete": "You finished the whole journey! 🎉",
+    "status_done": "Done!",
+    "status_current": "Up next",
+    "status_open": "Open",
+    "status_locked": "Locked",
+    "badges_title": "My Badges",
+    "see_all": "See all",
+    "next_badge": "{count} more stars to unlock {name}",
+    "all_badges": "You unlocked every badge!",
+    "activities_title": "Activities I Did",
+    "played_count": "Played {count}×",
+    "not_played": "Not tried yet",
+    "stars_earned": "+{count} stars",
+    "play": "Play",
+    "close": "Close"
   },
   "rewards": {
     "title": "Sticker Album",
@@ -638,7 +813,7 @@
       },
       "trophy-bronze": {
         "title": "Bronze Castle Cup",
-        "subtitle": "First kingdom trophy",
+        "subtitle": "First journey trophy",
         "description": "A small but proud trophy for early milestones."
       },
       "trophy-silver": {
@@ -647,9 +822,9 @@
         "description": "A silver reward for consistent learning sessions."
       },
       "trophy-gold": {
-        "title": "Golden Kingdom Cup",
+        "title": "Golden Math Cup",
         "subtitle": "Big celebration trophy",
-        "description": "A golden cup for building a strong math kingdom."
+        "description": "A golden cup for becoming a strong math star."
       },
       "trophy-royal": {
         "title": "Royal Hero Crown",
@@ -659,7 +834,7 @@
     }
   },
   "placeholder": {
-    "coming_soon": "Coming soon in Math Kingdom",
+    "coming_soon": "Coming soon in eMath App",
     "try_start_learning": "Try Start Learning",
     "back_to_home": "Back To Home"
   },
@@ -722,5 +897,13 @@
     "abb_group_three": "Watch the group of three and complete it.",
     "abb_repeat_three": "Repeat the three-piece pattern.",
     "abb_complete_group": "Complete the last group."
+  },
+  "play_break": {
+    "time_up_title": "Time for a break! 🌙",
+    "time_up_message": "You played so well today. Rest your eyes and come back tomorrow for more adventures!",
+    "activity_off_title": "This game is resting 💤",
+    "activity_off_message": "A grown-up turned this game off for now. Let's pick another adventure!",
+    "go_home": "Back to Home",
+    "parent_unlock": "Grown-ups: open Parent Zone"
   }
 }

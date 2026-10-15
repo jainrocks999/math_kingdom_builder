@@ -13,32 +13,11 @@ import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/reward_progress_service.dart';
 import '../../core/utils/responsive_layout.dart';
+import '../../data/models/reward_catalog.dart';
 import '../../shared/widgets/celebration_bear.dart';
 import '../../shared/widgets/game_back_button.dart';
 import '../../shared/widgets/kid_loading_view.dart';
 import '../../shared/widgets/bottom_banner_layout.dart';
-
-enum _RewardCategory { stickers, badges, trophies }
-
-class _RewardItem {
-  const _RewardItem({
-    required this.id,
-    required this.category,
-    required this.emoji,
-    required this.color,
-    required this.softColor,
-    required this.shadowColor,
-    required this.unlockStars,
-  });
-
-  final String id;
-  final _RewardCategory category;
-  final String emoji;
-  final Color color;
-  final Color softColor;
-  final Color shadowColor;
-  final int unlockStars;
-}
 
 class RewardsScreen extends StatefulWidget {
   const RewardsScreen({super.key});
@@ -49,116 +28,7 @@ class RewardsScreen extends StatefulWidget {
 
 class _RewardsScreenState extends State<RewardsScreen>
     with RouteAware, SingleTickerProviderStateMixin {
-  static const List<_RewardItem> _rewards = [
-    _RewardItem(
-      id: 'sticker-sun',
-      category: _RewardCategory.stickers,
-      emoji: '🌞',
-      color: AppColors.warning,
-      softColor: AppColors.premiumGoldLight,
-      shadowColor: Color(0xFFD4A000),
-      unlockStars: 0,
-    ),
-    _RewardItem(
-      id: 'sticker-rainbow',
-      category: _RewardCategory.stickers,
-      emoji: '🌈',
-      color: AppColors.primary,
-      softColor: AppColors.primaryLight,
-      shadowColor: Color(0xFFC94A18),
-      unlockStars: 6,
-    ),
-    _RewardItem(
-      id: 'sticker-balloon',
-      category: _RewardCategory.stickers,
-      emoji: '🎈',
-      color: AppColors.secondary,
-      softColor: AppColors.secondaryLight,
-      shadowColor: Color(0xFF2AADA4),
-      unlockStars: 10,
-    ),
-    _RewardItem(
-      id: 'sticker-crown',
-      category: _RewardCategory.stickers,
-      emoji: '👑',
-      color: AppColors.stairsLavender,
-      softColor: AppColors.restBackground,
-      shadowColor: Color(0xFFA888E8),
-      unlockStars: 14,
-    ),
-    _RewardItem(
-      id: 'badge-counter',
-      category: _RewardCategory.badges,
-      emoji: '🔢',
-      color: AppColors.secondary,
-      softColor: AppColors.secondaryLight,
-      shadowColor: Color(0xFF2AADA4),
-      unlockStars: 4,
-    ),
-    _RewardItem(
-      id: 'badge-tracer',
-      category: _RewardCategory.badges,
-      emoji: '✏️',
-      color: AppColors.pathwayPeach,
-      softColor: AppColors.primaryLight,
-      shadowColor: Color(0xFFD97A4D),
-      unlockStars: 8,
-    ),
-    _RewardItem(
-      id: 'badge-matcher',
-      category: _RewardCategory.badges,
-      emoji: '🃏',
-      color: AppColors.bridgeBlue,
-      softColor: AppColors.secondaryLight,
-      shadowColor: Color(0xFF2890D0),
-      unlockStars: 12,
-    ),
-    _RewardItem(
-      id: 'badge-quiz',
-      category: _RewardCategory.badges,
-      emoji: '🧠',
-      color: AppColors.warning,
-      softColor: AppColors.premiumGoldLight,
-      shadowColor: Color(0xFFD4A000),
-      unlockStars: 16,
-    ),
-    _RewardItem(
-      id: 'trophy-bronze',
-      category: _RewardCategory.trophies,
-      emoji: '🏆',
-      color: AppColors.pathwayPeach,
-      softColor: AppColors.primaryLight,
-      shadowColor: Color(0xFFD97A4D),
-      unlockStars: 8,
-    ),
-    _RewardItem(
-      id: 'trophy-silver',
-      category: _RewardCategory.trophies,
-      emoji: '🥈',
-      color: AppColors.bridgeBlue,
-      softColor: AppColors.secondaryLight,
-      shadowColor: Color(0xFF2890D0),
-      unlockStars: 14,
-    ),
-    _RewardItem(
-      id: 'trophy-gold',
-      category: _RewardCategory.trophies,
-      emoji: '🥇',
-      color: AppColors.premiumGold,
-      softColor: AppColors.premiumGoldLight,
-      shadowColor: Color(0xFFD4A000),
-      unlockStars: 20,
-    ),
-    _RewardItem(
-      id: 'trophy-royal',
-      category: _RewardCategory.trophies,
-      emoji: '👑',
-      color: AppColors.parentAccent,
-      softColor: AppColors.restBackground,
-      shadowColor: Color(0xFF3A58C8),
-      unlockStars: 24,
-    ),
-  ];
+  static const List<RewardItem> _rewards = rewardCatalog;
 
   Set<String> _claimedRewardIds = <String>{};
   Map<String, int> _completionCounts = <String, int>{};
@@ -167,7 +37,7 @@ class _RewardsScreenState extends State<RewardsScreen>
   late final FlutterTts _detailTts;
   late Future<void> _detailTtsReady;
   bool _detailTtsConfigured = false;
-  _RewardCategory _selectedCategory = _RewardCategory.stickers;
+  RewardCategory _selectedCategory = RewardCategory.stickers;
   int _selectedIndex = 0;
   bool _showClaimCelebration = false;
   bool _isLoadingProgress = true;
@@ -175,11 +45,11 @@ class _RewardsScreenState extends State<RewardsScreen>
   String? _animatingRewardId;
   late final AnimationController _collectAnimationController;
 
-  List<_RewardItem> get _visibleRewards => _rewards
+  List<RewardItem> get _visibleRewards => _rewards
       .where((reward) => reward.category == _selectedCategory)
       .toList(growable: false);
 
-  _RewardItem get _selectedReward {
+  RewardItem get _selectedReward {
     final rewards = _visibleRewards;
     final safeIndex = math.min(
       math.max(_selectedIndex, 0),
@@ -210,7 +80,7 @@ class _RewardsScreenState extends State<RewardsScreen>
     return ((_currentStars - base) / range).clamp(0, 1).toDouble();
   }
 
-  _RewardItem? get _nextUnlockReward {
+  RewardItem? get _nextUnlockReward {
     final locked = _rewards
         .where((reward) => reward.unlockStars > _currentStars)
         .toList(growable: false)
@@ -249,9 +119,9 @@ class _RewardsScreenState extends State<RewardsScreen>
   double get _collectBurstProgress =>
       Curves.easeOutCubic.transform(_collectAnimationController.value);
 
-  bool _isUnlocked(_RewardItem reward) => reward.unlockStars <= _currentStars;
+  bool _isUnlocked(RewardItem reward) => reward.unlockStars <= _currentStars;
 
-  bool _isClaimed(_RewardItem reward) => _claimedRewardIds.contains(reward.id);
+  bool _isClaimed(RewardItem reward) => _claimedRewardIds.contains(reward.id);
 
   Future<void> _loadProgress() async {
     final snapshot = await RewardProgressService.instance.loadSnapshot();
@@ -270,7 +140,7 @@ class _RewardsScreenState extends State<RewardsScreen>
     await _detailTts.setVolume(1.0);
   }
 
-  Future<void> _speakRewardDetail(_RewardItem reward) async {
+  Future<void> _speakRewardDetail(RewardItem reward) async {
     await _detailTtsReady;
     await _detailTts.stop();
     if (!mounted) return;
@@ -281,7 +151,7 @@ class _RewardsScreenState extends State<RewardsScreen>
     );
   }
 
-  Future<void> _openRewardDetailSheet(_RewardItem reward) async {
+  Future<void> _openRewardDetailSheet(RewardItem reward) async {
     HapticFeedback.selectionClick();
     await showModalBottomSheet<void>(
       context: context,
@@ -327,7 +197,7 @@ class _RewardsScreenState extends State<RewardsScreen>
     context.pop();
   }
 
-  void _selectCategory(_RewardCategory category) {
+  void _selectCategory(RewardCategory category) {
     if (_selectedCategory == category) return;
     setState(() {
       _selectedCategory = category;
@@ -439,109 +309,109 @@ class _RewardsScreenState extends State<RewardsScreen>
       backgroundColor: AppColors.background,
       body: ScreenBannerHost(
         child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/backround.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  const Color(0xFF87CEEB).withValues(alpha: 0.55),
-                  const Color(0xFFB8E4FF).withValues(alpha: 0.30),
-                  AppColors.background.withValues(alpha: 0.25),
-                  AppColors.restBackground.withValues(alpha: 0.15),
-                ],
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/backround.png',
+                fit: BoxFit.cover,
               ),
             ),
-          ),
-          SafeArea(
-            child: AdaptiveContentWidth(
-              child: LayoutBuilder(
-              builder: (context, constraints) {
-                final isCompact = !ResponsiveLayout.isTablet(context) &&
-                    (constraints.maxWidth < 860 ||
-                        ResponsiveLayout.isCompactHeight(
-                          context,
-                          760,
-                          constraints: constraints,
-                        ));
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    const Color(0xFF87CEEB).withValues(alpha: 0.55),
+                    const Color(0xFFB8E4FF).withValues(alpha: 0.30),
+                    AppColors.background.withValues(alpha: 0.25),
+                    AppColors.restBackground.withValues(alpha: 0.15),
+                  ],
+                ),
+              ),
+            ),
+            SafeArea(
+              child: AdaptiveContentWidth(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isCompact = !ResponsiveLayout.isTablet(context) &&
+                        (constraints.maxWidth < 860 ||
+                            ResponsiveLayout.isCompactHeight(
+                              context,
+                              760,
+                              constraints: constraints,
+                            ));
 
-                if (isCompact) {
-                  return SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(
-                      18,
-                      16,
-                      18,
-                      18 + (MediaQuery.of(context).padding.bottom * 0.25),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildTopBar(),
-                        const SizedBox(height: 16),
-                        _buildSummaryRow(),
-                        const SizedBox(height: 16),
-                        _buildCategoryTabs(),
-                        const SizedBox(height: 14),
-                        _buildRewardGrid(shrinkWrap: true),
-                        const SizedBox(height: 14),
-                        _buildDetailPanel(
-                          reward: reward,
-                          unlocked: unlocked,
-                          claimed: claimed,
-                          scrollable: false,
+                    if (isCompact) {
+                      return SingleChildScrollView(
+                        padding: EdgeInsets.fromLTRB(
+                          18,
+                          16,
+                          18,
+                          18 + (MediaQuery.of(context).padding.bottom * 0.25),
                         ),
-                      ],
-                    ),
-                  );
-                }
-
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildTopBar(),
-                      const SizedBox(height: 16),
-                      _buildSummaryRow(),
-                      const SizedBox(height: 16),
-                      _buildCategoryTabs(),
-                      const SizedBox(height: 14),
-                      Expanded(
-                        child: Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              flex: 5,
-                              child: _buildRewardGrid(),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              flex: 4,
-                              child: _buildDetailPanel(
-                                reward: reward,
-                                unlocked: unlocked,
-                                claimed: claimed,
-                              ),
+                            _buildTopBar(),
+                            const SizedBox(height: 16),
+                            _buildSummaryRow(),
+                            const SizedBox(height: 16),
+                            _buildCategoryTabs(),
+                            const SizedBox(height: 14),
+                            _buildRewardGrid(shrinkWrap: true),
+                            const SizedBox(height: 14),
+                            _buildDetailPanel(
+                              reward: reward,
+                              unlocked: unlocked,
+                              claimed: claimed,
+                              scrollable: false,
                             ),
                           ],
                         ),
+                      );
+                    }
+
+                    return Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildTopBar(),
+                          const SizedBox(height: 16),
+                          _buildSummaryRow(),
+                          const SizedBox(height: 16),
+                          _buildCategoryTabs(),
+                          const SizedBox(height: 14),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 5,
+                                  child: _buildRewardGrid(),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  flex: 4,
+                                  child: _buildDetailPanel(
+                                    reward: reward,
+                                    unlocked: unlocked,
+                                    claimed: claimed,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                );
-              },
+                    );
+                  },
+                ),
+              ),
             ),
-            ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -652,23 +522,23 @@ class _RewardsScreenState extends State<RewardsScreen>
       _CategoryTab(
         label: context.tr('rewards.categories.stickers'),
         emoji: '✨',
-        selected: _selectedCategory == _RewardCategory.stickers,
+        selected: _selectedCategory == RewardCategory.stickers,
         color: AppColors.primary,
-        onTap: () => _selectCategory(_RewardCategory.stickers),
+        onTap: () => _selectCategory(RewardCategory.stickers),
       ),
       _CategoryTab(
         label: context.tr('rewards.categories.badges'),
         emoji: '🎖️',
-        selected: _selectedCategory == _RewardCategory.badges,
+        selected: _selectedCategory == RewardCategory.badges,
         color: AppColors.bridgeBlue,
-        onTap: () => _selectCategory(_RewardCategory.badges),
+        onTap: () => _selectCategory(RewardCategory.badges),
       ),
       _CategoryTab(
         label: context.tr('rewards.categories.trophies'),
         emoji: '🏆',
-        selected: _selectedCategory == _RewardCategory.trophies,
+        selected: _selectedCategory == RewardCategory.trophies,
         color: AppColors.premiumGold,
-        onTap: () => _selectCategory(_RewardCategory.trophies),
+        onTap: () => _selectCategory(RewardCategory.trophies),
       ),
     ];
 
@@ -913,7 +783,7 @@ class _RewardsScreenState extends State<RewardsScreen>
   }
 
   Widget _buildDetailPanel({
-    required _RewardItem reward,
+    required RewardItem reward,
     required bool unlocked,
     required bool claimed,
     bool scrollable = true,
@@ -938,7 +808,8 @@ class _RewardsScreenState extends State<RewardsScreen>
         ),
         const SizedBox(height: 16),
         Text(
-          context.tr('rewards.next_reward', namedArgs: {'count': '$starsNeeded'}),
+          context
+              .tr('rewards.next_reward', namedArgs: {'count': '$starsNeeded'}),
           style: AppTypography.bodyStrong.copyWith(
             color: const Color(0xFF1A1060),
             fontWeight: FontWeight.w800,
@@ -1030,7 +901,7 @@ class _RewardsScreenState extends State<RewardsScreen>
             ),
           ],
         ),
-        if (reward.category == _RewardCategory.stickers) ...[
+        if (reward.category == RewardCategory.stickers) ...[
           const SizedBox(height: 10),
           SizedBox(
             width: double.infinity,
@@ -1069,7 +940,7 @@ class _RewardsScreenState extends State<RewardsScreen>
   }
 
   Widget _buildRewardShowcase({
-    required _RewardItem reward,
+    required RewardItem reward,
     required bool unlocked,
     required bool claimed,
   }) {
@@ -1330,7 +1201,7 @@ class _RewardDetailSheet extends StatelessWidget {
     required this.onSpeakTap,
   });
 
-  final _RewardItem reward;
+  final RewardItem reward;
   final bool unlocked;
   final bool claimed;
   final VoidCallback onSpeakTap;
@@ -1416,7 +1287,8 @@ class _RewardDetailSheet extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      AppLocalization.rewardItem(context, reward.id, 'subtitle'),
+                      AppLocalization.rewardItem(
+                          context, reward.id, 'subtitle'),
                       textAlign: TextAlign.center,
                       style: AppTypography.bodySmall.copyWith(
                         color: reward.color,

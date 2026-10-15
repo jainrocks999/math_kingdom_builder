@@ -8,9 +8,14 @@ class ChildProfile extends HiveObject {
   @HiveField(1)
   final String avatarPath;
 
+  /// Age in years; null for profiles created before ages were asked.
+  @HiveField(2)
+  final int? age;
+
   ChildProfile({
     required this.name,
     required this.avatarPath,
+    this.age,
   });
 }
 
@@ -27,17 +32,20 @@ class ChildProfileAdapter extends TypeAdapter<ChildProfile> {
     return ChildProfile(
       name: fields[0] as String,
       avatarPath: fields[1] as String,
+      age: fields[2] as int?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ChildProfile obj) {
     writer
-      ..writeByte(2)
+      ..writeByte(3)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
-      ..write(obj.avatarPath);
+      ..write(obj.avatarPath)
+      ..writeByte(2)
+      ..write(obj.age);
   }
 
   @override

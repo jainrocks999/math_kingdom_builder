@@ -33,7 +33,8 @@ class KingdomBottomPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final canPlayActive =
         activeZone.playable && activeZone.unlocked && !activeZone.isComplete;
-    final showActiveCta = canPlayActive || (activeZone.playable && activeZone.unlocked);
+    final showActiveCta =
+        canPlayActive || (activeZone.playable && activeZone.unlocked);
 
     return Container(
       width: double.infinity,
@@ -65,8 +66,8 @@ class KingdomBottomPanel extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
-                child:
-                    Text(activeZone.emoji, style: const TextStyle(fontSize: 28)),
+                child: Text(activeZone.emoji,
+                    style: const TextStyle(fontSize: 28)),
               ),
               const SizedBox(width: 14),
               Expanded(

@@ -1,6 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,7 +9,6 @@ import '../../core/localization/app_locale_config.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/audio_settings_service.dart';
 import '../../core/services/child_profile_service.dart';
-import '../../core/services/parent_pin_service.dart';
 import '../../core/utils/audio_service.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../core/utils/tts_voice_helper.dart';
@@ -32,7 +30,6 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   late final FlutterTts _previewTts;
-  late final TextEditingController _parentPinController;
 
   AudioSettingsSnapshot _audioSettings = const AudioSettingsSnapshot(
     musicEnabled: true,
@@ -44,9 +41,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isLoading = true;
   bool _isPreviewSpeaking = false;
   bool _isSaving = false;
-  bool _hasParentPin = false;
-  String? _parentPinMessage;
-  bool _isParentPinSuccessMessage = false;
 
   List<AppLocaleDescriptor> get _languageOptions => AppLocaleConfig.descriptors;
 
@@ -54,14 +48,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     _previewTts = FlutterTts();
-    _parentPinController = TextEditingController();
     _bootstrap();
   }
 
   @override
   void dispose() {
     _previewTts.stop();
-    _parentPinController.dispose();
     super.dispose();
   }
 
@@ -85,12 +77,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadSettings() async {
     final audioSettings = await AudioSettingsService.instance.loadSnapshot();
     final profiles = await ChildProfileService.instance.loadSnapshot();
-    final hasParentPin = await ParentPinService.instance.hasPin();
     if (!mounted) return;
     setState(() {
       _audioSettings = audioSettings;
       _profiles = profiles;
-      _hasParentPin = hasParentPin;
       _isLoading = false;
     });
   }
@@ -181,10 +171,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (locale == context.locale) return;
     await context.setLocale(locale);
     if (!mounted) return;
-    setState(() {
-      _parentPinMessage = null;
-      _isParentPinSuccessMessage = false;
-    });
+    setState(() {});
   }
 
   Future<void> _playSuccessPreview() async {
@@ -218,121 +205,85 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Future<void> _saveParentPin() async {
-    final pin = _parentPinController.text.trim();
-    if (pin.length != 4) {
-      setState(() {
-        _parentPinMessage = context.tr('settings.parent_pin_invalid');
-        _isParentPinSuccessMessage = false;
-      });
-      return;
-    }
-
-    setState(() {
-      _isSaving = true;
-      _parentPinMessage = null;
-      _isParentPinSuccessMessage = false;
-    });
-
-    await ParentPinService.instance.setPin(pin);
-    _parentPinController.clear();
-
-    if (!mounted) return;
-    setState(() {
-      _hasParentPin = true;
-      _isSaving = false;
-      _parentPinMessage = context.tr('settings.parent_pin_updated');
-      _isParentPinSuccessMessage = true;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.parentBackground,
       body: ScreenBannerHost(
         child: SafeArea(
-        child: AdaptiveContentWidth(
-          child: _isLoading
-            ? KidLoadingView(
-                title: context.tr('settings.title'),
-                subtitle: context.tr('settings.loading_subtitle'),
-                color: AppColors.parentAccent,
-                compact: true,
-              )
-            : SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: 8,right: 20,left: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+          child: AdaptiveContentWidth(
+            child: _isLoading
+                ? KidLoadingView(
+                    title: context.tr('settings.title'),
+                    subtitle: context.tr('settings.loading_subtitle'),
+                    color: AppColors.parentAccent,
+                    compact: true,
+                  )
+                : SingleChildScrollView(
+                    padding:
+                        const EdgeInsets.only(bottom: 8, right: 20, left: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        GameBackButton(
-                          onTap: () => context.pop(),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            context.tr('settings.title'),
-                            style: AppTypography.h2.copyWith(
-                              color: const Color(0xFF1E1060),
-                              fontWeight: FontWeight.w800,
+                        Row(
+                          children: [
+                            GameBackButton(
+                              onTap: () => context.pop(),
                             ),
-                          ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                context.tr('settings.title'),
+                                style: AppTypography.h2.copyWith(
+                                  color: const Color(0xFF1E1060),
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
+                        const SizedBox(height: 10),
+                        _buildHeroCard(),
+                        const SizedBox(height: 20),
+                        _buildSectionHeader(
+                          context.tr('settings.language_title'),
+                          context.tr('settings.language_subtitle'),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildLanguageCard(),
+                        const SizedBox(height: 20),
+                        _buildSectionHeader(
+                          context.tr('settings.active_child_title'),
+                          context.tr('settings.active_child_subtitle'),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildProfileCard(),
+                        const SizedBox(height: 20),
+                        _buildSectionHeader(
+                          context.tr('settings.audio_title'),
+                          context.tr('settings.audio_subtitle'),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildAudioCard(),
+                        const SizedBox(height: 20),
+                        _buildSectionHeader(
+                          context.tr('settings.preview_title'),
+                          context.tr('settings.preview_subtitle'),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildPreviewCard(),
+                        const SizedBox(height: 20),
+                        _buildSectionHeader(
+                          context.tr('settings.coming_next_title'),
+                          context.tr('settings.coming_next_subtitle'),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildComingSoonCard(),
                       ],
                     ),
-                    const SizedBox(height: 10),
-                    _buildHeroCard(),
-                    const SizedBox(height: 20),
-                    _buildSectionHeader(
-                      context.tr('settings.language_title'),
-                      context.tr('settings.language_subtitle'),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildLanguageCard(),
-                    const SizedBox(height: 20),
-                    _buildSectionHeader(
-                      context.tr('settings.active_child_title'),
-                      context.tr('settings.active_child_subtitle'),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildProfileCard(),
-                    const SizedBox(height: 20),
-                    _buildSectionHeader(
-                      context.tr('settings.audio_title'),
-                      context.tr('settings.audio_subtitle'),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildAudioCard(),
-                    const SizedBox(height: 20),
-                    _buildSectionHeader(
-                      context.tr('settings.preview_title'),
-                      context.tr('settings.preview_subtitle'),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildPreviewCard(),
-                    if (widget.showParentControls) ...[
-                      const SizedBox(height: 20),
-                      _buildSectionHeader(
-                        context.tr('settings.parent_controls_title'),
-                        context.tr('settings.parent_controls_subtitle'),
-                      ),
-                      const SizedBox(height: 12),
-                      _buildParentControlsCard(),
-                    ],
-                    const SizedBox(height: 20),
-                    _buildSectionHeader(
-                      context.tr('settings.coming_next_title'),
-                      context.tr('settings.coming_next_subtitle'),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildComingSoonCard(),
-                  ],
-                ),
-              ),
+                  ),
+          ),
         ),
-      ),
       ),
     );
   }
@@ -592,107 +543,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 color: const Color(0xFF546071),
                 fontWeight: FontWeight.w600,
                 height: 1.4,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildParentControlsCard() {
-    return _SettingsCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.shield_rounded,
-                color: AppColors.parentAccent,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  _hasParentPin
-                      ? context.tr('settings.parent_pin_active')
-                      : context.tr('settings.parent_pin_missing'),
-                  style: AppTypography.bodyStrong.copyWith(
-                    color: const Color(0xFF1E1060),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            _hasParentPin
-                ? context.tr('settings.parent_pin_update_hint')
-                : context.tr('settings.parent_pin_create_hint'),
-            style: AppTypography.bodySmall.copyWith(
-              color: const Color(0xFF5A6B7A),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 14),
-          TextField(
-            controller: _parentPinController,
-            keyboardType: TextInputType.number,
-            maxLength: 4,
-            obscureText: true,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: InputDecoration(
-              labelText: _hasParentPin
-                  ? context.tr('settings.new_parent_pin')
-                  : context.tr('settings.parent_pin'),
-              counterText: '',
-              filled: true,
-              fillColor: AppColors.surfaceMuted,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: AppColors.outline),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: AppColors.outline),
-              ),
-            ),
-            onChanged: (_) {
-              if (_parentPinMessage != null) {
-                setState(() {
-                  _parentPinMessage = null;
-                  _isParentPinSuccessMessage = false;
-                });
-              }
-            },
-          ),
-          if (_parentPinMessage != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              _parentPinMessage!,
-              style: AppTypography.bodySmall.copyWith(
-                color: _isParentPinSuccessMessage
-                    ? AppColors.gardenGreen
-                    : AppColors.primary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: _isSaving ? null : _saveParentPin,
-              icon: const Icon(Icons.lock_reset_rounded),
-              label: Text(
-                _hasParentPin
-                    ? context.tr('settings.update_parent_pin')
-                    : context.tr('settings.save_parent_pin'),
-              ),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.parentAccent,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 15),
               ),
             ),
           ),

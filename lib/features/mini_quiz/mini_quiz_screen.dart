@@ -15,6 +15,7 @@ import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../../core/services/child_profile_service.dart';
 import '../../core/services/reward_progress_service.dart';
+import '../../core/services/performance_service.dart';
 import '../../core/utils/audio_service.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../StartLearning/start_learning_next_action_button.dart';
@@ -95,6 +96,7 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
   String _writtenAnswer = '';
   bool _answerLocked = false;
   bool _roundSolved = false;
+  final _attempts = RoundAttemptTracker(RewardModuleIds.miniQuiz);
   bool _showCelebration = false;
   bool _hasShownDragHint = false;
 
@@ -522,6 +524,8 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
 
   void _markCorrect() {
     if (_answerLocked || _showCelebration) return;
+    // Grouped by question type so parents see which kind is hardest.
+    _attempts.finish(_currentRound.mode.name);
 
     TopSnackbar.hide();
     setState(() {
@@ -536,6 +540,7 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
   }
 
   void _markWrong() {
+    _attempts.miss();
     HapticFeedback.heavyImpact();
     _feedbackAudio.playWrongFeedback();
   }
@@ -748,36 +753,36 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
       return Scaffold(
         backgroundColor: AppColors.background,
         body: ScreenBannerHost(
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Positioned.fill(
-              child: Image.asset(
-                'assets/images/backround.png',
-                fit: BoxFit.cover,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Positioned.fill(
+                child: Image.asset(
+                  'assets/images/backround.png',
+                  fit: BoxFit.cover,
+                ),
               ),
-            ),
-            // const DecoratedBox(
-            //   decoration: BoxDecoration(
-            //     gradient: LinearGradient(
-            //       begin: Alignment.topCenter,
-            //       end: Alignment.bottomCenter,
-            //       colors: [
-            //         Color(0x40FFFFFF),
-            //         Color(0x40FFF2D9),
-            //         Color(0xB8F5F7FB),
-            //       ],
-            //     ),
-            //   ),
-            // ),
-            KidLoadingView(
-              title: context.tr('modules.mini_quiz.title'),
-              subtitle: context.tr('learning.loading_subtitle'),
-              compact: true,
-            ),
-          ],
+              // const DecoratedBox(
+              //   decoration: BoxDecoration(
+              //     gradient: LinearGradient(
+              //       begin: Alignment.topCenter,
+              //       end: Alignment.bottomCenter,
+              //       colors: [
+              //         Color(0x40FFFFFF),
+              //         Color(0x40FFF2D9),
+              //         Color(0xB8F5F7FB),
+              //       ],
+              //     ),
+              //   ),
+              // ),
+              KidLoadingView(
+                title: context.tr('modules.mini_quiz.title'),
+                subtitle: context.tr('learning.loading_subtitle'),
+                compact: true,
+              ),
+            ],
+          ),
         ),
-      ),
       );
     }
 
@@ -787,82 +792,84 @@ class _MiniQuizScreenState extends State<MiniQuizScreen>
       backgroundColor: AppColors.background,
       body: ScreenBannerHost(
         child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/images/backround.png',
-              fit: BoxFit.cover,
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/backround.png',
+                fit: BoxFit.cover,
+              ),
             ),
-          ),
-          // DecoratedBox(
-          //   decoration: BoxDecoration(
-          //     gradient: LinearGradient(
-          //       begin: Alignment.topCenter,
-          //       end: Alignment.bottomCenter,
-          //       colors: [
-          //         Colors.white.withValues(alpha: 0.25),
-          //         _theme.softColor.withValues(alpha: 0.35),
-          //         AppColors.background.withValues(alpha: 0.72),
-          //       ],
-          //     ),
-          //   ),
-          // ),
-          SafeArea(
-            child: AdaptiveGameFrame(
-              child: LayoutBuilder(
-              builder: (context, constraints) {
-                final isNarrowWidth = ResponsiveLayout.isCompactWidth(
-                  context,
-                  380,
-                  constraints: constraints,
-                );
-                final isCompactHeight = ResponsiveLayout.isCompactHeight(
-                  context,
-                  760,
-                  constraints: constraints,
-                );
-                final isVeryCompactHeight = ResponsiveLayout.isCompactHeight(
-                  context,
-                  690,
-                  constraints: constraints,
-                );
-                final gap = isVeryCompactHeight ? 10.0 : 14.0;
+            // DecoratedBox(
+            //   decoration: BoxDecoration(
+            //     gradient: LinearGradient(
+            //       begin: Alignment.topCenter,
+            //       end: Alignment.bottomCenter,
+            //       colors: [
+            //         Colors.white.withValues(alpha: 0.25),
+            //         _theme.softColor.withValues(alpha: 0.35),
+            //         AppColors.background.withValues(alpha: 0.72),
+            //       ],
+            //     ),
+            //   ),
+            // ),
+            SafeArea(
+              child: AdaptiveGameFrame(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isNarrowWidth = ResponsiveLayout.isCompactWidth(
+                      context,
+                      380,
+                      constraints: constraints,
+                    );
+                    final isCompactHeight = ResponsiveLayout.isCompactHeight(
+                      context,
+                      760,
+                      constraints: constraints,
+                    );
+                    final isVeryCompactHeight =
+                        ResponsiveLayout.isCompactHeight(
+                      context,
+                      690,
+                      constraints: constraints,
+                    );
+                    final gap = isVeryCompactHeight ? 10.0 : 14.0;
 
-                return Column(
-                  children: [
-                    _buildTopBar(
-                      progress,
-                      compact: isCompactHeight,
-                      narrowWidth: isNarrowWidth,
-                    ),
-                    SizedBox(height: gap),
-                    Expanded(
-                      child: AnimatedBuilder(
-                        animation: _successPulseController,
-                        builder: (context, child) {
-                          final scale = 1 +
-                              ((_successPulseController.value - 1) * 0.03);
-                          return Transform.scale(scale: scale, child: child);
-                        },
-                        child: _buildActivityPanel(
+                    return Column(
+                      children: [
+                        _buildTopBar(
+                          progress,
+                          compact: isCompactHeight,
                           narrowWidth: isNarrowWidth,
-                          compactHeight: isCompactHeight,
-                          veryCompactHeight: isVeryCompactHeight,
                         ),
-                      ),
-                    ),
-                    SizedBox(height: isVeryCompactHeight ? 10 : 12),
-                    _buildBottomBar(compact: isVeryCompactHeight),
-                  ],
-                );
-              },
+                        SizedBox(height: gap),
+                        Expanded(
+                          child: AnimatedBuilder(
+                            animation: _successPulseController,
+                            builder: (context, child) {
+                              final scale = 1 +
+                                  ((_successPulseController.value - 1) * 0.03);
+                              return Transform.scale(
+                                  scale: scale, child: child);
+                            },
+                            child: _buildActivityPanel(
+                              narrowWidth: isNarrowWidth,
+                              compactHeight: isCompactHeight,
+                              veryCompactHeight: isVeryCompactHeight,
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: isVeryCompactHeight ? 10 : 12),
+                        _buildBottomBar(compact: isVeryCompactHeight),
+                      ],
+                    );
+                  },
+                ),
+              ),
             ),
-          ),
-          ),
-          if (_showCelebration) _buildCelebrationOverlay(),
-        ],
-      ),
+            if (_showCelebration) _buildCelebrationOverlay(),
+          ],
+        ),
       ),
     );
   }

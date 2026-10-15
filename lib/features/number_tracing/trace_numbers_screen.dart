@@ -12,6 +12,7 @@ import '../../core/router/app_router.dart';
 import '../../core/services/audio_service.dart';
 import '../StartLearning/start_learning_next_action_button.dart';
 import '../../core/services/reward_progress_service.dart';
+import '../../core/services/performance_service.dart';
 import '../../core/utils/audio_service.dart';
 import '../../core/utils/responsive_layout.dart';
 import '../../shared/widgets/celebration_bear.dart';
@@ -362,6 +363,8 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
   List<Offset> _activeStrokePath = <Offset>[];
   String _statusText = '';
   int _strokeFailureCount = 0;
+  // Wrong strokes across the whole number, for the parent report.
+  final _attempts = RoundAttemptTracker(RewardModuleIds.traceNumbers);
   int _celebrationToken = 0;
   int _finalCelebrationToken = 0;
   int _musicRequestToken = 0;
@@ -488,6 +491,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
   }
 
   void _resetLessonState({bool speakPrompt = true}) {
+    _attempts.start();
     _currentStrokeIndex = 0;
     _currentProgressIndex = 0;
     _isTracing = false;
@@ -653,6 +657,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
   }
 
   void _registerTracingFailure(String message) {
+    _attempts.miss();
     final nextFailureCount = _strokeFailureCount + 1;
     final shouldShowHint = nextFailureCount >= _ghostHintFailureThreshold;
     setState(() {
@@ -700,6 +705,7 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
     });
 
     if (isLastStroke) {
+      _attempts.finish(_lesson.display);
       _celebrationController.forward(from: 0);
       HapticFeedback.heavyImpact();
       if (_currentLessonIndex != _lessons.length - 1) {
@@ -1174,7 +1180,6 @@ class _TraceNumbersScreenState extends State<TraceNumbersScreen>
                   ),
                 ),
               ],
-              
             ],
           );
         },
