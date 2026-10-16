@@ -414,6 +414,7 @@
       "saved_with_suggestion": "{name}'s profile saved with the suggested settings.",
       "delete_title": "Remove {name}?",
       "delete_body": "This removes the profile from this device. Stars and reports are shared and are not deleted.",
+      "delete_last_body": "This is the last profile. After removing it you'll need to create a new child profile to keep using the app.",
       "delete": "Remove",
       "playing_now": "Playing now"
     }
@@ -905,5 +906,19 @@
     "activity_off_message": "A grown-up turned this game off for now. Let's pick another adventure!",
     "go_home": "Back to Home",
     "parent_unlock": "Grown-ups: open Parent Zone"
-  }
+  },
+  "create_profile": {
+    "title": "Who's going to play? 👋",
+    "subtitle": "Create your child's profile to start. We've suggested a name, avatar and settings — change anything you like.",
+    "back_blocked": "Please create your child's profile first to start playing."
+  },
+  "update": {
+  "title": "Update required",
+  "message": "A new version of eMath App is ready. Please update to keep playing.",
+  "button": "Update now",
+  "cancelled": "This update is required. Please update to keep playing.",
+  "failed": "The update didn't finish. Please try again.",
+  "not_allowed": "Please update the app from the Play Store to continue.",
+  "offline": "Can't reach the Play Store. Check your internet and try again."
+}
 }

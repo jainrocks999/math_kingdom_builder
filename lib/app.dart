@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:emath_app/core/services/app_update_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -132,7 +133,10 @@ class _MathKingdomAppState extends ConsumerState<MathKingdomApp> {
           data: MediaQuery.of(context).copyWith(
             textScaler: TextScaler.linear(textScale),
           ),
-          child: child ?? const SizedBox.shrink(),
+          // child: child ?? const SizedBox.shrink(),
+          child: StartupUpdateGate(
+            child: child ?? const SizedBox.shrink(),
+          ),
         );
       },
     );

@@ -34,7 +34,7 @@ val pubspecVersionCode = pubspecVersion
     ?.toIntOrNull()
 
 android {
-    namespace = "com.forebear.mathkingdombuilder"
+    namespace = "com.eflashapps.emath"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -44,7 +44,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.forebear.mathkingdombuilder"
+        applicationId = "com.eflashapps.emath"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = pubspecVersionCode ?: flutter.versionCode

@@ -9,7 +9,11 @@ import 'ad_request_config.dart';
 import 'ad_units_ids.dart';
 
 class BannerAdWidget extends StatefulWidget {
-  const BannerAdWidget({super.key});
+  const BannerAdWidget({super.key, this.bottomPadding = 0});
+
+  /// Space below the ad for the system navigation area. The ad's white bar
+  /// extends through it so the banner sits flush with the screen's bottom.
+  final double bottomPadding;
 
   @override
   State<BannerAdWidget> createState() => _BannerAdWidgetState();
@@ -40,7 +44,8 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
     }
   }
 
-  Future<AdSize?> _resolveBannerSize(double width, Orientation orientation) async {
+  Future<AdSize?> _resolveBannerSize(
+      double width, Orientation orientation) async {
     final adWidth = width.truncate();
     if (adWidth <= 0) return null;
 
@@ -56,7 +61,6 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
   }
 
   Future<void> _loadAd(double width, Orientation orientation) async {
-
     _retryTimer?.cancel();
 
     final size = await _resolveBannerSize(width, orientation);
@@ -75,14 +79,22 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
       size: size,
       request: AdRequestConfig.request,
       listener: BannerAdListener(
-        onAdLoaded: (ad) {
+        onAdLoaded: (ad) async {
           debugPrint('Banner ad loaded (${AdUnitIds.bannerAdId})');
-          if (mounted) {
-            setState(() {
-              _isLoaded = true;
-              _retryAttempt = 0;
-            });
-          }
+          // The served ad is often smaller than the requested adaptive slot
+          // (e.g. 320x50 inside a taller slot). Size the container to the
+          // real ad so there is no empty space above or below it.
+          final servedSize = await (ad as BannerAd).getPlatformAdSize();
+          if (!mounted || _bannerAd != ad) return;
+          setState(() {
+            if (servedSize != null &&
+                servedSize.width > 0 &&
+                servedSize.height > 0) {
+              _adSize = servedSize;
+            }
+            _isLoaded = true;
+            _retryAttempt = 0;
+          });
         },
         onAdFailedToLoad: (ad, error) {
           ad.dispose();
@@ -123,13 +135,29 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
   @override
   Widget build(BuildContext context) {
     if (!_isLoaded || _bannerAd == null || _adSize == null) {
-      return const SizedBox.shrink();
+      // Keep content clear of the system navigation area until an ad shows.
+      return SizedBox(height: widget.bottomPadding);
     }
 
-    return SizedBox(
-      width: _adSize!.width.toDouble(),
-      height:_adSize!.height.toDouble(),
-       child: AdWidget(ad: _bannerAd!),
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0x1F000000))),
+      ),
+      child: Padding(
+        padding: EdgeInsets.only(bottom: widget.bottomPadding),
+        child: SizedBox(
+          width: double.infinity,
+          height: _adSize!.height.toDouble(),
+          child: Center(
+            child: SizedBox(
+              width: _adSize!.width.toDouble(),
+              height: _adSize!.height.toDouble(),
+              child: AdWidget(ad: _bannerAd!),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

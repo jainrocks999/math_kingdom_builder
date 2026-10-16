@@ -24,7 +24,7 @@ import UIKit
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
 
     let channel = FlutterMethodChannel(
-      name: "com.forebear.mathkingdombuilder/device",
+      name: "com.eflashapps.emath/device",
       binaryMessenger: engineBridge.applicationRegistrar.messenger()
     )
     channel.setMethodCallHandler { call, result in

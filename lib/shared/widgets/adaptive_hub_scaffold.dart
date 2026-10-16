@@ -50,7 +50,11 @@ class AdaptiveHubScaffold extends StatelessWidget {
             child: SafeArea(
               bottom: !showBanner,
               child: AdaptiveContentWidth(
-                padding: ResponsiveLayout.hubPadding(context),
+                // With a banner, let content scroll right up to it instead of
+                // being cut off above an empty strip.
+                padding: showBanner
+                    ? ResponsiveLayout.hubPadding(context).copyWith(bottom: 0)
+                    : ResponsiveLayout.hubPadding(context),
                 child: body,
               ),
             ),

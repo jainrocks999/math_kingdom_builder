@@ -130,6 +130,10 @@ class _SplashScreenState extends State<SplashScreen> {
                   style: FilledButton.styleFrom(
                     backgroundColor: Colors.white.withValues(alpha: 0.88),
                     foregroundColor: const Color(0xFF1E1060),
+                    side: const BorderSide(
+                      color: Color(0xFF1E1060),
+                      width: 0.5,
+                    ),
                   ),
                   child: Text(context.tr('splash.skip')),
                 ),

@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -31,6 +32,9 @@ void main() async {
   if (kingdomsBox.get('current') == null) {
     await kingdomsBox.put('current', KingdomState.empty());
   }
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
   await Hive.openBox<LessonProgress>('progress');
 
   await DeviceOrientationService.initialize();

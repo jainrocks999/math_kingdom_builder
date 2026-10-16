@@ -144,7 +144,8 @@ class PlaceholderScreen extends StatelessWidget {
                                   onPressed: () =>
                                       context.push(AppRoutes.startlearning),
                                   icon: const Icon(Icons.play_arrow_rounded),
-                                  label: Text(context.tr('placeholder.try_start_learning')),
+                                  label: Text(context
+                                      .tr('placeholder.try_start_learning')),
                                   style: FilledButton.styleFrom(
                                     backgroundColor: accentColor,
                                     foregroundColor: AppColors.surface,
@@ -159,7 +160,8 @@ class PlaceholderScreen extends StatelessWidget {
                                 width: double.infinity,
                                 child: OutlinedButton(
                                   onPressed: () => _goBack(context),
-                                  child: Text(context.tr('placeholder.back_to_home')),
+                                  child: Text(
+                                      context.tr('placeholder.back_to_home')),
                                 ),
                               ),
                             ],

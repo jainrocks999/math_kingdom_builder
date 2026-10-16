@@ -12,7 +12,7 @@ class DeviceOrientationService {
   DeviceOrientationService._();
 
   static const MethodChannel _channel = MethodChannel(
-    'com.forebear.mathkingdombuilder/device',
+    'com.eflashapps.emath/device',
   );
 
   static bool? _isTablet;

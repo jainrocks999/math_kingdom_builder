@@ -1,4 +1,4 @@
-package com.forebear.mathkingdombuilder
+package com.eflashapps.emath
 
 import android.content.pm.ActivityInfo
 import io.flutter.embedding.android.FlutterActivity
@@ -20,7 +20,7 @@ class MainActivity : FlutterActivity() {
 
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
-            "com.forebear.mathkingdombuilder/device",
+            "com.eflashapps.emath/device",
         ).setMethodCallHandler { call, result ->
             when (call.method) {
                 "isTablet" -> result.success(isTablet)

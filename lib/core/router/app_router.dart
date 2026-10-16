@@ -13,6 +13,7 @@ import 'package:emath_app/features/matching/match_numbers_screen.dart';
 import 'package:emath_app/features/mini_quiz/mini_quiz_screen.dart';
 import 'package:emath_app/features/number_tracing/trace_numbers_screen.dart';
 import 'package:emath_app/features/parent_dashboard/parent_dashboard_screen.dart';
+import 'package:emath_app/features/parent_dashboard/create_profile_screen.dart';
 import 'package:emath_app/features/parent_dashboard/play_break_screen.dart';
 import 'package:emath_app/features/patterns/patterns_screen.dart';
 import 'package:emath_app/features/rewards/rewards_screen.dart';
@@ -23,6 +24,7 @@ import 'package:emath_app/onboarding_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/number_recognition/number_recognition_screen.dart';
 import '../../splash_screen.dart';
+import '../services/child_profile_service.dart';
 import '../services/parent_controls_service.dart';
 import '../../ads/ad_navigator_observer.dart';
 import 'screen_music_observer.dart';
@@ -57,6 +59,7 @@ class AppRoutes {
   static const settings = '/settings';
   static const startlearning = '/start-learning';
   static const playBreak = '/play-break';
+  static const createProfile = '/create-profile';
 }
 
 final AdNavigatorObserver adNavigatorObserver = AdNavigatorObserver();
@@ -74,6 +77,20 @@ final GoRouter _appRouter = GoRouter(
   // play time is used up.
   redirect: (context, state) {
     final path = state.uri.path;
+
+    // No child profile yet (fresh install, or the last one was removed):
+    // ask for one before anything else, except during splash/onboarding.
+    final hasProfiles = ChildProfileService.instance.hasProfiles;
+    if (!hasProfiles &&
+        path != AppRoutes.splash &&
+        path != AppRoutes.onboarding &&
+        path != AppRoutes.createProfile) {
+      return AppRoutes.createProfile;
+    }
+    if (hasProfiles && path == AppRoutes.createProfile) {
+      return AppRoutes.home;
+    }
+
     final controls = ParentControlsService.instance;
     if (controls.isRouteDisabled(path)) {
       return '${AppRoutes.playBreak}?reason=off';
@@ -84,6 +101,10 @@ final GoRouter _appRouter = GoRouter(
     return null;
   },
   routes: [
+    GoRoute(
+      path: AppRoutes.createProfile,
+      builder: (context, state) => const CreateProfileScreen(),
+    ),
     GoRoute(
       path: AppRoutes.playBreak,
       builder: (context, state) => PlayBreakScreen(

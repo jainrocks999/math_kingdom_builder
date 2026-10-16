@@ -145,11 +145,8 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
   }
 
   String get _childName {
-    final profiles = _profiles;
-    if (profiles == null || profiles.profiles.isEmpty) {
-      return context.tr('parent_dashboard.your_child');
-    }
-    return profiles.activeProfile.name;
+    return _profiles?.activeProfile?.name ??
+        context.tr('parent_dashboard.your_child');
   }
 
   Future<void> _practice(String moduleId) async {
@@ -352,7 +349,8 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
 
   Future<void> _deleteProfile(int index) async {
     final profiles = _profiles?.profiles ?? const <ChildProfile>[];
-    if (profiles.length <= 1 || index >= profiles.length) return;
+    if (index >= profiles.length) return;
+    final isLast = profiles.length == 1;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -362,7 +360,13 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
             namedArgs: {'name': profiles[index].name},
           ),
         ),
-        content: Text(dialogContext.tr('parent_dashboard.profile.delete_body')),
+        content: Text(
+          dialogContext.tr(
+            isLast
+                ? 'parent_dashboard.profile.delete_last_body'
+                : 'parent_dashboard.profile.delete_body',
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -380,6 +384,12 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     );
     if (confirmed != true) return;
     await ChildProfileService.instance.deleteProfile(index);
+    if (!mounted) return;
+    if (!ChildProfileService.instance.hasProfiles) {
+      // No child left: a new profile is needed before the app continues.
+      context.go(AppRoutes.createProfile);
+      return;
+    }
     await _loadDashboardData();
   }
 
@@ -388,7 +398,6 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
     if (profiles == null) {
       return const SizedBox.shrink();
     }
-    final canDelete = profiles.profiles.length > 1;
 
     return ParentCard(
       padding: const EdgeInsets.fromLTRB(6, 6, 6, 12),
@@ -400,7 +409,7 @@ class _ParentDashboardScreenState extends State<ParentDashboardScreen> {
               active: index == profiles.activeIndex,
               onSelect: () => _switchProfile(index),
               onEdit: () => _editProfile(index),
-              onDelete: canDelete ? () => _deleteProfile(index) : null,
+              onDelete: () => _deleteProfile(index),
             ),
           const SizedBox(height: 6),
           Padding(

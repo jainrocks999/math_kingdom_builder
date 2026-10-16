@@ -21,8 +21,7 @@ class KidLoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final resolvedTitle =
-        title ?? context.tr('learning.loading_title');
+    final resolvedTitle = title ?? context.tr('learning.loading_title');
     final resolvedSubtitle =
         subtitle ?? context.tr('learning.loading_subtitle');
     final bearSize = compact ? 72.0 : 92.0;

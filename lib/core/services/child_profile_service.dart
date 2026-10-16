@@ -10,9 +10,14 @@ class ChildProfileSnapshot {
   });
 
   final List<ChildProfile> profiles;
+
+  /// -1 when there are no profiles yet.
   final int activeIndex;
 
-  ChildProfile get activeProfile => profiles[activeIndex];
+  bool get isEmpty => profiles.isEmpty;
+
+  ChildProfile? get activeProfile =>
+      profiles.isEmpty ? null : profiles[activeIndex];
 }
 
 class ChildProfileService {
@@ -26,12 +31,16 @@ class ChildProfileService {
 
   Box<ChildProfile> get _profilesBox => Hive.box<ChildProfile>('profiles');
 
+  /// True once at least one child profile exists. The app asks for one
+  /// before it can be used.
+  bool get hasProfiles => _profilesBox.isNotEmpty;
+
   Future<ChildProfileSnapshot> loadSnapshot() async {
-    await _ensureSeededProfiles();
     final prefs = await _prefs;
     final profiles = _profilesBox.values.toList(growable: false);
     final activeIndex = prefs.getInt(_activeProfileIndexKey) ?? 0;
-    final safeIndex = activeIndex.clamp(0, profiles.length - 1);
+    final safeIndex =
+        profiles.isEmpty ? -1 : activeIndex.clamp(0, profiles.length - 1);
 
     return ChildProfileSnapshot(
       profiles: profiles,
@@ -59,27 +68,20 @@ class ChildProfileService {
     await _profilesBox.putAt(index, profile);
   }
 
-  /// Keeps at least one profile, and keeps the same child active when an
-  /// earlier one is removed.
+  /// Keeps the same child active when an earlier one is removed. Removing
+  /// the last profile is allowed; the app then asks for a new one.
   Future<void> deleteProfile(int index) async {
-    if (_profilesBox.length <= 1 || index < 0 || index >= _profilesBox.length) {
-      return;
-    }
+    if (index < 0 || index >= _profilesBox.length) return;
     final prefs = await _prefs;
     final activeIndex = prefs.getInt(_activeProfileIndexKey) ?? 0;
     await _profilesBox.deleteAt(index);
+    if (_profilesBox.isEmpty) {
+      await prefs.remove(_activeProfileIndexKey);
+      return;
+    }
     final newActive = activeIndex > index
         ? activeIndex - 1
         : activeIndex.clamp(0, _profilesBox.length - 1);
     await prefs.setInt(_activeProfileIndexKey, newActive);
-  }
-
-  Future<void> _ensureSeededProfiles() async {
-    if (_profilesBox.isNotEmpty) return;
-
-    // One friendly starter profile; parents rename it in the Parent Zone.
-    await _profilesBox.add(
-      ChildProfile(name: 'Little Star', avatarPath: '🦁', age: 5),
-    );
   }
 }
