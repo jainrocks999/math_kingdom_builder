@@ -10,10 +10,10 @@ class AdUnitIds {
   static const String _androidInterstitialId =
       'ca-app-pub-3339897183017333/2475864297';
 
-  static const String _iosBannerId = 'ca-app-pub-6121378252341914/6328033338';
+  static const String _iosBannerId = 'ca-app-pub-3339897183017333/2500663451';
 
   static const String _iosInterstitialId =
-      'ca-app-pub-6121378252341914/3297333865';
+      'ca-app-pub-3339897183017333/4279367720';
 
   static const String _testBannerId = 'ca-app-pub-3940256099942544/6300978111';
 
