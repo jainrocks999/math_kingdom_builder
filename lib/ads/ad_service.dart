@@ -1,3 +1,4 @@
+import 'package:emath_app/core/services/premium_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
@@ -41,6 +42,8 @@ class AdService {
     AppRoutes.kingdom,
   };
 
+  bool get _adsRemoved => PremiumService.instance.adsRemoved.value;
+
   Future<void> initialize() async {
     await MobileAds.instance.initialize();
     await AdRequestConfig.applyGlobalSettings();
@@ -63,7 +66,7 @@ class AdService {
   }
 
   void loadInterstitial() {
-
+    if (_adsRemoved) return; // ← add
     InterstitialAdManager.instance.preload();
   }
 
@@ -76,6 +79,11 @@ class AdService {
   /// Shows a full-screen ad when available, then runs [onFinished].
   /// If no ad is loaded or cooldown is active, [onFinished] runs immediately.
   Future<void> showInterstitialThen(VoidCallback onFinished) async {
+    if (_adsRemoved) {
+      // ← add
+      onFinished();
+      return;
+    }
     if (!canShowInterstitial) {
       onFinished();
       loadInterstitial();
@@ -96,6 +104,7 @@ class AdService {
 
   /// Standard hook: user left a learning/game screen via back navigation.
   void showInterstitialOnGameExit(String? route) {
+    if (_adsRemoved) return;
     if (route == null || !isGameRoute(route) || !canShowInterstitial) {
       loadInterstitial();
       return;

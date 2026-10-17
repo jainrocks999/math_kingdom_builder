@@ -913,12 +913,27 @@
     "back_blocked": "Please create your child's profile first to start playing."
   },
   "update": {
-  "title": "Update required",
-  "message": "A new version of eMath App is ready. Please update to keep playing.",
-  "button": "Update now",
-  "cancelled": "This update is required. Please update to keep playing.",
-  "failed": "The update didn't finish. Please try again.",
-  "not_allowed": "Please update the app from the Play Store to continue.",
-  "offline": "Can't reach the Play Store. Check your internet and try again."
-}
+    "title": "Update required",
+    "message": "A new version of eMath App is ready. Please update to keep playing.",
+    "button": "Update now",
+    "cancelled": "This update is required. Please update to keep playing.",
+    "failed": "The update didn't finish. Please try again.",
+    "not_allowed": "Please update the app from the Play Store to continue.",
+    "offline": "Can't reach the Play Store. Check your internet and try again."
+  },
+  "premium": {
+    "section_title": "Upgrade to Pro",
+    "title": "Remove ads forever",
+    "subtitle": "One-time purchase. No banners or full-screen ads, on this Google account for life.",
+    "buy": "Remove ads",
+    "buy_with_price": "Remove ads – {price}",
+    "restore": "Restore purchase",
+    "active_title": "Pro is active",
+    "active": "Ads are removed forever. Thank you for supporting eMath!",
+    "thank_you": "Ads removed – thank you! 🎉",
+    "pending": "Payment is processing. Ads will be removed as soon as it completes.",
+    "cancelled": "Purchase cancelled.",
+    "error": "Something went wrong. Please try again.",
+    "nothing_to_restore": "No purchase found on this Google account."
+  }
 }

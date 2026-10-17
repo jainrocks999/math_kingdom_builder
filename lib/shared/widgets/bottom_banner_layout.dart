@@ -1,3 +1,4 @@
+import 'package:emath_app/core/services/premium_service.dart';
 import 'package:flutter/material.dart';
 
 import '../../ads/mobile_banner_ads.dart';
@@ -33,7 +34,12 @@ class ScreenBannerHost extends StatelessWidget {
             child: child,
           ),
         ),
-        BannerAdWidget(bottomPadding: bottomInset),
+        ValueListenableBuilder<bool>(
+          valueListenable: PremiumService.instance.adsRemoved,
+          builder: (context, adsRemoved, _) => adsRemoved
+              ? SizedBox(height: bottomInset)
+              : BannerAdWidget(bottomPadding: bottomInset),
+        ),
       ],
     );
   }

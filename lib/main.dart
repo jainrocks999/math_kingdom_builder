@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:emath_app/core/services/premium_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +16,7 @@ import 'data/models/lesson_progress.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await PremiumService.instance.initialize(); 
   await AdService.instance.initialize();
   await EasyLocalization.ensureInitialized();
   await AppLocaleConfig.ensureLoaded();

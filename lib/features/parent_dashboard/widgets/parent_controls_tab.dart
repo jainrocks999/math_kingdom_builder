@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:emath_app/features/parent_dashboard/widgets/upgrade_to_pro_card.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/constants/app_colors.dart';
@@ -104,6 +105,8 @@ class _ParentControlsTabState extends State<ParentControlsTab> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
       children: [
+         ParentSectionTitle('⭐ ${context.tr('premium.section_title')}'),   // ← add
+        const UpgradeToProCard(),  
         ParentSectionTitle(
           '⏰ ${context.tr('parent_dashboard.controls.time_title')}',
           subtitle: context.tr('parent_dashboard.controls.time_subtitle'),
