@@ -18,7 +18,6 @@ class InterstitialAdManager {
 
     _isLoading = true;
 
-
     InterstitialAd.load(
       adUnitId: AdUnitIds.interstitialAdId,
       request: AdRequestConfig.request,
@@ -37,7 +36,6 @@ class InterstitialAdManager {
   }
 
   void _attachFullScreenCallbacks(InterstitialAd ad) {
-
     ad.fullScreenContentCallback = FullScreenContentCallback(
       onAdDismissedFullScreenContent: (ad) {
         ad.dispose();
@@ -61,7 +59,6 @@ class InterstitialAdManager {
 
   /// Returns `true` when an ad was shown, `false` when nothing was available.
   bool showIfAvailable({VoidCallback? onDismissed}) {
-
     final ad = _interstitialAd;
     if (ad == null) {
       preload();

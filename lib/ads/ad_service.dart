@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:emath_app/core/services/premium_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -5,6 +7,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../core/router/app_router.dart';
 import 'ad_request_config.dart';
 import 'interstitial_ad_manager.dart';
+import 'native_interstitial.dart';
 
 /// Central ad API — same pattern most production apps use:
 /// preload once, show interstitial with cooldown, banner on eligible screens.
@@ -13,7 +16,7 @@ class AdService {
 
   static final AdService instance = AdService._();
 
-  static const Duration minInterstitialInterval = Duration(seconds: 90);
+  static const Duration minInterstitialInterval = Duration(seconds: 60);
 
   DateTime? _lastInterstitialAt;
 
@@ -44,6 +47,26 @@ class AdService {
 
   bool get _adsRemoved => PremiumService.instance.adsRemoved.value;
 
+  /// iOS shows a native ad on a full-screen page instead of an interstitial,
+  /// so taps can go through the parental gate first.
+  bool get _useNativeFullScreen => !kIsWeb && Platform.isIOS;
+
+  void _preloadFullScreenAd() {
+    if (_useNativeFullScreen) {
+      NativeInterstitialManager.instance.preload();
+    } else {
+      InterstitialAdManager.instance.preload();
+    }
+  }
+
+  bool _showFullScreenAd({VoidCallback? onDismissed}) {
+    return _useNativeFullScreen
+        ? NativeInterstitialManager.instance
+            .showIfAvailable(onDismissed: onDismissed)
+        : InterstitialAdManager.instance
+            .showIfAvailable(onDismissed: onDismissed);
+  }
+
   Future<void> initialize() async {
     await MobileAds.instance.initialize();
     await AdRequestConfig.applyGlobalSettings();
@@ -66,8 +89,8 @@ class AdService {
   }
 
   void loadInterstitial() {
-    if (_adsRemoved) return; // ← add
-    InterstitialAdManager.instance.preload();
+    if (_adsRemoved) return;
+    _preloadFullScreenAd();
   }
 
   bool get canShowInterstitial {
@@ -90,7 +113,7 @@ class AdService {
       return;
     }
 
-    final shown = InterstitialAdManager.instance.showIfAvailable(
+    final shown = _showFullScreenAd(
       onDismissed: () {
         _lastInterstitialAt = DateTime.now();
         onFinished();
@@ -110,7 +133,7 @@ class AdService {
       return;
     }
 
-    final shown = InterstitialAdManager.instance.showIfAvailable(
+    final shown = _showFullScreenAd(
       onDismissed: () {
         _lastInterstitialAt = DateTime.now();
         loadInterstitial();

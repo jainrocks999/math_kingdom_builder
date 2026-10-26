@@ -935,5 +935,17 @@
     "cancelled": "Purchase cancelled.",
     "error": "Something went wrong. Please try again.",
     "nothing_to_restore": "No purchase found on this Google account."
+  },
+  "parental_gate": {
+    "badge": "For grown-ups",
+    "title": "Ask a grown-up",
+    "message": "This opens an ad outside the app. A grown-up needs to answer this first:",
+    "cancel": "Cancel",
+    "wrong": "That's not right. Please ask a grown-up.",
+    "tap_ad_now": "Thanks! Now tap the ad once to open it."
+  },
+  "ads": {
+    "label": "Ad",
+    "close": "Close ad"
   }
 }

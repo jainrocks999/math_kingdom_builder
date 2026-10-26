@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'ad_request_config.dart';
+import 'parental_ad_gate.dart';
 import 'ad_units_ids.dart';
 
 class BannerAdWidget extends StatefulWidget {
@@ -27,6 +28,9 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
   Orientation? _requestedOrientation;
   int _retryAttempt = 0;
   Timer? _retryTimer;
+
+  /// iOS: grown-up approval before the ad can open (see ParentalAdGate).
+  final _gate = ParentalAdGateController();
 
   static const Duration _retryDelay = Duration(seconds: 8);
   static const int _maxRetries = 6;
@@ -96,6 +100,10 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
             _retryAttempt = 0;
           });
         },
+        // The ad was tapped and is opening: lock again right away, so the
+        // next tap (e.g. after coming back) shows the parental gate again.
+        onAdClicked: (_) => _gate.relock(),
+        onAdOpened: (_) => _gate.relock(),
         onAdFailedToLoad: (ad, error) {
           ad.dispose();
           debugPrint(
@@ -128,6 +136,7 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
   @override
   void dispose() {
     _retryTimer?.cancel();
+    _gate.dispose();
     _bannerAd?.dispose();
     super.dispose();
   }
@@ -153,7 +162,10 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
             child: SizedBox(
               width: _adSize!.width.toDouble(),
               height: _adSize!.height.toDouble(),
-              child: AdWidget(ad: _bannerAd!),
+              child: ParentalAdGate(
+                controller: _gate,
+                child: AdWidget(ad: _bannerAd!),
+              ),
             ),
           ),
         ),
